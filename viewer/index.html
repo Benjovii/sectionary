@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sectionary · Phase 0 viewer</title>
+<style>
+  :root {
+    --bg: #f6f6f4; --card: #ffffff; --ink: #161616; --muted: #6b6b66; --line: #e4e4df; --accent: #1f6feb; --chip: #eeeeea;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #131312; --card: #1d1d1b; --ink: #f2f2ee; --muted: #a2a29b; --line: #2c2c29; --accent: #6ea8ff; --chip: #262624; }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  header { position: sticky; top: 0; z-index: 5; background: var(--bg); border-bottom: 1px solid var(--line); padding: 12px 16px; display: flex; flex-direction: column; gap: 10px; }
+  .title { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+  .title h1 { font-size: 16px; margin: 0; letter-spacing: .01em; }
+  .title .count { color: var(--muted); }
+  .tabs { display: flex; gap: 6px; }
+  .tabs button { border: 1px solid var(--line); background: var(--card); color: var(--ink); padding: 6px 12px; border-radius: 999px; cursor: pointer; font: inherit; }
+  .tabs button[aria-selected="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  .filters { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .filters select, .filters input { width: 100%; min-width: 0; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--card); color: var(--ink); font: inherit; }
+  .filters input { grid-column: 1 / -1; }
+  @media (min-width: 900px) {
+    header { flex-direction: row; align-items: center; justify-content: space-between; }
+    .filters { display: flex; flex-wrap: wrap; }
+    .filters select { width: auto; }
+    .filters input { width: 220px; }
+  }
+  main { padding: 16px; }
+  .grid { column-count: 1; column-gap: 14px; }
+  @media (min-width: 640px) { .grid { column-count: 2; } }
+  @media (min-width: 1000px) { .grid { column-count: 3; } }
+  @media (min-width: 1400px) { .grid { column-count: 4; } }
+  .card { break-inside: avoid; margin: 0 0 14px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; cursor: zoom-in; }
+  .card img { display: block; width: 100%; height: auto; background: #fff; }
+  .card.mobile img { max-width: 260px; margin: 0 auto; border-left: 1px solid var(--line); border-right: 1px solid var(--line); }
+  .card .cap { padding: 8px 10px; display: flex; gap: 6px; flex-wrap: wrap; align-items: center; color: var(--muted); font-size: 12px; }
+  .chip { background: var(--chip); border-radius: 999px; padding: 2px 8px; color: var(--ink); }
+  .chip.type { background: var(--accent); color: #fff; }
+  .empty { max-width: 560px; margin: 60px auto; text-align: center; color: var(--muted); }
+  .empty code { background: var(--chip); padding: 2px 6px; border-radius: 6px; color: var(--ink); }
+  /* pages view */
+  .page { background: var(--card); border: 1px solid var(--line); border-radius: 12px; margin-bottom: 18px; overflow: hidden; }
+  .page .head { padding: 12px 14px; border-bottom: 1px solid var(--line); display: flex; flex-direction: column; gap: 6px; }
+  .page .head a { color: var(--accent); word-break: break-all; }
+  .page .shots { display: grid; grid-template-columns: 1fr; gap: 12px; padding: 12px; background: var(--bg); }
+  @media (min-width: 900px) { .page .shots { grid-template-columns: 3fr 1fr; align-items: start; } }
+  .page .shots img { width: 100%; height: auto; display: block; border: 1px solid var(--line); background: #fff; border-radius: 6px; }
+  .page .shots .m img { max-width: 390px; margin: 0 auto; }
+  /* dialog */
+  dialog { border: 0; border-radius: 14px; padding: 0; max-width: min(1200px, 96vw); width: 100%; background: var(--card); color: var(--ink); }
+  dialog::backdrop { background: rgba(0,0,0,.6); }
+  .d-wrap { display: grid; grid-template-columns: 1fr; max-height: 92vh; }
+  @media (min-width: 900px) { .d-wrap { grid-template-columns: 1fr 320px; } }
+  .d-img { overflow: auto; background: #fff; max-height: 60vh; }
+  @media (min-width: 900px) { .d-img { max-height: 92vh; } }
+  .d-img img { display: block; width: 100%; height: auto; }
+  .d-img.mobile img { max-width: 390px; margin: 0 auto; }
+  .d-meta { padding: 14px 16px; overflow: auto; border-left: 1px solid var(--line); font-size: 13px; }
+  .d-meta h2 { font-size: 15px; margin: 0 0 8px; }
+  .d-meta dl { margin: 0; display: grid; grid-template-columns: 90px 1fr; gap: 4px 8px; }
+  .d-meta dt { color: var(--muted); }
+  .d-meta dd { margin: 0; word-break: break-word; }
+  .d-meta .text { color: var(--muted); margin-top: 10px; font-size: 12px; }
+  .d-close { position: absolute; top: 8px; right: 8px; border: 0; background: var(--ink); color: var(--bg); width: 32px; height: 32px; border-radius: 999px; cursor: pointer; font-size: 16px; }
+</style>
+</head>
+<body>
+<header>
+  <div class="title">
+    <h1>Sectionary · Phase 0 viewer</h1>
+    <span class="count" id="count"></span>
+  </div>
+  <div class="tabs" role="tablist">
+    <button role="tab" aria-selected="true" data-view="blocks">Blocks</button>
+    <button role="tab" aria-selected="false" data-view="pages">Pages</button>
+  </div>
+  <div class="filters" id="filters">
+    <select id="f-site"><option value="">All sites</option></select>
+    <select id="f-page"><option value="">All page types</option></select>
+    <select id="f-block"><option value="">All block types</option></select>
+    <select id="f-vp"><option value="">Desktop + mobile</option><option value="desktop">Desktop</option><option value="mobile">Mobile</option></select>
+    <input id="f-q" type="search" placeholder="Search headline or text…">
+  </div>
+</header>
+<main id="main"></main>
+
+<dialog id="dlg">
+  <button class="d-close" id="dlg-close" aria-label="Close">×</button>
+  <div class="d-wrap">
+    <div class="d-img" id="d-img"></div>
+    <div class="d-meta" id="d-meta"></div>
+  </div>
+</dialog>
+
+<script src="../data/index.js"></script>
+<script>
+(function () {
+  const $ = (s) => document.querySelector(s);
+  const main = $('#main');
+  const D = window.SECTIONARY_DATA;
+  if (!D || !D.pages || !D.pages.length) {
+    main.innerHTML = '<div class="empty"><p>No captures yet.</p><p>Run <code>npm run capture -- myzoobox.com --discover</code> in the project folder, then reload this page.</p></div>';
+    $('#filters').style.display = 'none';
+    return;
+  }
+  const pages = D.pages;
+  const blocks = [];
+  for (const p of pages) for (const b of p.blocks || []) if (b.file) blocks.push(Object.assign({ page: p }, b));
+
+  const uniq = (arr) => [...new Set(arr)].sort();
+  const fill = (sel, values) => { for (const v of values) { const o = document.createElement('option'); o.value = v; o.textContent = v; sel.appendChild(o); } };
+  fill($('#f-site'), uniq(pages.map((p) => p.site.host)));
+  fill($('#f-page'), uniq(pages.map((p) => p.page.type)));
+  fill($('#f-block'), uniq(blocks.map((b) => b.typeHint)));
+
+  let view = 'blocks';
+  const state = () => ({ site: $('#f-site').value, page: $('#f-page').value, block: $('#f-block').value, vp: $('#f-vp').value, q: $('#f-q').value.trim().toLowerCase() });
+  const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const src = (p, file) => '../data/' + p.dir + '/' + file;
+
+  function renderBlocks() {
+    const s = state();
+    const list = blocks.filter((b) =>
+      (!s.site || b.page.site.host === s.site) &&
+      (!s.page || b.page.page.type === s.page) &&
+      (!s.block || b.typeHint === s.block) &&
+      (!s.vp || b.viewport === s.vp) &&
+      (!s.q || (b.headline || '').toLowerCase().includes(s.q) || (b.text || '').toLowerCase().includes(s.q) || b.typeHint.includes(s.q))
+    );
+    $('#count').textContent = list.length + ' blocks · ' + pages.length + ' pages';
+    const grid = document.createElement('div');
+    grid.className = 'grid';
+    list.forEach((b, i) => {
+      const card = document.createElement('figure');
+      card.className = 'card ' + b.viewport;
+      card.innerHTML = '<img loading="lazy" src="' + esc(src(b.page, b.file)) + '" alt="">' +
+        '<figcaption class="cap"><span class="chip type">' + esc(b.typeHint) + '</span><span class="chip">' + esc(b.page.page.type) + '</span><span>' + esc(b.page.site.host) + '</span><span>' + esc(b.viewport) + ' · ' + b.height + 'px</span></figcaption>';
+      card.addEventListener('click', () => openBlock(b));
+      grid.appendChild(card);
+    });
+    main.replaceChildren(grid);
+  }
+
+  function chips(p) {
+    const s = p.site || {};
+    const parts = [];
+    if (s.platform) parts.push(s.platform);
+    if (s.theme && s.theme.name) parts.push('theme: ' + s.theme.name + (s.theme.schema_version ? ' ' + s.theme.schema_version : ''));
+    if (s.builder) parts.push('builder: ' + s.builder);
+    for (const a of s.apps || []) parts.push(a);
+    return parts.map((x) => '<span class="chip">' + esc(x) + '</span>').join(' ');
+  }
+
+  function renderPages() {
+    const s = state();
+    const list = pages.filter((p) => (!s.site || p.site.host === s.site) && (!s.page || p.page.type === s.page) &&
+      (!s.q || (p.page.title || '').toLowerCase().includes(s.q) || p.page.url.toLowerCase().includes(s.q)));
+    $('#count').textContent = list.length + ' pages';
+    const wrap = document.createElement('div');
+    for (const p of list) {
+      const d = (p.viewports || {}).desktop, m = (p.viewports || {}).mobile;
+      const el = document.createElement('section');
+      el.className = 'page';
+      el.innerHTML = '<div class="head"><strong>' + esc(p.page.title || p.page.url) + '</strong>' +
+        '<a href="' + esc(p.page.url) + '" target="_blank" rel="noopener">' + esc(p.page.url) + '</a>' +
+        '<div><span class="chip type">' + esc(p.page.type) + '</span> ' + chips(p) + '</div></div>' +
+        '<div class="shots">' +
+        (d && d.file ? '<div class="d"><img loading="lazy" src="' + esc(src(p, d.file)) + '" alt="desktop"></div>' : '<div class="d">desktop: ' + esc(d && d.error || 'not captured') + '</div>') +
+        (m && m.file ? '<div class="m"><img loading="lazy" src="' + esc(src(p, m.file)) + '" alt="mobile"></div>' : '<div class="m">mobile: ' + esc(m && m.error || 'not captured') + '</div>') +
+        '</div>';
+      wrap.appendChild(el);
+    }
+    main.replaceChildren(wrap);
+  }
+
+  function openBlock(b) {
+    const p = b.page;
+    $('#d-img').className = 'd-img ' + b.viewport;
+    $('#d-img').innerHTML = '<img src="' + esc(src(p, b.file)) + '" alt="">';
+    $('#d-meta').innerHTML = '<h2>' + esc(b.typeHint) + ' <span style="color:var(--muted);font-weight:normal">#' + b.index + ' · ' + b.viewport + '</span></h2>' +
+      '<dl>' +
+      '<dt>Site</dt><dd>' + esc(p.site.host) + '</dd>' +
+      '<dt>Page</dt><dd><a href="' + esc(p.page.url) + '" target="_blank" rel="noopener">' + esc(p.page.type) + ' ↗</a></dd>' +
+      '<dt>Platform</dt><dd>' + esc((p.site.platform || '') + (p.site.theme && p.site.theme.name ? ' / ' + p.site.theme.name : '')) + '</dd>' +
+      '<dt>Size</dt><dd>' + b.width + ' × ' + b.height + ' px, top ' + b.top + '</dd>' +
+      '<dt>Headline</dt><dd>' + esc(b.headline || '–') + '</dd>' +
+      '<dt>Counts</dt><dd>' + b.buttons + ' buttons · ' + b.images + ' images · ' + b.videos + ' videos</dd>' +
+      '<dt>Background</dt><dd><span style="display:inline-block;width:12px;height:12px;border:1px solid var(--line);vertical-align:middle;background:' + esc(b.bg) + '"></span> ' + esc(b.bg) + '</dd>' +
+      '<dt>Element</dt><dd>' + esc(b.tag + (b.id ? '#' + b.id : '')) + '</dd>' +
+      '<dt>Apps</dt><dd>' + esc((p.site.apps || []).join(', ') || '–') + '</dd>' +
+      '</dl><p class="text">' + esc(b.text) + (b.textLength > 400 ? '…' : '') + '</p>';
+    $('#dlg').showModal();
+  }
+  $('#dlg-close').addEventListener('click', () => $('#dlg').close());
+  $('#dlg').addEventListener('click', (e) => { if (e.target === e.currentTarget) e.currentTarget.close(); });
+
+  const render = () => (view === 'blocks' ? renderBlocks() : renderPages());
+  for (const b of document.querySelectorAll('.tabs button')) b.addEventListener('click', () => {
+    view = b.dataset.view;
+    for (const o of document.querySelectorAll('.tabs button')) o.setAttribute('aria-selected', String(o === b));
+    render();
+  });
+  for (const id of ['#f-site', '#f-page', '#f-block', '#f-vp']) $(id).addEventListener('change', render);
+  $('#f-q').addEventListener('input', render);
+  render();
+})();
+</script>
+</body>
+</html>

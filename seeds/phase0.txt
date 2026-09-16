@@ -1,0 +1,8 @@
+# One site per line. A bare host (no path) is discovered automatically when
+# you pass --discover: Shopify stores expose /products.json and /collections.json,
+# so we can find the home page, two collections, two products and the cart.
+# Lines starting with # are ignored. A full URL is captured as-is.
+myzoobox.com
+sisterlylab.com
+allfreshseafood.com
+https://www.myirelandbox.com/
