@@ -10,7 +10,9 @@
     "typecheck": "tsc --noEmit",
     "viewer": "node scripts/serve.js",
     "polite-check": "tsx src/polite-check.ts",
-    "harvest": "tsx src/harvest.ts"
+    "harvest": "tsx src/harvest.ts",
+    "validate": "tsx src/validate.ts",
+    "seeds-report": "node scripts/seeds-report.mjs"
   },
   "dependencies": {
     "cheerio": "^1.2.0",

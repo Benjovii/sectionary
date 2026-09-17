@@ -27,7 +27,7 @@ import { existsSync } from 'node:fs';
 import path from 'node:path';
 import * as cheerio from 'cheerio';
 import { unzipSync, strFromU8 } from 'fflate';
-import { Politeness, PoliteError, botUserAgent, DESKTOP_BASE_UA, hostOf } from './polite.js';
+import { Politeness, PoliteError, botUserAgent, DESKTOP_BASE_UA, hostOf, lanes, laneFor, retryAfterMs } from './polite.js';
 
 // Minimal .env loader (FIRECRAWL_API_KEY lives there, git-ignored).
 try {
@@ -408,16 +408,29 @@ function rankOf(map: Map<string, number>, host: string): number | null {
 }
 
 // ---- Liveness ---------------------------------------------------------------
-async function probe(host: string): Promise<Live> {
+async function probe(host: string, platformHint: string | null = null): Promise<Live> {
   const out: Live = { alive: false, status: null, finalHost: null, platform: null, title: null, store: false, signals: 0, ts: Date.now() };
   try {
-    const r = await fetch(`https://${host}/`, {
-      headers: { 'user-agent': botUserAgent(DESKTOP_BASE_UA), accept: 'text/html,*/*' },
-      redirect: 'follow',
-      signal: AbortSignal.timeout(15_000),
-    });
+    const get = () =>
+      fetch(`https://${host}/`, {
+        headers: { 'user-agent': botUserAgent(DESKTOP_BASE_UA), accept: 'text/html,*/*' },
+        redirect: 'follow',
+        signal: AbortSignal.timeout(15_000),
+      });
+    const lane = laneFor(platformHint);
+    let r = await lanes.run(lane, get);
+    if (r.status === 429) {
+      await sleep(retryAfterMs(r, 30, 60));
+      r = await lanes.run(lane, get);
+    }
     out.status = r.status;
     out.finalHost = hostOf(r.url);
+    if (r.status === 429) {
+      // Throttled twice: our doing, not the store's. Leave it uncached (ts 0)
+      // so the next run asks again.
+      out.ts = 0;
+      return out;
+    }
     if (!r.ok) return out;
     const html = (await r.text()).slice(0, 400_000);
     const low = html.toLowerCase();
@@ -517,7 +530,7 @@ async function main() {
     console.log(`\nLiveness: probing ${toProbe.length} hosts (8 at a time, ${liveMap.size} cached)…`);
     let done = 0;
     await h.parallel(toProbe, 8, async (r) => {
-      liveMap.set(r.host, await probe(r.host));
+      liveMap.set(r.host, await probe(r.host, r.platformHint));
       if (++done % 200 === 0) console.log(`  ${done}/${toProbe.length}`);
     });
     await writeFile(cachePath, JSON.stringify(Object.fromEntries(liveMap)), 'utf8');

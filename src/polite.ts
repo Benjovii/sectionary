@@ -48,6 +48,51 @@ type Rule = {
   delayMs: number | null;
 };
 
+/**
+ * Shopify serves every store from one platform, so "one request per second
+ * per host" is not enough on its own: too many stores at once and the whole
+ * IP gets 429s. Requests to known Shopify hosts share one lane (two in
+ * flight, spaced out); everything else shares a wider lane.
+ */
+export type Lane = 'shopify' | 'other';
+
+export class Lanes {
+  private inflight: Record<Lane, number> = { shopify: 0, other: 0 };
+  private nextAt: Record<Lane, number> = { shopify: 0, other: 0 };
+  private readonly limits: Record<Lane, { max: number; gapMs: number }> = { shopify: { max: 2, gapMs: 900 }, other: { max: 8, gapMs: 120 } };
+
+  async run<T>(lane: Lane, fn: () => Promise<T>): Promise<T> {
+    const lim = this.limits[lane];
+    for (;;) {
+      const now = Date.now();
+      if (this.inflight[lane] < lim.max && now >= this.nextAt[lane]) {
+        this.inflight[lane]++;
+        this.nextAt[lane] = now + lim.gapMs;
+        break;
+      }
+      await sleep(Math.max(25, this.nextAt[lane] - now));
+    }
+    try {
+      return await fn();
+    } finally {
+      this.inflight[lane]--;
+    }
+  }
+}
+
+/** One set of lanes per process. */
+export const lanes = new Lanes();
+
+export function laneFor(platformHint: string | null | undefined): Lane {
+  return (platformHint || '').toLowerCase() === 'shopify' ? 'shopify' : 'other';
+}
+
+/** Seconds to wait after a 429, from Retry-After when present, capped. */
+export function retryAfterMs(res: Response, fallbackSeconds = 45, capSeconds = 90): number {
+  const ra = Number(res.headers.get('retry-after'));
+  return Math.min(ra > 0 ? ra : fallbackSeconds, capSeconds) * 1000;
+}
+
 export class PoliteError extends Error {
   constructor(public readonly reason: string, public readonly url: string) {
     super(`${reason}: ${url}`);
@@ -121,11 +166,22 @@ export class Politeness {
     const robotsUrl = `${origin}/robots.txt`;
     try {
       await this.wait(hostOf(origin));
-      const res = await fetch(robotsUrl, {
+      let res = await fetch(robotsUrl, {
         headers: { 'user-agent': botUserAgent(DESKTOP_BASE_UA), accept: 'text/plain,*/*' },
         redirect: 'follow',
         signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
       });
+      // A 429 on robots.txt is the platform telling us to slow down, not a
+      // rule. Back off once before giving the host up for this run.
+      if (res.status === 429) {
+        const retryAfter = Number(res.headers.get('retry-after')) || 30;
+        await sleep(Math.min(retryAfter, 60) * 1000);
+        res = await fetch(robotsUrl, {
+          headers: { 'user-agent': botUserAgent(DESKTOP_BASE_UA), accept: 'text/plain,*/*' },
+          redirect: 'follow',
+          signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+        });
+      }
       if (res.status === 200) {
         const txt = await res.text();
         const robots = robotsParser(robotsUrl, txt);
