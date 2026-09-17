@@ -172,6 +172,28 @@ export function storeSignals(html: string): number {
   return STORE_SIGNALS.filter((s) => low.includes(s)).length;
 }
 
+/**
+ * Big brands on custom stacks often ship a JavaScript shell with almost no
+ * server-rendered text, so the body signals miss them. Their title and
+ * description still say what they are: "Official Online Store", "Shop
+ * online", "Online Shopping for Watches".
+ */
+const STORE_TITLE = /\b(online (shop|store|shopping)|official (online )?(shop|store|site & store|website & store)|shop online|buy online|e-?shop|webshop|shop now|store\b|shop\b|boutique)\b/i;
+export function titleSaysStore(title: string | null, description: string | null): boolean {
+  return STORE_TITLE.test(`${title || ''} ${description || ''}`);
+}
+
+export const STORE_SOURCES = new Set(['ecomm', 'gallery', 'catalog']);
+
+/** The store verdict, kept pure so cached facts can be re-judged without refetching. */
+export function looksLikeStore(platform: string | null, signals: number, title: string | null, description: string | null, sources: string[]): boolean {
+  if (platform && ECOM_PLATFORMS.has(platform)) return true;
+  if (signals >= 3) return true;
+  const listedAsStore = sources.some((s) => STORE_SOURCES.has(s));
+  if (titleSaysStore(title, description) && (signals >= 1 || listedAsStore)) return true;
+  return listedAsStore && signals >= 2;
+}
+
 const PARKED = ['this domain is for sale', 'domain for sale', 'buy this domain', 'sedoparking', 'hugedomains', 'afternic', 'dan.com', 'parked free', 'domain is parked', 'godaddy.com/domainsearch', 'namecheap.com/domains', 'coming soon', 'under construction', 'website is temporarily unavailable', 'account suspended'];
 export function isParked(html: string): string | null {
   const low = html.toLowerCase();

@@ -16,7 +16,7 @@ import * as cheerio from 'cheerio';
 import { Politeness, PoliteError, hostOf, lanes, laneFor, retryAfterMs, installFetchCrashGuard, type Lane } from './polite.js';
 
 installFetchCrashGuard();
-import { classifyIndustry, detectApps, detectPlatform, ECOM_PLATFORMS, guessCountry, isAdult, isParked, storeSignals, type PlatformInfo } from './fingerprints.js';
+import { classifyIndustry, detectApps, detectPlatform, guessCountry, isAdult, isParked, looksLikeStore, storeSignals, type PlatformInfo } from './fingerprints.js';
 
 type Row = Record<string, string>;
 
@@ -95,7 +95,7 @@ const csvLine = (cells: unknown[]) => cells.map(csvCell).join(',');
 const decode = (s: string) => cheerio.load(`<x>${s}</x>`)('x').text().replace(/\s+/g, ' ').trim();
 
 // ---- One host ---------------------------------------------------------------
-async function validateHost(polite: Politeness, host: string, platformHint: string | null): Promise<Verdict> {
+async function validateHost(polite: Politeness, host: string, platformHint: string | null, sources: string[]): Promise<Verdict> {
   const v: Verdict = {
     ok: false, reason: null, status: null, finalHost: null, brand: null, title: null, description: null, info: { ...EMPTY_INFO },
     apps: [], signals: 0, industry: 'other', industryScore: 0, industryRunnerUp: null, country: null, collections: null, products: null, ts: Date.now(),
@@ -114,7 +114,9 @@ async function validateHost(polite: Politeness, host: string, platformHint: stri
       return v;
     }
     if (!r.ok) {
-      v.reason = 'dead';
+      // 401/403/503 from a live site is bot protection, not a dead store: the
+      // real-browser crawler gets another go at these later.
+      v.reason = [401, 403, 503].includes(r.status) ? 'blocked' : 'dead';
       return v;
     }
     const ct = r.headers.get('content-type') || '';
@@ -142,8 +144,6 @@ async function validateHost(polite: Politeness, host: string, platformHint: stri
     v.reason = 'parked';
     return v;
   }
-  const isEcom = v.info.platform !== null && ECOM_PLATFORMS.has(v.info.platform);
-
   // Shopify: the catalogue feeds confirm the store and name its categories.
   let collectionTitles: string[] = [];
   if (v.info.platform === 'shopify') {
@@ -161,7 +161,7 @@ async function validateHost(polite: Politeness, host: string, platformHint: stri
     }
   }
 
-  if (!isEcom && v.signals < 3) {
+  if (!looksLikeStore(v.info.platform, v.signals, v.title, v.description, sources)) {
     v.reason = 'not-store';
     return v;
   }
@@ -222,11 +222,17 @@ async function main() {
   const cache = new Map<string, Verdict>();
   if (existsSync(cachePath)) {
     try {
+      const srcOf = new Map(queue.map((r) => [r.host, r.sources ? r.sources.split('|') : []]));
       for (const [h, v] of Object.entries(JSON.parse(await readFile(cachePath, 'utf8')) as Record<string, Verdict>)) {
         // Throttling and unreachable robots are about the moment, not the
         // store: never trust them from the cache.
         const transient = v.status === 429 || v.reason === 'rate-limited' || v.reason === 'robots-unreachable';
-        if (!transient && Date.now() - v.ts < 7 * 86_400_000) cache.set(h, v);
+        if (transient || Date.now() - v.ts >= 7 * 86_400_000) continue;
+        // Re-judge old "not a store" verdicts with the current rule; if it now
+        // passes, drop the entry so the host is validated in full.
+        if (v.reason === 'not-store' && looksLikeStore(v.info.platform, v.signals, v.title, v.description, srcOf.get(h) || [])) continue;
+        if (v.reason === 'dead' && v.status && [401, 403, 503].includes(v.status)) v.reason = 'blocked';
+        cache.set(h, v);
       }
     } catch {
       /* start fresh */
@@ -244,7 +250,7 @@ async function main() {
       const row = queue[next++];
       let v = cache.get(row.host);
       if (!v) {
-        v = await validateHost(polite, row.host, (row.platform || row.platform_hint || '').toLowerCase() || null);
+        v = await validateHost(polite, row.host, (row.platform || row.platform_hint || '').toLowerCase() || null, row.sources ? row.sources.split('|') : []);
         if (v.reason !== 'rate-limited' && v.reason !== 'robots-unreachable' && v.status !== 429) cache.set(row.host, v);
       }
       // Duplicate detection needs the run's own state, so it lives outside the cache.
