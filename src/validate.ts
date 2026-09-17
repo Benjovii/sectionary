@@ -223,7 +223,10 @@ async function main() {
   if (existsSync(cachePath)) {
     try {
       for (const [h, v] of Object.entries(JSON.parse(await readFile(cachePath, 'utf8')) as Record<string, Verdict>)) {
-        if (Date.now() - v.ts < 7 * 86_400_000) cache.set(h, v);
+        // Throttling and unreachable robots are about the moment, not the
+        // store: never trust them from the cache.
+        const transient = v.status === 429 || v.reason === 'rate-limited' || v.reason === 'robots-unreachable';
+        if (!transient && Date.now() - v.ts < 7 * 86_400_000) cache.set(h, v);
       }
     } catch {
       /* start fresh */
@@ -242,7 +245,7 @@ async function main() {
       let v = cache.get(row.host);
       if (!v) {
         v = await validateHost(polite, row.host, (row.platform || row.platform_hint || '').toLowerCase() || null);
-        if (v.reason !== 'rate-limited') cache.set(row.host, v);
+        if (v.reason !== 'rate-limited' && v.reason !== 'robots-unreachable' && v.status !== 429) cache.set(row.host, v);
       }
       // Duplicate detection needs the run's own state, so it lives outside the cache.
       const fh = v.finalHost || row.host;
