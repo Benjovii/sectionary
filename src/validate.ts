@@ -118,7 +118,7 @@ async function validateHost(polite: Politeness, host: string, platformHint: stri
     if (!r.ok) {
       // 401/403/503 from a live site is bot protection, not a dead store: the
       // real-browser crawler gets another go at these later.
-      v.reason = [401, 403, 503].includes(r.status) ? 'blocked' : 'dead';
+      v.reason = [401, 403, 406, 503].includes(r.status) ? 'blocked' : 'dead';
       return v;
     }
     const ct = r.headers.get('content-type') || '';
@@ -275,7 +275,7 @@ async function main() {
         // an old pass that now fails becomes a rejection from cached facts.
         if (v.reason === 'not-store' && passes) continue;
         if (v.ok && !passes) v = { ...v, ok: false, reason: isSpam(v.title, v.description) ? 'spam' : 'not-store' };
-        if (v.reason === 'dead' && v.status && [401, 403, 503].includes(v.status)) v.reason = 'blocked';
+        if (v.reason === 'dead' && v.status && [401, 403, 406, 503].includes(v.status)) v.reason = 'blocked';
         cache.set(h, v);
       }
     } catch {
@@ -332,9 +332,9 @@ async function main() {
 
   await runQueue(queue, workers, 'main');
   if (transient.length && accepted.length < target) {
-    console.log(`\nSecond pass: ${transient.length} host(s) were throttled or had unreachable robots; retrying slowly…`);
-    await sleep(30_000);
-    await runQueue(transient, 3, 'retry');
+    console.log(`\nSecond pass: ${transient.length} host(s) were throttled or had unreachable robots; retrying one at a time…`);
+    await sleep(60_000);
+    await runQueue(transient, 1, 'retry');
   }
   await saveCache();
 

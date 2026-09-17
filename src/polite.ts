@@ -65,10 +65,9 @@ export type Lane = 'shopify' | 'other';
 export class Lanes {
   private inflight: Record<Lane, number> = { shopify: 0, other: 0 };
   private nextAt: Record<Lane, number> = { shopify: 0, other: 0 };
-  // Shopify starts answering 429 (and refusing robots.txt) somewhere above
-  // ~3 requests a second from one IP; 3 in flight at 600 ms is the fastest
-  // setting that stayed clean over a full run.
-  private readonly limits: Record<Lane, { max: number; gapMs: number }> = { shopify: { max: 3, gapMs: 600 }, other: { max: 8, gapMs: 120 } };
+  // Shopify answers 429 (robots.txt included) above roughly two requests a
+  // second from one IP across all its stores: two in flight, one second apart.
+  private readonly limits: Record<Lane, { max: number; gapMs: number }> = { shopify: { max: 2, gapMs: 1000 }, other: { max: 8, gapMs: 120 } };
 
   async run<T>(lane: Lane, fn: () => Promise<T>): Promise<T> {
     const lim = this.limits[lane];
@@ -208,9 +207,9 @@ export class Politeness {
       // asked at once.
       let res = await lanes.run(lane, get);
       // A 429 on robots.txt is the platform telling us to slow down, not a
-      // rule. Back off once before giving the host up for this run.
-      if (res.status === 429) {
-        await sleep(retryAfterMs(res, 30, 60));
+      // rule. Back off with growing waits before giving the host up for this run.
+      for (let attempt = 1; res.status === 429 && attempt <= 3; attempt++) {
+        await sleep(Math.max(retryAfterMs(res, 10, 60), attempt * 10_000));
         res = await lanes.run(lane, get);
       }
       if (res.status === 200) {
@@ -225,9 +224,10 @@ export class Politeness {
           delayMs: typeof delay === 'number' ? Math.min(delay * 1000, MAX_CRAWL_DELAY_MS) : null,
         };
       }
-      // No robots file (404/410) or one we may not read (401/403): the
-      // convention is that everything is allowed.
-      if ([401, 403, 404, 410].includes(res.status)) return { source: 'none', isAllowed: () => true, delayMs: null };
+      // No robots file (404/410) or one we may not read (401/403/406): the
+      // convention is that everything is allowed; a site that blocks the bot
+      // outright will say so again on the page request, which is then cached.
+      if ([401, 403, 404, 406, 410].includes(res.status)) return { source: 'none', isAllowed: () => true, delayMs: null };
       // 5xx and anything odd: assume "not now" for this run.
       return { source: 'error', isAllowed: () => false, delayMs: null };
     } catch (e) {
