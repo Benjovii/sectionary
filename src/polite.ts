@@ -93,6 +93,28 @@ export function retryAfterMs(res: Response, fallbackSeconds = 45, capSeconds = 9
   return Math.min(ra > 0 ? ra : fallbackSeconds, capSeconds) * 1000;
 }
 
+/**
+ * Node's fetch (undici) can throw an internal assertion from a socket event
+ * handler when a server sends a malformed response. It surfaces as an
+ * uncaught exception no try/catch can reach and takes the whole crawl down.
+ * For a batch crawler the right response is to log it and carry on: the
+ * request itself times out through its AbortSignal. Anything else is rethrown.
+ */
+let guardInstalled = false;
+export function installFetchCrashGuard(): void {
+  if (guardInstalled) return;
+  guardInstalled = true;
+  process.on('uncaughtException', (err: NodeJS.ErrnoException) => {
+    const stack = String(err && err.stack);
+    if (err && err.code === 'ERR_ASSERTION' && stack.includes('undici')) {
+      console.warn('  (ignored an undici assertion from a malformed response)');
+      return;
+    }
+    console.error(err);
+    process.exit(1);
+  });
+}
+
 export class PoliteError extends Error {
   constructor(public readonly reason: string, public readonly url: string) {
     super(`${reason}: ${url}`);

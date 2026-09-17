@@ -27,7 +27,9 @@ import { existsSync } from 'node:fs';
 import path from 'node:path';
 import * as cheerio from 'cheerio';
 import { unzipSync, strFromU8 } from 'fflate';
-import { Politeness, PoliteError, botUserAgent, DESKTOP_BASE_UA, hostOf, lanes, laneFor, retryAfterMs } from './polite.js';
+import { Politeness, PoliteError, botUserAgent, DESKTOP_BASE_UA, hostOf, lanes, laneFor, retryAfterMs, installFetchCrashGuard } from './polite.js';
+
+installFetchCrashGuard();
 
 // Minimal .env loader (FIRECRAWL_API_KEY lives there, git-ignored).
 try {
@@ -504,6 +506,12 @@ async function main() {
   console.log('\nRanking with Tranco…');
   const ranks = await tranco(dataDir);
   const rows = [...h.candidates.values()].map((c) => ({ ...c, rank: rankOf(ranks, c.host) }));
+
+  // Save the harvest before the slow liveness pass, so a crash there costs
+  // nothing but the probes.
+  const early = (r: (typeof rows)[number]) =>
+    csvLine([r.host, '', r.brand || '', '', r.platformHint || '', r.platformHint || '', r.rank || '', r.mentions, [...r.sources].join('|'), r.industryHint || '', [...r.sourceUrls].slice(0, 3).join('|')]);
+  await writeFile('seeds/candidates.csv', [csvLine(HEADER), ...rows.map(early)].join('\n') + '\n', 'utf8');
   rows.sort((a, b) => {
     if (a.rank && b.rank) return a.rank - b.rank;
     if (a.rank) return -1;
@@ -529,11 +537,15 @@ async function main() {
     const toProbe = rows.slice(0, Math.max(Math.round(limit * 1.6), limit + 300)).filter((r) => !liveMap.has(r.host));
     console.log(`\nLiveness: probing ${toProbe.length} hosts (8 at a time, ${liveMap.size} cached)…`);
     let done = 0;
+    const saveLive = () => writeFile(cachePath, JSON.stringify(Object.fromEntries([...liveMap].filter(([, l]) => l.ts > 0))), 'utf8');
     await h.parallel(toProbe, 8, async (r) => {
       liveMap.set(r.host, await probe(r.host, r.platformHint));
-      if (++done % 200 === 0) console.log(`  ${done}/${toProbe.length}`);
+      if (++done % 200 === 0) {
+        console.log(`  ${done}/${toProbe.length}`);
+        await saveLive();
+      }
     });
-    await writeFile(cachePath, JSON.stringify(Object.fromEntries(liveMap)), 'utf8');
+    await saveLive();
   }
 
   // Merge hosts that redirect to the same final host (brand.com -> shop.brand.com).

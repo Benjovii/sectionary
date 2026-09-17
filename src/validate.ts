@@ -13,7 +13,9 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import * as cheerio from 'cheerio';
-import { Politeness, PoliteError, hostOf, lanes, laneFor, retryAfterMs, type Lane } from './polite.js';
+import { Politeness, PoliteError, hostOf, lanes, laneFor, retryAfterMs, installFetchCrashGuard, type Lane } from './polite.js';
+
+installFetchCrashGuard();
 import { classifyIndustry, detectApps, detectPlatform, ECOM_PLATFORMS, guessCountry, isAdult, isParked, storeSignals, type PlatformInfo } from './fingerprints.js';
 
 type Row = Record<string, string>;
