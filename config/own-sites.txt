@@ -1,0 +1,6 @@
+# Stores Blackbird manages, with permission to capture every page. Only these
+# skip robots.txt and get faster pacing (500 ms). Never add a third-party site here.
+myzoobox.com
+sisterlylab.com
+allfreshseafood.com
+myirelandbox.com

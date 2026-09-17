@@ -1,0 +1,2 @@
+# Hosts we never capture (opt-outs and takedown requests). One per line,
+# subdomains included automatically, www. ignored. Lines starting with # are comments.

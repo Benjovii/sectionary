@@ -12,21 +12,20 @@
 // for viewer/index.html.
 
 import { chromium, type Browser, type Page } from 'playwright';
-import { mkdir, writeFile, readFile } from 'node:fs/promises';
+import { mkdir, writeFile, readFile, appendFile } from 'node:fs/promises';
 import path from 'node:path';
 import { createHash } from 'node:crypto';
 import { collectBlocks, detectSite, pageMeta, type BlockInfo, type SiteInfo, type PageMeta } from './page-script.js';
 import { discoverShopify } from './discover.js';
 import { buildIndex } from './build-index.js';
+import { Politeness, PoliteError, botUserAgent, hostOf, DESKTOP_BASE_UA, MOBILE_BASE_UA } from './polite.js';
 
 type ViewportName = 'desktop' | 'mobile';
 
-const DESKTOP_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36';
-const MOBILE_UA = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1';
-
+// The real browser UA plus our bot token, so site owners can see who we are.
 const VIEWPORTS: Record<ViewportName, { width: number; height: number; deviceScaleFactor: number; isMobile: boolean; hasTouch: boolean; userAgent: string }> = {
-  desktop: { width: 1440, height: 900, deviceScaleFactor: 1, isMobile: false, hasTouch: false, userAgent: DESKTOP_UA },
-  mobile: { width: 390, height: 844, deviceScaleFactor: 2, isMobile: true, hasTouch: true, userAgent: MOBILE_UA },
+  desktop: { width: 1440, height: 900, deviceScaleFactor: 1, isMobile: false, hasTouch: false, userAgent: botUserAgent(DESKTOP_BASE_UA) },
+  mobile: { width: 390, height: 844, deviceScaleFactor: 2, isMobile: true, hasTouch: true, userAgent: botUserAgent(MOBILE_BASE_UA) },
 };
 
 type Options = {
@@ -171,7 +170,7 @@ async function autoScroll(page: Page): Promise<void> {
     .catch(() => {});
 }
 
-async function captureViewport(browser: Browser, url: string, vp: ViewportName, pageDir: string, opts: Options): Promise<ViewportResult> {
+async function captureViewport(browser: Browser, url: string, vp: ViewportName, pageDir: string, opts: Options, polite: Politeness): Promise<ViewportResult> {
   const v = VIEWPORTS[vp];
   const context = await browser.newContext({
     viewport: { width: v.width, height: v.height },
@@ -193,6 +192,8 @@ async function captureViewport(browser: Browser, url: string, vp: ViewportName, 
   const t0 = Date.now();
   let status: number | null = null;
   try {
+    // One navigation per second per host (or the site's Crawl-delay).
+    await polite.waitFor(url);
     const resp = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60_000 });
     status = resp ? resp.status() : null;
     await page.waitForLoadState('load', { timeout: 20_000 }).catch(() => {});
@@ -256,14 +257,32 @@ async function main(): Promise<void> {
   }
   if (!inputs.length) usage();
 
+  const polite = await Politeness.fromConfig();
+  await mkdir(opts.out, { recursive: true });
+  const crawlLog = path.join(opts.out, 'crawl-log.jsonl');
+  const log = (entry: Record<string, unknown>) => appendFile(crawlLog, JSON.stringify({ ts: new Date().toISOString(), ...entry }) + '\n');
+
   const targets: string[] = [];
   for (const input of inputs) {
     const url = normalizeUrl(input);
+    if (polite.isBlocked(hostOf(url))) {
+      console.log(`${url}: on the block list, skipped`);
+      await log({ url, action: 'skipped', reason: 'blocklist' });
+      continue;
+    }
     if (opts.discover && isBareHost(input)) {
       const origin = new URL(url).origin;
-      const d = await discoverShopify(origin);
-      console.log(`${origin}: ${d.shopify ? 'Shopify store, discovered' : 'not Shopify, using'} ${d.urls.length} page(s)`);
-      targets.push(...d.urls);
+      try {
+        const d = await discoverShopify(polite, origin);
+        console.log(`${origin}: ${d.shopify ? 'Shopify store, discovered' : 'not Shopify, using'} ${d.urls.length} page(s)` +
+          (d.skipped.length ? `, skipped ${d.skipped.map((s) => new URL(s.url).pathname + ' (' + s.reason + ')').join(', ')}` : ''));
+        for (const s of d.skipped) await log({ url: s.url, action: 'skipped', reason: s.reason });
+        targets.push(...d.urls);
+      } catch (e) {
+        const reason = e instanceof PoliteError ? e.reason : String(e);
+        console.log(`${origin}: discovery refused (${reason})`);
+        await log({ url: origin, action: 'skipped', reason });
+      }
     } else {
       targets.push(url);
     }
@@ -277,6 +296,12 @@ async function main(): Promise<void> {
     for (const url of uniq) {
       const u = new URL(url);
       const host = u.hostname.replace(/^www\./, '');
+      const verdict = await polite.allowed(url);
+      if (!verdict.ok) {
+        console.log(`\n${url}  skipped (${verdict.reason})`);
+        await log({ url, host, action: 'skipped', reason: verdict.reason });
+        continue;
+      }
       const slug = pageSlug(u);
       const pageDir = path.join(opts.out, host, slug);
       await mkdir(pageDir, { recursive: true });
@@ -295,12 +320,14 @@ async function main(): Promise<void> {
       };
 
       for (const vp of vps) {
-        const r = await captureViewport(browser, url, vp, pageDir, opts);
+        const r = await captureViewport(browser, url, vp, pageDir, opts, polite);
         if (!r.ok) {
           console.log(`  ${vp}: FAILED ${r.error}`);
           manifest.viewports[vp] = { error: r.error, status: r.status };
+          await log({ url, host, action: 'failed', viewport: vp, reason: r.error });
           continue;
         }
+        await log({ url, host, action: 'captured', viewport: vp, blocks: r.blocks.length, ms: r.ms });
         const okBlocks = r.blocks.filter((b) => b.file).length;
         const themeName = r.site.theme && (r.site.theme as { name?: string }).name;
         console.log(`  ${vp}: ${r.site.platform}${themeName ? ' / ' + themeName : ''} · ${okBlocks}/${r.blocks.length} blocks (${r.strategy}) · ${(r.ms / 1000).toFixed(1)}s`);

@@ -7,10 +7,16 @@
   "scripts": {
     "capture": "tsx src/capture.ts",
     "index": "tsx src/build-index.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "viewer": "node scripts/serve.js",
+    "polite-check": "tsx src/polite-check.ts",
+    "harvest": "tsx src/harvest.ts"
   },
   "dependencies": {
-    "playwright": "1.58.0"
+    "cheerio": "^1.2.0",
+    "fflate": "^0.8.3",
+    "playwright": "1.58.0",
+    "robots-parser": "^3.0.1"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",

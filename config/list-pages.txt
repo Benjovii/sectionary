@@ -1,0 +1,10 @@
+# Hand-picked "best stores" articles. The harvester reads each one and keeps
+# every outbound store link (junk hosts filtered). One URL per line.
+https://www.shopify.com/blog/best-ecommerce-sites
+https://www.shopify.com/blog/11863377-30-beautiful-and-creative-ecommerce-website-designs
+https://www.bigcommerce.com/blog/best-ecommerce-stores/
+https://wisepops.com/blog/ecommerce-website-design-examples
+https://www.groovecommerce.com/ecommerce-blog/shopify-website-examples-ecommerce-site-designs
+https://ecomm.design/best-shopify-stores/
+https://www.posstack.com/blog/shopify-examples-hero-sections
+https://muz.li/inspiration/ecommerce-website/
