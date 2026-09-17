@@ -185,7 +185,7 @@ export function storeSignals(html: string): Signals {
  * Store", "Shop online", "Online Shopping for Watches". A bare "shop" or
  * "store" is not enough ("Get Paid to Shop", "App Store").
  */
-const STORE_TITLE = /\b(online (shop|store|shopping|boutique)|official (online )?(shop|store|website & store|site & store)|shop online|buy online|e-?shop|webshop|web store)\b/i;
+const STORE_TITLE = /\b(online (shop|store|shopping|boutique)|online [a-z]+ store|official (online )?(shop|store|website & store|site & store)|shop online|buy online|e-?shop|webshop|web store)\b|^shop\b/i;
 export function titleSaysStore(title: string | null, description: string | null): boolean {
   return STORE_TITLE.test(`${title || ''} ${description || ''}`);
 }
@@ -206,6 +206,10 @@ export function looksLikeStore(platform: string | null, signals: Signals, title:
   if (platform && ECOM_PLATFORMS.has(platform)) return signals.strong >= 1 || signals.weak >= 2 || listedAsStore || titleSaysStore(title, description);
   if (signals.strong >= 2) return true;
   if (signals.strong >= 1 && signals.weak >= 2) return true;
+  // JavaScript-shell retailers (Gap, Wayfair, Ulta) render no product markup
+  // server-side but still carry four to seven weak signals; publishers and
+  // services top out around three.
+  if (signals.weak >= 4) return true;
   if (titleSaysStore(title, description) && (signals.strong >= 1 || signals.weak >= 1 || listedAsStore)) return true;
   return listedAsStore && signals.strong >= 1;
 }
