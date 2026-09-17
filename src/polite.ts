@@ -59,7 +59,7 @@ export type Lane = 'shopify' | 'other';
 export class Lanes {
   private inflight: Record<Lane, number> = { shopify: 0, other: 0 };
   private nextAt: Record<Lane, number> = { shopify: 0, other: 0 };
-  private readonly limits: Record<Lane, { max: number; gapMs: number }> = { shopify: { max: 2, gapMs: 900 }, other: { max: 8, gapMs: 120 } };
+  private readonly limits: Record<Lane, { max: number; gapMs: number }> = { shopify: { max: 3, gapMs: 500 }, other: { max: 8, gapMs: 120 } };
 
   async run<T>(lane: Lane, fn: () => Promise<T>): Promise<T> {
     const lim = this.limits[lane];
@@ -175,34 +175,34 @@ export class Politeness {
   }
 
   /** robots.txt for the origin, fetched once per run. */
-  private rule(origin: string): Promise<Rule> {
+  private rule(origin: string, lane: Lane = 'other'): Promise<Rule> {
     let p = this.rules.get(origin);
     if (!p) {
-      p = this.loadRule(origin);
+      p = this.loadRule(origin, lane);
       this.rules.set(origin, p);
     }
     return p;
   }
 
-  private async loadRule(origin: string): Promise<Rule> {
+  private async loadRule(origin: string, lane: Lane): Promise<Rule> {
     const robotsUrl = `${origin}/robots.txt`;
-    try {
-      await this.wait(hostOf(origin));
-      let res = await fetch(robotsUrl, {
+    const get = () =>
+      fetch(robotsUrl, {
         headers: { 'user-agent': botUserAgent(DESKTOP_BASE_UA), accept: 'text/plain,*/*' },
         redirect: 'follow',
         signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
       });
+    try {
+      await this.wait(hostOf(origin));
+      // The robots request itself goes through the platform lane: Shopify
+      // throttles robots.txt like any other page when too many stores are
+      // asked at once.
+      let res = await lanes.run(lane, get);
       // A 429 on robots.txt is the platform telling us to slow down, not a
       // rule. Back off once before giving the host up for this run.
       if (res.status === 429) {
-        const retryAfter = Number(res.headers.get('retry-after')) || 30;
-        await sleep(Math.min(retryAfter, 60) * 1000);
-        res = await fetch(robotsUrl, {
-          headers: { 'user-agent': botUserAgent(DESKTOP_BASE_UA), accept: 'text/plain,*/*' },
-          redirect: 'follow',
-          signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
-        });
+        await sleep(retryAfterMs(res, 30, 60));
+        res = await lanes.run(lane, get);
       }
       if (res.status === 200) {
         const txt = await res.text();
@@ -227,11 +227,11 @@ export class Politeness {
   }
 
   /** May we request this URL? Own sites bypass robots, never the block list. */
-  async allowed(url: string): Promise<Verdict> {
+  async allowed(url: string, lane: Lane = 'other'): Promise<Verdict> {
     const host = hostOf(url);
     if (this.isBlocked(host)) return { ok: false, reason: 'blocklist' };
     if (this.isOwn(host)) return { ok: true };
-    const rule = await this.rule(new URL(url).origin);
+    const rule = await this.rule(new URL(url).origin, lane);
     if (rule.source === 'error') return { ok: false, reason: 'robots-unreachable' };
     return rule.isAllowed(url) ? { ok: true } : { ok: false, reason: 'robots' };
   }
@@ -248,17 +248,17 @@ export class Politeness {
   }
 
   /** Pacing plus the site's own Crawl-delay, for page navigations. */
-  async waitFor(url: string): Promise<void> {
+  async waitFor(url: string, lane: Lane = 'other'): Promise<void> {
     const host = hostOf(url);
-    const rule = this.isOwn(host) ? null : await this.rule(new URL(url).origin);
+    const rule = this.isOwn(host) ? null : await this.rule(new URL(url).origin, lane);
     await this.wait(host, rule?.delayMs ?? null);
   }
 
   /** A plain fetch that obeys every rule above. Throws PoliteError when refused. */
-  async fetch(url: string, init: RequestInit = {}): Promise<Response> {
-    const verdict = await this.allowed(url);
+  async fetch(url: string, init: RequestInit = {}, lane: Lane = 'other'): Promise<Response> {
+    const verdict = await this.allowed(url, lane);
     if (!verdict.ok) throw new PoliteError(verdict.reason, url);
-    await this.waitFor(url);
+    await this.waitFor(url, lane);
     const headers = new Headers(init.headers);
     if (!headers.has('user-agent')) headers.set('user-agent', botUserAgent(DESKTOP_BASE_UA));
     return fetch(url, { redirect: 'follow', ...init, headers, signal: init.signal ?? AbortSignal.timeout(FETCH_TIMEOUT_MS) });

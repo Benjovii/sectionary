@@ -177,7 +177,7 @@ class Harvest {
     const plat = await this.text('https://ecomm.design/wp-json/wp/v2/platforms?per_page=100&_fields=id,name', 'application/json');
     if (plat) {
       try {
-        for (const p of JSON.parse(plat) as { id: number; name: string }[]) platformNames.set(p.id, decode(p.name));
+        for (const p of JSON.parse(plat) as { id: number; name?: string }[]) if (typeof p.name === 'string' && p.name.trim()) platformNames.set(p.id, decode(p.name));
       } catch {
         /* keep going without names */
       }

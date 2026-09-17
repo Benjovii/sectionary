@@ -30,9 +30,13 @@ function parseCsv(t) {
   return b.map((r) => Object.fromEntries(h.map((k, i) => [k, r[i] ?? ""])));
 }
 
+// Keep the brand's own domain unless the home page redirected to a different
+// domain altogether (a checkout or regional subdomain is still the same store).
+const displayHost = (r) => (!r.final_host || r.final_host === r.host || r.final_host.endsWith(`.${r.host}`) ? r.host : r.final_host);
+
 const stores = parseCsv(text).map((r, i) => ({
   n: i + 1,
-  host: r.final_host || r.host,
+  host: displayHost(r),
   brand: r.brand || r.title || r.host,
   title: r.title || null,
   platform: r.platform || null,

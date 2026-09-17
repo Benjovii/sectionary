@@ -47,7 +47,7 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 /** Fetch through the politeness rules and the platform lane; retries a 429 twice. */
 async function laneFetch(polite: Politeness, lane: Lane, url: string, accept: string): Promise<Response> {
   for (let attempt = 1; ; attempt++) {
-    const r = await lanes.run(lane, () => polite.fetch(url, { headers: { accept } }));
+    const r = await lanes.run(lane, () => polite.fetch(url, { headers: { accept } }, lane));
     if (r.status !== 429 || attempt >= 3) return r;
     await sleep(retryAfterMs(r));
   }
@@ -270,9 +270,11 @@ async function main() {
   const order = new Map(queue.map((r, i) => [r.host, i]));
   accepted.sort((a, b) => (order.get(a.row.host) ?? 0) - (order.get(b.row.host) ?? 0));
 
+  // Country is derived at output time from the raw signals, so a better rule
+  // applies to cached verdicts too.
   const toLine = ({ row, v }: { row: Row; v: Verdict }) =>
     csvLine([row.host, v.finalHost || '', v.brand || row.brand || '', v.title || '', v.info.platform || '', v.info.builder || '', v.info.theme || '',
-      v.info.themeVersion || '', v.info.currency || '', v.country || '', v.info.locale || '', v.industry, v.industryScore, v.industryRunnerUp || '',
+      v.info.themeVersion || '', v.info.currency || '', guessCountry(v.finalHost || row.host, v.info) || '', v.info.locale || '', v.industry, v.industryScore, v.industryRunnerUp || '',
       v.apps.join('|'), v.collections ?? '', v.signals, row.tranco_rank || '', row.mentions || '', row.sources || '', new Date(v.ts).toISOString().slice(0, 10)]);
   await writeFile('seeds/stores.validated.csv', [csvLine(HEADER), ...accepted.map(toLine)].join('\n') + '\n', 'utf8');
   await writeFile(
@@ -290,7 +292,7 @@ async function main() {
   console.log(`\nseeds/stores.validated.csv: ${accepted.length} stores (${processed} checked, ${((Date.now() - t0) / 60000).toFixed(1)} min)`);
   console.log(`  platforms: ${tally(accepted, (v) => v.info.platform || 'unknown')}`);
   console.log(`  industries: ${tally(accepted, (v) => v.industry)}`);
-  console.log(`  countries: ${tally(accepted, (v) => v.country || '?')}`);
+  console.log(`  countries: ${tally(accepted, (v) => guessCountry(v.finalHost || '', v.info) || '?')}`);
   console.log(`  with theme name: ${accepted.filter((a) => a.v.info.theme).length}, with currency: ${accepted.filter((a) => a.v.info.currency).length}`);
   console.log(`seeds/rejected.csv: ${rejected.length} (${tally(rejected, (v) => v.reason || '?')})`);
 }

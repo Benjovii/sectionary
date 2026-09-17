@@ -240,14 +240,20 @@ const TLD_COUNTRY: Record<string, string> = {
 
 const CURRENCY_COUNTRY: Record<string, string> = { USD: 'US', GBP: 'GB', EUR: 'EU', CAD: 'CA', AUD: 'AU', NZD: 'NZ', JPY: 'JP', SEK: 'SE', NOK: 'NO', DKK: 'DK', CHF: 'CH', PLN: 'PL', INR: 'IN', BRL: 'BR', MXN: 'MX', SGD: 'SG', HKD: 'HK', KRW: 'KR', ZAR: 'ZA', AED: 'AE', ILS: 'IL', TRY: 'TR', CZK: 'CZ', HUF: 'HU' };
 
+/**
+ * Where the store is from. Shopify's `Shopify.country` is the VISITOR's
+ * localisation context, so from Kosovo it says XK for any store that ships
+ * worldwide; it is only used as a last resort and never when it names our
+ * own location. Country-code domains and the store's currency come first.
+ */
 export function guessCountry(host: string, info: PlatformInfo): string | null {
-  if (info.country) return info.country;
   const parts = host.split('.');
   const two = parts.slice(-2).join('.');
   const one = parts[parts.length - 1];
   if (TLD_COUNTRY[two]) return TLD_COUNTRY[two];
   if (TLD_COUNTRY[one]) return TLD_COUNTRY[one];
-  if (info.locale && /-[A-Z]{2}$/i.test(info.locale)) return info.locale.slice(-2).toUpperCase();
   if (info.currency && CURRENCY_COUNTRY[info.currency]) return CURRENCY_COUNTRY[info.currency];
+  if (info.locale && /-[A-Z]{2}$/i.test(info.locale)) return info.locale.slice(-2).toUpperCase();
+  if (info.country && info.country !== 'XK') return info.country;
   return null;
 }
