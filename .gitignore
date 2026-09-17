@@ -4,3 +4,8 @@ data/
 .env
 .env.*
 _tmp/
+web/public/sample/
+web/.next/
+web/node_modules/
+web/.vercel/
+seeds/live-cache.json

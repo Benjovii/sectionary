@@ -1,0 +1,191 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * Sectionary runs on Next Level's design language (DESIGN.md in the NL repo):
+ * warm near-neutral grays, one orange accent for actions, focus and selection,
+ * Bricolage Grotesque for titles, Inter for the UI, Geist Mono for ids.
+ * Tokens below are copied from Next Level's globals.css so both products read
+ * as one family; anything Sectionary-specific sits at the bottom.
+ */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-inter);
+  --font-mono: var(--font-geist-mono);
+  --font-heading: var(--font-bricolage);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+}
+
+:root {
+  --background: oklch(0.99 0.003 75);
+  --foreground: oklch(0.18 0.006 65);
+  --card: oklch(1 0.001 75);
+  --card-foreground: oklch(0.18 0.006 65);
+  --popover: oklch(1 0.001 75);
+  --popover-foreground: oklch(0.18 0.006 65);
+  --primary: #faa038;
+  --primary-foreground: oklch(0.22 0.02 65);
+  --secondary: oklch(0.96 0.004 75);
+  --secondary-foreground: oklch(0.25 0.006 65);
+  --muted: oklch(0.96 0.004 75);
+  --muted-foreground: oklch(0.55 0.018 60);
+  --accent: oklch(0.95 0.008 70);
+  --accent-foreground: oklch(0.18 0.006 65);
+  --destructive: oklch(0.577 0.215 27);
+  --border: oklch(0.92 0.006 70);
+  --input: oklch(0.92 0.006 70);
+  --ring: #faa038;
+  --radius: 0.5rem;
+}
+
+.dark {
+  /* Ben's palette: #110F0E ground, #1A1816 surface, #FAA038 accent, #FFFFFF text. */
+  --background: #110f0e;
+  --foreground: #ffffff;
+  --card: #1a1816;
+  --card-foreground: #ffffff;
+  --popover: #1a1816;
+  --popover-foreground: #ffffff;
+  --primary: #faa038;
+  --primary-foreground: oklch(0.2 0.02 65);
+  --secondary: oklch(0.25 0.005 65);
+  --secondary-foreground: oklch(0.94 0.003 75);
+  --muted: oklch(0.25 0.005 65);
+  --muted-foreground: oklch(0.67 0.012 62);
+  --accent: oklch(0.27 0.008 65);
+  --accent-foreground: oklch(0.94 0.003 75);
+  --destructive: oklch(0.66 0.19 25);
+  --border: oklch(0.94 0.005 75 / 9%);
+  --input: oklch(0.94 0.005 75 / 13%);
+  --ring: #faa038;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    @apply font-sans;
+    color-scheme: light;
+  }
+  html.dark {
+    color-scheme: dark;
+  }
+  body {
+    @apply bg-background text-foreground text-[13px] antialiased;
+  }
+  button:not(:disabled) {
+    cursor: pointer;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+  @media (pointer: coarse) {
+    input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+    textarea,
+    select {
+      font-size: max(1rem, 1em) !important;
+    }
+  }
+  /* Thin capsule scrollbars on no track, same as Next Level. */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in oklch, var(--muted-foreground) 28%, transparent) transparent;
+  }
+  *::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  *::-webkit-scrollbar-track,
+  *::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+  *::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background-color: color-mix(in oklch, var(--muted-foreground) 28%, transparent);
+    border: 2px solid transparent;
+    background-clip: content-box;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Sectionary-specific
+   --------------------------------------------------------------------------- */
+@layer utilities {
+  /* The browse wall: CSS-columns masonry, one column on phones. */
+  .wall {
+    column-gap: 12px;
+    column-count: 1;
+  }
+  @media (min-width: 560px) {
+    .wall {
+      column-count: 2;
+    }
+  }
+  @media (min-width: 900px) {
+    .wall {
+      column-count: 3;
+    }
+  }
+  @media (min-width: 1280px) {
+    .wall {
+      column-count: 4;
+    }
+  }
+  @media (min-width: 1700px) {
+    .wall {
+      column-count: 5;
+    }
+  }
+  .wall > * {
+    break-inside: avoid;
+    margin-bottom: 12px;
+  }
+  /* Skeleton shimmer: a slow sweep of the surface colour, no bounce. */
+  .shimmer {
+    background: linear-gradient(
+      100deg,
+      var(--muted) 30%,
+      color-mix(in oklch, var(--muted), var(--foreground) 6%) 50%,
+      var(--muted) 70%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.6s linear infinite;
+  }
+  @keyframes shimmer {
+    from {
+      background-position: 200% 0;
+    }
+    to {
+      background-position: -200% 0;
+    }
+  }
+}
