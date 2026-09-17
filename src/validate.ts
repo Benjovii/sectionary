@@ -44,10 +44,10 @@ const EMPTY_INFO: PlatformInfo = { platform: null, builder: null, theme: null, t
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-/** Fetch through the politeness rules and the platform lane; retries a 429 twice. */
+/** Fetch through the politeness rules (which take the platform lane); retries a 429 twice. */
 async function laneFetch(polite: Politeness, lane: Lane, url: string, accept: string): Promise<Response> {
   for (let attempt = 1; ; attempt++) {
-    const r = await lanes.run(lane, () => polite.fetch(url, { headers: { accept } }, lane));
+    const r = await polite.fetch(url, { headers: { accept } }, lane);
     if (r.status !== 429 || attempt >= 3) return r;
     await sleep(retryAfterMs(r));
   }

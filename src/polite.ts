@@ -254,13 +254,18 @@ export class Politeness {
     await this.wait(host, rule?.delayMs ?? null);
   }
 
-  /** A plain fetch that obeys every rule above. Throws PoliteError when refused. */
+  /**
+   * A plain fetch that obeys every rule above. Throws PoliteError when refused.
+   * The robots.txt request (inside `allowed`) and the request itself each take
+   * the platform lane in turn; callers must NOT wrap this in `lanes.run`, or
+   * the nested acquisition deadlocks once the lane is full.
+   */
   async fetch(url: string, init: RequestInit = {}, lane: Lane = 'other'): Promise<Response> {
     const verdict = await this.allowed(url, lane);
     if (!verdict.ok) throw new PoliteError(verdict.reason, url);
     await this.waitFor(url, lane);
     const headers = new Headers(init.headers);
     if (!headers.has('user-agent')) headers.set('user-agent', botUserAgent(DESKTOP_BASE_UA));
-    return fetch(url, { redirect: 'follow', ...init, headers, signal: init.signal ?? AbortSignal.timeout(FETCH_TIMEOUT_MS) });
+    return lanes.run(lane, () => fetch(url, { redirect: 'follow', ...init, headers, signal: init.signal ?? AbortSignal.timeout(FETCH_TIMEOUT_MS) }));
   }
 }
