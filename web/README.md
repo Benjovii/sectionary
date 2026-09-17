@@ -1,36 +1,32 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Sectionary web
 
-## Getting Started
+The browse app, in Next Level's design language. Next 16, React 19, Tailwind 4.
+Live at https://sectionary-pink.vercel.app (Vercel project `sectionary`).
 
-First, run the development server:
-
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+```powershell
+cd D:\dev\sectionary\web
+$env:npm_config_cache="D:\dev\_claude-tmp\npm-cache"; $env:TEMP="D:\dev\_claude-tmp\temp"; $env:TMP="D:\dev\_claude-tmp\temp"
+npm install
+npm run dev          # http://localhost:3000
+npm run build
+vercel deploy --prod --yes
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Until the database exists (SEC-10, SEC-11) the wall reads
+`public/sample/blocks.json`, produced by `node scripts/export-sample.mjs` in
+the repo root. The folder is git-ignored; the Vercel CLI uploads it with each
+deploy.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Where things are:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `src/app/globals.css`: Next Level tokens (light and dark), base layer, the
+  masonry `.wall` and the `.shimmer` skeleton.
+- `src/app/layout.tsx`: fonts (Inter, Bricolage Grotesque, Geist Mono) and the
+  theme provider, dark by default.
+- `src/components/app-shell.tsx`: 48px top bar with the block-mark logo.
+- `src/components/wall.tsx`: the browse wall, filters synced to the URL
+  (`?page=&block=&vp=&q=`), skeletons, empty state.
+- `src/components/block-card.tsx`: aspect-ratio-reserving card with blur-up.
+- `src/components/block-dialog.tsx`: native `<dialog>` detail view.
+- `vercel.json` pins the framework; without it a CLI-created project served
+  only `/public`.

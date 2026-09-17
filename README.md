@@ -1,22 +1,35 @@
-# Sectionary (working name) · Phase 0 prototype
+# Sectionary (codename)
 
 A reference library for real websites and online stores, cut into **blocks**
-(hero, featured collection, reviews, FAQ, footer…) instead of whole pages.
-Think Mobbin, but for landing pages and e-commerce, at block level, with the
-platform, theme and apps behind each store detected automatically.
+(hero, featured collection, buy box, reviews, FAQ, cart…) at desktop and phone
+width, with the platform, theme and apps behind each store detected
+automatically. Mobbin for storefronts, at block level, at scale.
 
-This folder is the **Phase 0 capture prototype**: it proves we can turn a URL
-into tagged block screenshots at desktop and mobile widths. The plan, name
-research and session log live in the vault:
-`D:\Ben's Vault\To Do's\New APP Mobbin Recreate\`.
+The plan, name research and session log live in the vault:
+`D:\Ben's Vault\To Do's\New APP Mobbin Recreate\`. Work is tracked on the
+private Next Level space **SEC**.
 
-## Run it
+## Layout
 
-Prerequisites: Node 24 (installed), Playwright's Chromium 1208 (already in
-`%LOCALAPPDATA%\ms-playwright`, which is why `playwright` is pinned to 1.58.0).
+```
+src/capture.ts        capture CLI: browser control, screenshots, manifests, crawl log
+src/page-script.ts    runs inside the page: block detection, platform/app detection
+src/discover.ts       Shopify /products.json + /collections.json page discovery
+src/polite.ts         polite-crawler rules: bot UA, robots.txt, pacing, block list
+src/polite-check.ts   17 checks for the rules above (npm run polite-check)
+src/harvest.ts        seed harvester: finds and ranks the stores to capture
+src/build-index.ts    folds manifests into data/index.js for the local viewer
+scripts/serve.js      local viewer server (npm run viewer -> http://localhost:4321)
+scripts/export-sample.mjs  exports captured blocks into web/public/sample
+viewer/index.html     local viewer for what was captured
+config/               blocklist.txt (opt-outs), own-sites.txt (our stores), list-pages.txt
+seeds/                stores.csv (chosen), candidates.csv (everything found)
+docs/bot-page.md      copy for the /bot page
+web/                  the Next.js app (Vercel: https://sectionary-pink.vercel.app)
+data/                 capture output, Tranco list (git-ignored)
+```
 
-Because the C: drive is nearly full, point npm's cache and temp at D: first
-(PowerShell):
+## Setup (Windows, C: drive nearly full)
 
 ```powershell
 cd D:\dev\sectionary
@@ -24,62 +37,26 @@ $env:npm_config_cache="D:\dev\_claude-tmp\npm-cache"; $env:TEMP="D:\dev\_claude-
 npm install
 ```
 
-Capture one Shopify store end to end (home, 2 collections, 2 products, cart):
+`playwright` is pinned to 1.58.0 because Chromium 1208 is already installed
+in `%LOCALAPPDATA%\ms-playwright`. Secrets go in `.env` (git-ignored):
+`FIRECRAWL_API_KEY` for the harvester's search source.
 
-```powershell
-npm run capture -- myzoobox.com --discover
-```
+## Commands
 
-Capture specific pages, or a whole seed list:
+| Command | What it does |
+|---|---|
+| `npm run harvest` | Builds `seeds/stores.csv`: stores from ecomm.design's API, stores.gallery and catalog.cool sitemaps, industry searches and hand-picked articles, ranked by Tranco traffic rank, alive and shop-like only. Merges with the previous run. Flags: `--limit 1000`, `--sources ecomm,gallery,catalog,search,lists`, `--no-live`, `--fresh`. |
+| `npm run polite-check` | Verifies robots parsing, block list, pacing and a live robots.txt. |
+| `npm run capture -- myzoobox.com --discover` | Captures a store: pages found through Shopify's JSON, desktop + mobile, full page + every block, platform/theme/apps, manifests. Robots and pacing enforced; skips logged in `data/crawl-log.jsonl`. |
+| `npm run capture -- --seeds seeds/phase0.txt --discover` | Same for a seed list. |
+| `npm run viewer` | Serves the local viewer at http://localhost:4321. |
+| `node scripts/export-sample.mjs myzoobox.com` | Copies captured blocks into `web/public/sample` for the web app. |
+| `cd web && npm run dev` | The web app locally (http://localhost:3000). `vercel deploy --prod --yes` deploys it. |
 
-```powershell
-npm run capture -- https://sisterlylab.com/products/the-daily-duo --only mobile
-npm run capture -- --seeds seeds/phase0.txt --discover
-```
+## Crawler conduct
 
-Then open `viewer\index.html` by double-clicking it (no server needed).
-Blocks tab = masonry of every block with filters; Pages tab = desktop and
-mobile full-page screenshots side by side, with the detected platform, theme
-and apps.
-
-Flags: `--discover`, `--seeds <file>`, `--only desktop|mobile`, `--out <dir>`,
-`--max-blocks 40`, `--min-height 80`, `--quality 88`, `--headed` (watch it).
-
-## What it does per page
-
-1. Opens the page in a real Chromium at 1440px (desktop) and 390px (mobile, 2x).
-2. Waits for network idle, scrolls to the bottom so lazy images load, presses
-   Escape and closes obvious popups and cookie banners (never accepts them).
-3. Detects the platform (Shopify, WooCommerce, WordPress, Webflow, Framer,
-   Squarespace, Wix, BigCommerce, Magento, Next.js…), the Shopify theme name and
-   version, page builders (GemPages, PageFly, Elementor…) and ~55 apps and
-   pixels (Klaviyo, Recharge, Skio, Rebuy, Gorgias, Judge.me, Loox, GA4, Meta…).
-4. Takes a full-page screenshot.
-5. Cuts the page into blocks. On Shopify every `.shopify-section` is a block and
-   its section id gives the type for free (`hero-banner`, `featured-collection`,
-   `image-with-text`, `collapsible-content`…). Elsewhere it falls back to
-   top-level `header`/`section`/`footer` elements, then to the children of `main`.
-6. Screenshots every block and records its headline, text, button/image/video
-   counts, background colour and position.
-7. Writes `data/<host>/<page>/manifest.json` and rebuilds `data/index.js`.
-
-## Layout
-
-```
-src/capture.ts       CLI: browser control, screenshots, manifests
-src/page-script.ts   code that runs inside the page: block detection, platform/app detection
-src/discover.ts      Shopify /products.json + /collections.json page discovery
-src/build-index.ts   folds all manifests into data/index.js for the viewer
-viewer/index.html    local browser for what was captured
-seeds/phase0.txt     the first sites to capture (our own client stores)
-data/                output (git-ignored)
-```
-
-## Known limits (Phase 0)
-
-- Non-Shopify segmentation is heuristic; expect a few merged or split blocks.
-- Sticky headers can overlap the top of a block screenshot on some themes.
-- Chromium cannot render full-page screenshots taller than ~16,000px; the
-  script falls back to the first screen for those pages.
-- No robots.txt handling or rate limiting yet: only run it against sites we
-  manage or with permission until Phase 1 adds the polite-crawler rules.
+Every third-party request identifies as `SectionaryBot/<version>` (appended to
+the real browser UA), honours robots.txt, keeps to one navigation per second
+per host or the site's Crawl-delay, and skips anything in
+`config/blocklist.txt`. Only the stores in `config/own-sites.txt` (ours) bypass
+robots. Never add a third-party site there.
