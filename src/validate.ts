@@ -10,7 +10,7 @@
 //   seeds/stores.validated.csv   the stores that passed, enriched
 //   seeds/rejected.csv           every drop with its reason
 //   seeds/validate-cache.json    per-host results, reused for 7 days
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { appendFile, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import * as cheerio from 'cheerio';
 import { Politeness, PoliteError, hostOf, lanes, laneFor, retryAfterMs, installFetchCrashGuard, type Lane } from './polite.js';
@@ -313,6 +313,7 @@ async function main() {
           if (isTransient(v)) {
             // Our throttling, not the store's fault: keep for the second pass.
             transientCount++;
+            await appendFile('seeds/transient.log', `${new Date().toISOString()}\t${label}\t${row.host}\t${v.reason}\t${v.status ?? ''}\n`).catch(() => {});
             if (label === 'main') {
               transient.push(row);
               continue;
