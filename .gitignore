@@ -9,3 +9,6 @@ web/.next/
 web/node_modules/
 web/.vercel/
 seeds/live-cache.json
+seeds/*.interim*.csv
+seeds/validate-cache.json
+seeds/transient.log
