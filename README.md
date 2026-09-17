@@ -53,6 +53,15 @@ in `%LOCALAPPDATA%\ms-playwright`. Secrets go in `.env` (git-ignored):
 | `node scripts/export-sample.mjs myzoobox.com` | Copies captured blocks into `web/public/sample` for the web app. |
 | `cd web && npm run dev` | The web app locally (http://localhost:3000). `vercel deploy --prod --yes` deploys it. |
 
+## Why the crawler scripts go through `scripts/with-dns-pool.mjs`
+
+Node resolves host names on a pool of four threads. A crawler that meets a few
+dead domains (each lookup hanging for about ten seconds) blocks that pool, and
+every other request then times out looking like "robots unreachable". The
+launcher starts `tsx` with `UV_THREADPOOL_SIZE=64`, which has to happen before
+the process starts. `npm run validate`, `harvest` and `capture` use it; if you
+run `tsx` directly, export the variable first.
+
 ## Crawler conduct
 
 Every third-party request identifies as `SectionaryBot/<version>` (appended to
