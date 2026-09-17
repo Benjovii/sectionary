@@ -59,7 +59,10 @@ export type Lane = 'shopify' | 'other';
 export class Lanes {
   private inflight: Record<Lane, number> = { shopify: 0, other: 0 };
   private nextAt: Record<Lane, number> = { shopify: 0, other: 0 };
-  private readonly limits: Record<Lane, { max: number; gapMs: number }> = { shopify: { max: 4, gapMs: 400 }, other: { max: 10, gapMs: 100 } };
+  // Shopify starts answering 429 (and refusing robots.txt) somewhere above
+  // ~3 requests a second from one IP; 3 in flight at 600 ms is the fastest
+  // setting that stayed clean over a full run.
+  private readonly limits: Record<Lane, { max: number; gapMs: number }> = { shopify: { max: 3, gapMs: 600 }, other: { max: 8, gapMs: 120 } };
 
   async run<T>(lane: Lane, fn: () => Promise<T>): Promise<T> {
     const lim = this.limits[lane];

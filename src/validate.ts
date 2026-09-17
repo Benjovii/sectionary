@@ -269,34 +269,55 @@ async function main() {
 
   const accepted: { row: Row; v: Verdict }[] = [];
   const rejected: { row: Row; v: Verdict }[] = [];
+  const transient: Row[] = [];
   const finalHosts = new Set<string>();
-  let next = 0;
+  const isTransient = (v: Verdict) => v.reason === 'rate-limited' || v.reason === 'robots-unreachable' || v.status === 429;
   let processed = 0;
-  const workerLoop = async () => {
-    while (next < queue.length && accepted.length < target) {
-      const row = queue[next++];
-      let v = cache.get(row.host);
-      if (!v) {
-        v = await validateHost(polite, row.host, (row.platform || row.platform_hint || '').toLowerCase() || null, row.sources ? row.sources.split('|') : []);
-        if (v.reason !== 'rate-limited' && v.reason !== 'robots-unreachable' && v.status !== 429) cache.set(row.host, v);
-      }
-      // Duplicate detection needs the run's own state, so it lives outside the cache.
-      const fh = v.finalHost || row.host;
-      if (v.ok && finalHosts.has(fh)) {
-        rejected.push({ row, v: { ...v, ok: false, reason: 'duplicate' } });
-      } else if (v.ok) {
-        finalHosts.add(fh);
-        accepted.push({ row, v });
-      } else {
-        rejected.push({ row, v });
-      }
-      if (++processed % 50 === 0) {
-        console.log(`  ${processed} checked, ${accepted.length} accepted, ${rejected.length} rejected (${((Date.now() - t0) / 60000).toFixed(1)} min)`);
-        await saveCache();
-      }
-    }
+  let transientCount = 0;
+
+  const judge = (row: Row, v: Verdict) => {
+    // Duplicate detection needs the run's own state, so it lives outside the cache.
+    const fh = v.finalHost || row.host;
+    if (v.ok && finalHosts.has(fh)) rejected.push({ row, v: { ...v, ok: false, reason: 'duplicate' } });
+    else if (v.ok) {
+      finalHosts.add(fh);
+      accepted.push({ row, v });
+    } else rejected.push({ row, v });
   };
-  await Promise.all(Array.from({ length: workers }, workerLoop));
+
+  const runQueue = async (items: Row[], n: number, label: string) => {
+    let next = 0;
+    const loop = async () => {
+      while (next < items.length && accepted.length < target) {
+        const row = items[next++];
+        let v = cache.get(row.host);
+        if (!v) {
+          v = await validateHost(polite, row.host, (row.platform || row.platform_hint || '').toLowerCase() || null, row.sources ? row.sources.split('|') : []);
+          if (isTransient(v)) {
+            // Our throttling, not the store's fault: keep for the second pass.
+            transientCount++;
+            if (label === 'main') {
+              transient.push(row);
+              continue;
+            }
+          } else cache.set(row.host, v);
+        }
+        judge(row, v);
+        if (++processed % 50 === 0) {
+          console.log(`  ${processed} checked, ${accepted.length} accepted, ${rejected.length} rejected, ${transientCount} transient (${((Date.now() - t0) / 60000).toFixed(1)} min)`);
+          await saveCache();
+        }
+      }
+    };
+    await Promise.all(Array.from({ length: n }, loop));
+  };
+
+  await runQueue(queue, workers, 'main');
+  if (transient.length && accepted.length < target) {
+    console.log(`\nSecond pass: ${transient.length} host(s) were throttled or had unreachable robots; retrying slowly…`);
+    await sleep(30_000);
+    await runQueue(transient, 3, 'retry');
+  }
   await saveCache();
 
   // Keep the harvest order (rank, then mentions) in the output.
@@ -322,7 +343,7 @@ async function main() {
     for (const { v } of items) m[pick(v)] = (m[pick(v)] || 0) + 1;
     return Object.entries(m).sort((a, b) => b[1] - a[1]).map(([k, n]) => `${k} ${n}`).join(', ');
   };
-  console.log(`\nseeds/stores.validated.csv: ${accepted.length} stores (${processed} checked, ${((Date.now() - t0) / 60000).toFixed(1)} min)`);
+  console.log(`\nseeds/stores.validated.csv: ${accepted.length} stores (${processed} checked, ${transientCount} transient, ${((Date.now() - t0) / 60000).toFixed(1)} min)`);
   console.log(`  platforms: ${tally(accepted, (v) => v.info.platform || 'unknown')}`);
   console.log(`  industries: ${tally(accepted, (v) => v.industry)}`);
   console.log(`  countries: ${tally(accepted, (v) => guessCountry(v.finalHost || '', v.info) || '?')}`);
