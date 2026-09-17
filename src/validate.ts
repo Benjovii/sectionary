@@ -220,12 +220,20 @@ async function main() {
   const t0 = Date.now();
 
   // Queue: the input rows first, then (if topping up) the rest of the
-  // candidates in their harvest order, which is Tranco rank then mentions.
+  // candidates. Among those, hosts that a store gallery listed come before
+  // hosts only ever seen as a link in an article: a ranked candidate from an
+  // article is usually a publisher or a tool, a gallery entry is a shop.
+  // Within each group the harvest order (Tranco rank, then mentions) holds.
   const seen = new Set<string>();
   const queue: Row[] = [];
   for (const r of parseCsv(await readFile(input, 'utf8'))) if (r.host && !seen.has(r.host)) { seen.add(r.host); queue.push(r); }
   if (topup && existsSync('seeds/candidates.csv')) {
-    for (const r of parseCsv(await readFile('seeds/candidates.csv', 'utf8'))) if (r.host && !seen.has(r.host)) { seen.add(r.host); queue.push(r); }
+    const rest = parseCsv(await readFile('seeds/candidates.csv', 'utf8')).filter((r) => r.host && !seen.has(r.host));
+    const fromStoreSource = (r: Row) => /\b(ecomm|gallery|catalog)\b/.test(r.sources || '');
+    const ranked = (r: Row) => Boolean(r.tranco_rank);
+    const tier = (r: Row) => (fromStoreSource(r) && ranked(r) ? 0 : fromStoreSource(r) ? 1 : ranked(r) ? 2 : 3);
+    rest.sort((a, b) => tier(a) - tier(b));
+    for (const r of rest) { seen.add(r.host); queue.push(r); }
   }
   console.log(`${queue.length} hosts queued (${input} first, then candidates). Target: ${target} validated stores.`);
 
