@@ -40,13 +40,19 @@ export function botUserAgent(base: string): string {
   return `${base} ${BOT_TOKEN}`;
 }
 
-export type Verdict = { ok: true } | { ok: false; reason: 'blocklist' | 'robots' | 'robots-unreachable' };
+export type Verdict = { ok: true } | { ok: false; reason: 'blocklist' | 'robots' | 'robots-unreachable' | 'dead' };
 
 type Rule = {
-  source: 'robots' | 'none' | 'error';
+  source: 'robots' | 'none' | 'error' | 'dead';
   isAllowed: (url: string) => boolean;
   delayMs: number | null;
 };
+
+/** A DNS failure is a dead host, not a transient problem on our side. */
+function isDnsFailure(e: unknown): boolean {
+  const code = (e as { cause?: { code?: string }; code?: string })?.cause?.code ?? (e as { code?: string })?.code;
+  return code === 'ENOTFOUND' || code === 'ECONNREFUSED' || code === 'CERT_HAS_EXPIRED' || code === 'ERR_TLS_CERT_ALTNAME_INVALID';
+}
 
 /**
  * Shopify serves every store from one platform, so "one request per second
@@ -224,7 +230,8 @@ export class Politeness {
       if ([401, 403, 404, 410].includes(res.status)) return { source: 'none', isAllowed: () => true, delayMs: null };
       // 5xx and anything odd: assume "not now" for this run.
       return { source: 'error', isAllowed: () => false, delayMs: null };
-    } catch {
+    } catch (e) {
+      if (isDnsFailure(e)) return { source: 'dead', isAllowed: () => false, delayMs: null };
       return { source: 'error', isAllowed: () => false, delayMs: null };
     }
   }
@@ -235,6 +242,7 @@ export class Politeness {
     if (this.isBlocked(host)) return { ok: false, reason: 'blocklist' };
     if (this.isOwn(host)) return { ok: true };
     const rule = await this.rule(new URL(url).origin, lane);
+    if (rule.source === 'dead') return { ok: false, reason: 'dead' };
     if (rule.source === 'error') return { ok: false, reason: 'robots-unreachable' };
     return rule.isAllowed(url) ? { ok: true } : { ok: false, reason: 'robots' };
   }
