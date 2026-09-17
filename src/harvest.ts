@@ -27,7 +27,7 @@ import { existsSync } from 'node:fs';
 import path from 'node:path';
 import * as cheerio from 'cheerio';
 import { unzipSync, strFromU8 } from 'fflate';
-import { Politeness, PoliteError, botUserAgent, DESKTOP_BASE_UA, hostOf, lanes, laneFor, retryAfterMs, installFetchCrashGuard } from './polite.js';
+import { Politeness, PoliteError, botUserAgent, DESKTOP_BASE_UA, hostOf, lanes, laneFor, retryAfterMs, installFetchCrashGuard, crawlerFetch } from './polite.js';
 
 installFetchCrashGuard();
 
@@ -414,7 +414,7 @@ async function probe(host: string, platformHint: string | null = null): Promise<
   const out: Live = { alive: false, status: null, finalHost: null, platform: null, title: null, store: false, signals: 0, ts: Date.now() };
   try {
     const get = () =>
-      fetch(`https://${host}/`, {
+      crawlerFetch(`https://${host}/`, {
         headers: { 'user-agent': botUserAgent(DESKTOP_BASE_UA), accept: 'text/html,*/*' },
         redirect: 'follow',
         signal: AbortSignal.timeout(15_000),

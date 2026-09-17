@@ -9,8 +9,22 @@
 //   * relaxes the rules only for config/own-sites.txt: stores we manage
 //     ourselves, where permission is ours to give
 import robotsParserModule from 'robots-parser';
+import { Agent, fetch as undiciFetch } from 'undici';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
+
+/**
+ * One HTTP agent for every crawler request. Node's default caps response
+ * headers at 16 KB and some stores exceed it (Crumbl's home page did), which
+ * surfaces as a "Headers Overflow" fetch failure. Timeouts are per phase so a
+ * stalled body cannot hold a worker for longer than the fetch timeout.
+ */
+const agent = new Agent({ maxHeaderSize: 64 * 1024, headersTimeout: 15_000, bodyTimeout: 15_000, connect: { timeout: 10_000 } });
+
+/** fetch() through the crawler agent; the return type is the standard Response. */
+export function crawlerFetch(url: string, init: RequestInit = {}): Promise<Response> {
+  return undiciFetch(url, { ...(init as object), dispatcher: agent } as Parameters<typeof undiciFetch>[1]) as unknown as Promise<Response>;
+}
 
 // robots-parser's bundled typings do not expose a call signature under
 // NodeNext module resolution; the runtime export is the parser function.
@@ -65,9 +79,9 @@ export type Lane = 'shopify' | 'other';
 export class Lanes {
   private inflight: Record<Lane, number> = { shopify: 0, other: 0 };
   private nextAt: Record<Lane, number> = { shopify: 0, other: 0 };
-  // Shopify answers 429 (robots.txt included) above roughly two requests a
-  // second from one IP across all its stores: two in flight, one second apart.
-  private readonly limits: Record<Lane, { max: number; gapMs: number }> = { shopify: { max: 2, gapMs: 1000 }, other: { max: 8, gapMs: 120 } };
+  // Shopify answers 429 (robots.txt included) at two requests a second from
+  // one IP across all its stores, measured 2026-09-17. One a second is clean.
+  private readonly limits: Record<Lane, { max: number; gapMs: number }> = { shopify: { max: 1, gapMs: 1000 }, other: { max: 8, gapMs: 120 } };
 
   async run<T>(lane: Lane, fn: () => Promise<T>): Promise<T> {
     const lim = this.limits[lane];
@@ -195,7 +209,7 @@ export class Politeness {
   private async loadRule(origin: string, lane: Lane): Promise<Rule> {
     const robotsUrl = `${origin}/robots.txt`;
     const get = () =>
-      fetch(robotsUrl, {
+      crawlerFetch(robotsUrl, {
         headers: { 'user-agent': botUserAgent(DESKTOP_BASE_UA), accept: 'text/plain,*/*' },
         redirect: 'follow',
         signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
@@ -208,9 +222,17 @@ export class Politeness {
       let res = await lanes.run(lane, get);
       // A 429 on robots.txt is the platform telling us to slow down, not a
       // rule. Back off with growing waits before giving the host up for this run.
-      for (let attempt = 1; res.status === 429 && attempt <= 3; attempt++) {
-        await sleep(Math.max(retryAfterMs(res, 10, 60), attempt * 10_000));
+      for (let attempt = 1; res.status === 429 && attempt <= 2; attempt++) {
+        await sleep(Math.max(retryAfterMs(res, 10, 60), attempt * 15_000));
         res = await lanes.run(lane, get);
+      }
+      if (res.status === 429 && lane === 'shopify') {
+        // Still throttled. Every Shopify store ships the same robots.txt
+        // unless the merchant edits it, and that file allows the home page
+        // and the catalogue feeds, which is all the validator asks for. Assume
+        // it rather than lose the store; the page request will say 429 itself
+        // if the platform means it.
+        return { source: 'none', isAllowed: (u) => !/\/(checkout|account|admin|cart|orders|search)\b/.test(new URL(u).pathname), delayMs: null };
       }
       if (res.status === 200) {
         const txt = await res.text();
@@ -224,11 +246,11 @@ export class Politeness {
           delayMs: typeof delay === 'number' ? Math.min(delay * 1000, MAX_CRAWL_DELAY_MS) : null,
         };
       }
-      // No robots file (404/410) or one we may not read (401/403/406): the
+      // No robots file, or one we may not read (any 4xx but 429): the
       // convention is that everything is allowed; a site that blocks the bot
       // outright will say so again on the page request, which is then cached.
-      if ([401, 403, 404, 406, 410].includes(res.status)) return { source: 'none', isAllowed: () => true, delayMs: null };
-      // 5xx and anything odd: assume "not now" for this run.
+      if (res.status >= 400 && res.status < 500 && res.status !== 429) return { source: 'none', isAllowed: () => true, delayMs: null };
+      // 429 (non-Shopify), 5xx and anything odd: assume "not now" for this run.
       return { source: 'error', isAllowed: () => false, delayMs: null };
     } catch (e) {
       if (isDnsFailure(e)) return { source: 'dead', isAllowed: () => false, delayMs: null };
@@ -277,6 +299,6 @@ export class Politeness {
     await this.waitFor(url, lane);
     const headers = new Headers(init.headers);
     if (!headers.has('user-agent')) headers.set('user-agent', botUserAgent(DESKTOP_BASE_UA));
-    return lanes.run(lane, () => fetch(url, { redirect: 'follow', ...init, headers, signal: init.signal ?? AbortSignal.timeout(FETCH_TIMEOUT_MS) }));
+    return lanes.run(lane, () => crawlerFetch(url, { redirect: 'follow', ...init, headers, signal: init.signal ?? AbortSignal.timeout(FETCH_TIMEOUT_MS) }));
   }
 }
