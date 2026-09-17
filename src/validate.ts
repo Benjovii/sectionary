@@ -16,7 +16,7 @@ import * as cheerio from 'cheerio';
 import { Politeness, PoliteError, hostOf, lanes, laneFor, retryAfterMs, installFetchCrashGuard, type Lane } from './polite.js';
 
 installFetchCrashGuard();
-import { classifyIndustry, detectApps, detectPlatform, guessCountry, isAdult, isParked, looksLikeStore, storeSignals, type PlatformInfo } from './fingerprints.js';
+import { classifyIndustry, detectApps, detectPlatform, guessCountry, isAdult, isParked, isSpam, looksLikeStore, storeSignals, type PlatformInfo, type Signals } from './fingerprints.js';
 
 type Row = Record<string, string>;
 
@@ -31,6 +31,8 @@ type Verdict = {
   info: PlatformInfo;
   apps: string[];
   signals: number;
+  strong: number;
+  weak: number;
   industry: string;
   industryScore: number;
   industryRunnerUp: string | null;
@@ -98,7 +100,7 @@ const decode = (s: string) => cheerio.load(`<x>${s}</x>`)('x').text().replace(/\
 async function validateHost(polite: Politeness, host: string, platformHint: string | null, sources: string[]): Promise<Verdict> {
   const v: Verdict = {
     ok: false, reason: null, status: null, finalHost: null, brand: null, title: null, description: null, info: { ...EMPTY_INFO },
-    apps: [], signals: 0, industry: 'other', industryScore: 0, industryRunnerUp: null, country: null, collections: null, products: null, ts: Date.now(),
+    apps: [], signals: 0, strong: 0, weak: 0, industry: 'other', industryScore: 0, industryRunnerUp: null, country: null, collections: null, products: null, ts: Date.now(),
   };
   let html = '';
   const lane = laneFor(platformHint);
@@ -136,32 +138,22 @@ async function validateHost(polite: Politeness, host: string, platformHint: stri
   v.brand = ($('meta[property="og:site_name"]').attr('content') || '').trim().slice(0, 80) || (v.title ? v.title.split(/[|–—·:-]/)[0].trim().slice(0, 80) : null);
   v.info = detectPlatform(html);
   v.apps = detectApps(html);
-  v.signals = storeSignals(html);
+  const sig = storeSignals(html);
+  v.strong = sig.strong;
+  v.weak = sig.weak;
+  v.signals = sig.strong + sig.weak;
   v.country = guessCountry(v.finalHost || host, v.info);
+  if (isSpam(v.title, v.description)) {
+    v.reason = 'spam';
+    return v;
+  }
 
   const parked = isParked(html);
   if (parked || html.length < 1500) {
     v.reason = 'parked';
     return v;
   }
-  // Shopify: the catalogue feeds confirm the store and name its categories.
-  let collectionTitles: string[] = [];
-  if (v.info.platform === 'shopify') {
-    try {
-      const origin = `https://${v.finalHost || host}`;
-      const r = await laneFetch(polite, 'shopify', `${origin}/collections.json?limit=50`, 'application/json');
-      if (r.ok && (r.headers.get('content-type') || '').includes('json')) {
-        const j = (await r.json()) as { collections?: { title?: string; handle?: string }[] };
-        const cols = j.collections || [];
-        v.collections = cols.length;
-        collectionTitles = cols.map((c) => `${c.title || ''} ${(c.handle || '').replace(/-/g, ' ')}`);
-      }
-    } catch {
-      /* fine, the home page still counts */
-    }
-  }
-
-  if (!looksLikeStore(v.info.platform, v.signals, v.title, v.description, sources)) {
+  if (!looksLikeStore(v.info.platform, sig, v.title, v.description, sources)) {
     v.reason = 'not-store';
     return v;
   }
@@ -175,13 +167,32 @@ async function validateHost(polite: Politeness, host: string, platformHint: stri
     v.reason = 'adult';
     return v;
   }
-  const guess = classifyIndustry([
+  const buckets = [
     { text: meta, weight: 3 },
-    { text: collectionTitles.join(' '), weight: 2 },
     { text: navText, weight: 2 },
     { text: headings, weight: 1.5 },
     { text: body, weight: 0.5 },
-  ]);
+  ];
+  let guess = classifyIndustry(buckets);
+
+  // Shopify: when the home page alone gives a weak industry guess, the
+  // catalogue feed names the categories outright. One extra request, only
+  // when it can change the answer.
+  if (v.info.platform === 'shopify' && guess.score < 8) {
+    try {
+      const origin = `https://${v.finalHost || host}`;
+      const r = await laneFetch(polite, 'shopify', `${origin}/collections.json?limit=50`, 'application/json');
+      if (r.ok && (r.headers.get('content-type') || '').includes('json')) {
+        const j = (await r.json()) as { collections?: { title?: string; handle?: string }[] };
+        const cols = j.collections || [];
+        v.collections = cols.length;
+        const titles = cols.map((c) => `${c.title || ''} ${(c.handle || '').replace(/-/g, ' ')}`).join(' ');
+        guess = classifyIndustry([...buckets, { text: titles, weight: 2 }]);
+      }
+    } catch {
+      /* fine, the home page still counts */
+    }
+  }
   v.industry = guess.industry;
   v.industryScore = Math.round(guess.score * 10) / 10;
   v.industryRunnerUp = guess.runnerUp;
@@ -190,8 +201,8 @@ async function validateHost(polite: Politeness, host: string, platformHint: stri
 }
 
 // ---- Main -------------------------------------------------------------------
-const HEADER = ['host', 'final_host', 'brand', 'title', 'platform', 'builder', 'theme', 'theme_version', 'currency', 'country', 'locale', 'industry',
-  'industry_score', 'industry_runner_up', 'apps', 'collections', 'store_signals', 'tranco_rank', 'mentions', 'sources', 'validated_at'];
+export const HEADER = ['host', 'final_host', 'brand', 'title', 'platform', 'builder', 'theme', 'theme_version', 'currency', 'country', 'locale', 'industry',
+  'industry_score', 'industry_runner_up', 'apps', 'collections', 'store_signals', 'strong_signals', 'tranco_rank', 'mentions', 'sources', 'validated_at'];
 
 async function main() {
   const args = process.argv.slice(2);
@@ -202,7 +213,7 @@ async function main() {
   const input = opt('--in', 'seeds/stores.csv');
   const target = Number(opt('--target', '1000'));
   const topup = !args.includes('--no-topup');
-  const workers = Number(opt('--workers', '8'));
+  const workers = Number(opt('--workers', '12'));
 
   await mkdir('seeds', { recursive: true });
   const polite = await Politeness.fromConfig();
@@ -223,14 +234,22 @@ async function main() {
   if (existsSync(cachePath)) {
     try {
       const srcOf = new Map(queue.map((r) => [r.host, r.sources ? r.sources.split('|') : []]));
-      for (const [h, v] of Object.entries(JSON.parse(await readFile(cachePath, 'utf8')) as Record<string, Verdict>)) {
+      for (const [h, cached] of Object.entries(JSON.parse(await readFile(cachePath, 'utf8')) as Record<string, Verdict>)) {
+        let v = cached;
         // Throttling and unreachable robots are about the moment, not the
         // store: never trust them from the cache.
         const transient = v.status === 429 || v.reason === 'rate-limited' || v.reason === 'robots-unreachable';
         if (transient || Date.now() - v.ts >= 7 * 86_400_000) continue;
-        // Re-judge old "not a store" verdicts with the current rule; if it now
-        // passes, drop the entry so the host is validated in full.
-        if (v.reason === 'not-store' && looksLikeStore(v.info.platform, v.signals, v.title, v.description, srcOf.get(h) || [])) continue;
+        // Verdicts from before strong/weak signals were split carry no
+        // breakdown: re-validate those in full.
+        if (typeof v.strong !== 'number') continue;
+        const sig: Signals = { strong: v.strong, weak: v.weak };
+        const passes = looksLikeStore(v.info.platform, sig, v.title, v.description, srcOf.get(h) || []);
+        // Re-judge with the current rule in both directions: an old "not a
+        // store" that now passes is dropped so the host is validated in full;
+        // an old pass that now fails becomes a rejection from cached facts.
+        if (v.reason === 'not-store' && passes) continue;
+        if (v.ok && !passes) v = { ...v, ok: false, reason: isSpam(v.title, v.description) ? 'spam' : 'not-store' };
         if (v.reason === 'dead' && v.status && [401, 403, 503].includes(v.status)) v.reason = 'blocked';
         cache.set(h, v);
       }
@@ -281,12 +300,12 @@ async function main() {
   const toLine = ({ row, v }: { row: Row; v: Verdict }) =>
     csvLine([row.host, v.finalHost || '', v.brand || row.brand || '', v.title || '', v.info.platform || '', v.info.builder || '', v.info.theme || '',
       v.info.themeVersion || '', v.info.currency || '', guessCountry(v.finalHost || row.host, v.info) || '', v.info.locale || '', v.industry, v.industryScore, v.industryRunnerUp || '',
-      v.apps.join('|'), v.collections ?? '', v.signals, row.tranco_rank || '', row.mentions || '', row.sources || '', new Date(v.ts).toISOString().slice(0, 10)]);
+      v.apps.join('|'), v.collections ?? '', v.signals, v.strong, row.tranco_rank || '', row.mentions || '', row.sources || '', new Date(v.ts).toISOString().slice(0, 10)]);
   await writeFile('seeds/stores.validated.csv', [csvLine(HEADER), ...accepted.map(toLine)].join('\n') + '\n', 'utf8');
   await writeFile(
     'seeds/rejected.csv',
-    [csvLine(['host', 'reason', 'status', 'final_host', 'platform', 'store_signals', 'title']),
-      ...rejected.map(({ row, v }) => csvLine([row.host, v.reason || '', v.status ?? '', v.finalHost || '', v.info.platform || '', v.signals, v.title || '']))].join('\n') + '\n',
+    [csvLine(['host', 'reason', 'status', 'final_host', 'platform', 'store_signals', 'strong_signals', 'title']),
+      ...rejected.map(({ row, v }) => csvLine([row.host, v.reason || '', v.status ?? '', v.finalHost || '', v.info.platform || '', v.signals, v.strong ?? '', v.title || '']))].join('\n') + '\n',
     'utf8',
   );
 

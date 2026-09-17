@@ -12,7 +12,8 @@
     "polite-check": "tsx src/polite-check.ts",
     "harvest": "tsx src/harvest.ts",
     "validate": "tsx src/validate.ts",
-    "seeds-report": "node scripts/seeds-report.mjs"
+    "seeds-report": "node scripts/seeds-report.mjs",
+    "export-stores": "tsx src/export-stores.ts"
   },
   "dependencies": {
     "cheerio": "^1.2.0",

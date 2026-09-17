@@ -29,7 +29,7 @@ export const BOT_TOKEN = `${BOT_NAME}/${BOT_VERSION}${BOT_INFO_URL ? ` (+${BOT_I
 export const DEFAULT_INTERVAL_MS = 1000;
 export const OWN_SITE_INTERVAL_MS = 500;
 export const MAX_CRAWL_DELAY_MS = 10_000;
-export const FETCH_TIMEOUT_MS = 20_000;
+export const FETCH_TIMEOUT_MS = 12_000;
 
 export const DESKTOP_BASE_UA =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36';
@@ -59,7 +59,7 @@ export type Lane = 'shopify' | 'other';
 export class Lanes {
   private inflight: Record<Lane, number> = { shopify: 0, other: 0 };
   private nextAt: Record<Lane, number> = { shopify: 0, other: 0 };
-  private readonly limits: Record<Lane, { max: number; gapMs: number }> = { shopify: { max: 3, gapMs: 500 }, other: { max: 8, gapMs: 120 } };
+  private readonly limits: Record<Lane, { max: number; gapMs: number }> = { shopify: { max: 4, gapMs: 400 }, other: { max: 10, gapMs: 100 } };
 
   async run<T>(lane: Lane, fn: () => Promise<T>): Promise<T> {
     const lim = this.limits[lane];

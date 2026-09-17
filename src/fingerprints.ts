@@ -161,37 +161,53 @@ export function detectApps(html: string): string[] {
   return APPS.filter(([, re]) => re.test(html)).map(([n]) => n);
 }
 
-export const STORE_SIGNALS = [
-  'add to cart', 'add-to-cart', 'addtocart', 'href="/cart', 'checkout', '"@type":"product"', '"@type": "product"', 'data-product',
-  'product-form', '/products/', '/collections/', '/product/', 'buy now', 'shop now', 'shopping bag', 'shopping cart', 'your cart', 'basket',
-  'free shipping', 'sold out', 'add to bag', 'pricecurrency', 'itemlistelement', 'shop all',
+// Strong signals only appear on pages that sell things; weak ones also show
+// up on publishers and services ("checkout" in a subscription flow, "basket"
+// in a newsletter, "shop now" in an ad).
+export const STRONG_SIGNALS = [
+  'add to cart', 'add-to-cart', 'addtocart', 'add to bag', 'product-form', '"@type":"product"', '"@type": "product"', 'data-product',
+  '/products/', '/collections/', 'shopping cart', 'your cart', 'sold out', 'pricecurrency', 'href="/cart',
 ];
+export const WEAK_SIGNALS = ['checkout', '/product/', 'buy now', 'shop now', 'shopping bag', 'basket', 'free shipping', 'itemlistelement', 'shop all'];
+export const STORE_SIGNALS = [...STRONG_SIGNALS, ...WEAK_SIGNALS];
 
-export function storeSignals(html: string): number {
+export type Signals = { strong: number; weak: number };
+
+export function storeSignals(html: string): Signals {
   const low = html.toLowerCase();
-  return STORE_SIGNALS.filter((s) => low.includes(s)).length;
+  return { strong: STRONG_SIGNALS.filter((s) => low.includes(s)).length, weak: WEAK_SIGNALS.filter((s) => low.includes(s)).length };
 }
 
 /**
  * Big brands on custom stacks often ship a JavaScript shell with almost no
  * server-rendered text, so the body signals miss them. Their title and
- * description still say what they are: "Official Online Store", "Shop
- * online", "Online Shopping for Watches".
+ * description still say what they are, in so many words: "Official Online
+ * Store", "Shop online", "Online Shopping for Watches". A bare "shop" or
+ * "store" is not enough ("Get Paid to Shop", "App Store").
  */
-const STORE_TITLE = /\b(online (shop|store|shopping)|official (online )?(shop|store|site & store|website & store)|shop online|buy online|e-?shop|webshop|shop now|store\b|shop\b|boutique)\b/i;
+const STORE_TITLE = /\b(online (shop|store|shopping|boutique)|official (online )?(shop|store|website & store|site & store)|shop online|buy online|e-?shop|webshop|web store)\b/i;
 export function titleSaysStore(title: string | null, description: string | null): boolean {
   return STORE_TITLE.test(`${title || ''} ${description || ''}`);
+}
+
+// Hijacked or expired domains serving gambling spam, app-store redirects,
+// parking pages with a shop-like title.
+const SPAM = /\b(slot ?gacor|slot online|slot777|togel|judi|sbobet|casino|poker online|deposit otomatis|situs slot|link alternatif|bet365|1xbet)\b|app store$|apps\.apple\.com/i;
+export function isSpam(title: string | null, description: string | null): boolean {
+  return SPAM.test(`${title || ''} ${description || ''}`);
 }
 
 export const STORE_SOURCES = new Set(['ecomm', 'gallery', 'catalog']);
 
 /** The store verdict, kept pure so cached facts can be re-judged without refetching. */
-export function looksLikeStore(platform: string | null, signals: number, title: string | null, description: string | null, sources: string[]): boolean {
-  if (platform && ECOM_PLATFORMS.has(platform)) return true;
-  if (signals >= 3) return true;
+export function looksLikeStore(platform: string | null, signals: Signals, title: string | null, description: string | null, sources: string[]): boolean {
+  if (isSpam(title, description)) return false;
   const listedAsStore = sources.some((s) => STORE_SOURCES.has(s));
-  if (titleSaysStore(title, description) && (signals >= 1 || listedAsStore)) return true;
-  return listedAsStore && signals >= 2;
+  if (platform && ECOM_PLATFORMS.has(platform)) return signals.strong >= 1 || signals.weak >= 2 || listedAsStore || titleSaysStore(title, description);
+  if (signals.strong >= 2) return true;
+  if (signals.strong >= 1 && signals.weak >= 2) return true;
+  if (titleSaysStore(title, description) && (signals.strong >= 1 || signals.weak >= 1 || listedAsStore)) return true;
+  return listedAsStore && signals.strong >= 1;
 }
 
 const PARKED = ['this domain is for sale', 'domain for sale', 'buy this domain', 'sedoparking', 'hugedomains', 'afternic', 'dan.com', 'parked free', 'domain is parked', 'godaddy.com/domainsearch', 'namecheap.com/domains', 'coming soon', 'under construction', 'website is temporarily unavailable', 'account suspended'];
