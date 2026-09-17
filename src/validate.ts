@@ -227,13 +227,30 @@ async function main() {
   const seen = new Set<string>();
   const queue: Row[] = [];
   for (const r of parseCsv(await readFile(input, 'utf8'))) if (r.host && !seen.has(r.host)) { seen.add(r.host); queue.push(r); }
+  // The harvester's liveness probe already visited the ranked candidates:
+  // a host it saw answer 404 or a server error is dead, no need to ask again.
+  // (403, 429 and timeouts stay in: those can be the moment, not the store.)
+  const harvestDead = new Set<string>();
+  if (existsSync('seeds/live-cache.json')) {
+    try {
+      for (const [h, l] of Object.entries(JSON.parse(await readFile('seeds/live-cache.json', 'utf8')) as Record<string, { alive: boolean; status: number | null }>)) {
+        if (!l.alive && l.status && (l.status === 404 || l.status === 410 || l.status >= 500)) harvestDead.add(h);
+      }
+    } catch {
+      /* no harvest cache */
+    }
+  }
   if (topup && existsSync('seeds/candidates.csv')) {
-    const rest = parseCsv(await readFile('seeds/candidates.csv', 'utf8')).filter((r) => r.host && !seen.has(r.host));
+    const rest = parseCsv(await readFile('seeds/candidates.csv', 'utf8')).filter((r) => r.host && !seen.has(r.host) && !harvestDead.has(r.host));
     const fromStoreSource = (r: Row) => /\b(ecomm|gallery|catalog)\b/.test(r.sources || '');
     const ranked = (r: Row) => Boolean(r.tranco_rank);
-    const tier = (r: Row) => (fromStoreSource(r) && ranked(r) ? 0 : fromStoreSource(r) ? 1 : ranked(r) ? 2 : 3);
+    // Gallery-listed stores the harvester never probed (unranked) pass at the
+    // highest rate; gallery-listed ranked hosts were mostly probed and
+    // rejected already; article-only hosts come last.
+    const tier = (r: Row) => (fromStoreSource(r) && !ranked(r) ? 0 : fromStoreSource(r) ? 1 : ranked(r) ? 2 : 3);
     rest.sort((a, b) => tier(a) - tier(b));
     for (const r of rest) { seen.add(r.host); queue.push(r); }
+    if (harvestDead.size) console.log(`Skipping ${harvestDead.size} host(s) the harvester saw answer 404 or a server error.`);
   }
   console.log(`${queue.length} hosts queued (${input} first, then candidates). Target: ${target} validated stores.`);
 
