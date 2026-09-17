@@ -81,7 +81,9 @@ export class Lanes {
   private nextAt: Record<Lane, number> = { shopify: 0, other: 0 };
   // Shopify answers 429 (robots.txt included) at two requests a second from
   // one IP across all its stores, measured 2026-09-17. One a second is clean.
-  private readonly limits: Record<Lane, { max: number; gapMs: number }> = { shopify: { max: 1, gapMs: 1000 }, other: { max: 8, gapMs: 120 } };
+  // The general lane is gentler than it looks: gallery entries carry no
+  // platform hint, so many Shopify stores travel through it.
+  private readonly limits: Record<Lane, { max: number; gapMs: number }> = { shopify: { max: 1, gapMs: 1000 }, other: { max: 4, gapMs: 300 } };
 
   async run<T>(lane: Lane, fn: () => Promise<T>): Promise<T> {
     const lim = this.limits[lane];
@@ -106,7 +108,7 @@ export class Lanes {
 export const lanes = new Lanes();
 
 export function laneFor(platformHint: string | null | undefined): Lane {
-  return (platformHint || '').toLowerCase() === 'shopify' ? 'shopify' : 'other';
+  return /shopify/i.test(platformHint || '') ? 'shopify' : 'other';
 }
 
 /** Seconds to wait after a 429, from Retry-After when present, capped. */
@@ -226,13 +228,14 @@ export class Politeness {
         await sleep(Math.max(retryAfterMs(res, 10, 60), attempt * 15_000));
         res = await lanes.run(lane, get);
       }
-      if (res.status === 429 && lane === 'shopify') {
-        // Still throttled. Every Shopify store ships the same robots.txt
-        // unless the merchant edits it, and that file allows the home page
-        // and the catalogue feeds, which is all the validator asks for. Assume
-        // it rather than lose the store; the page request will say 429 itself
-        // if the platform means it.
-        return { source: 'none', isAllowed: (u) => !/\/(checkout|account|admin|cart|orders|search)\b/.test(new URL(u).pathname), delayMs: null };
+      if (res.status === 429) {
+        // Still throttled on robots.txt itself. Nearly every store on a hosted
+        // platform ships that platform's standard robots.txt, which allows the
+        // home page and catalogue feeds, all the validator asks for. Assume the
+        // conservative reading rather than lose the store; the page request
+        // will say 429 itself if the throttle is real, and that is retried
+        // slowly later. The capture crawler (a real browser) re-reads robots.
+        return { source: 'none', isAllowed: (u) => !/\/(checkout|account|admin|cart|orders|search|login|customer)\b/.test(new URL(u).pathname), delayMs: null };
       }
       if (res.status === 200) {
         const txt = await res.text();
