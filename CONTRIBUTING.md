@@ -25,20 +25,40 @@ password manager, not chat.
 
 ## Branches
 
+One branch per person: `ben`, `buna`, `leke`. It works because each of us owns
+different folders, so our branches almost never touch the same file.
+
 - `main` is always deployable. Nobody commits to it directly.
-- Branch from `main`, name it `lane-<a|b|c>/sec-<task number>-<short-name>`,
-  for example `lane-c/sec-16-url-filters`.
-- One task, one branch, one pull request. Keep a branch alive three days at
-  most; split the task on the board if it needs longer.
-- Rebase on `main` before you open the PR and again before you merge:
-  `git fetch origin && git rebase origin/main`.
-- Squash-merge, delete the branch.
+- You work on your own branch, all the time. Commit as often as you like, one
+  task per commit where you can, with the task in the message:
+  `SEC-16 filters: multi-select for platform`.
+- **Stay current.** At least every morning, and always before you open a pull
+  request, bring `main` into your branch:
+
+  ```bash
+  git checkout buna        # your branch
+  git pull origin main     # a normal merge, no rebase, no force-push
+  ```
+
+- **Merge to `main` at least every Friday**, in the merge window, with CI
+  green. Never sit on more than a week of work: a finished task cannot reach
+  `main` while an unfinished one shares its branch, so keep half-built work
+  behind a flag or out of the way rather than holding the branch back.
+- Merge with **"Create a merge commit"**, not squash. Your branch then shares
+  history with `main` and simply carries on; you never reset it and never
+  force-push. Do not delete your branch after the merge.
+- **The one exception:** a change to `web/src/contracts/` gets its own short
+  branch from `main`, named `contract/<what>`, and its own pull request. All
+  three of us review it and it merges the same day, so it must not wait for
+  anyone's week of work. Squash it and delete the branch when it merges. A
+  hotfix for something broken on `main` works the same way: `fix/<what>`.
 
 ## Pull requests
 
-- Title starts with the task: `SEC-16 URL-synced filters`.
+- Title lists the tasks it contains: `SEC-15 SEC-16 wall and filters`. Put
+  one line per task in the description so the board links to the code.
 - Touch only your lane's folders. If the diff shows another lane's folder,
-  split the PR and ask that lane's owner to review their part.
+  take that change out and ask that lane's owner to make it.
 - A PR that touches `web/src/contracts/` carries the `contract` label, changes
   nothing else except docs and fixtures, and is reviewed by all three lanes.
 - CI must be green: crawler type-check, web type-check, web build.

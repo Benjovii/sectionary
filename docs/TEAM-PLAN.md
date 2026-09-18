@@ -58,9 +58,12 @@ as it happens before work starts.
      the same network break it for both.
    - Each package has its own `package.json` and lockfile (`/`, `web/`,
      `platform/`), so dependency changes do not conflict across lanes.
-5. **Small branches, merged often.** See [CONTRIBUTING.md](../CONTRIBUTING.md).
-   A branch that lives longer than three days is a merge conflict being saved
-   up.
+5. **One branch per person, merged every week.** `ben`, `buna`, `leke`. It is
+   safe because of rule 1: our branches almost never touch the same file. Pull
+   `main` into your branch every morning, merge your branch into `main` at
+   least every Friday, and you never reset or force-push anything. Contract
+   changes are the one exception: they get their own short branch so they can
+   merge the same day. Details in [CONTRIBUTING.md](../CONTRIBUTING.md).
 
 ## Milestones
 

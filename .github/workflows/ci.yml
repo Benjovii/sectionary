@@ -1,9 +1,11 @@
 name: CI
 
+# Runs on every push to main and to the three personal branches, so you see
+# red or green long before Friday's pull request, and on every pull request.
 on:
   pull_request:
   push:
-    branches: [main]
+    branches: [main, ben, buna, leke]
 
 concurrency:
   group: ci-${{ github.ref }}
