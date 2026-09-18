@@ -261,6 +261,13 @@ export class Politeness {
     }
   }
 
+  /** A retry later in the same run should ask for robots.txt again, not reuse a remembered failure. */
+  async forgetFailure(url: string): Promise<void> {
+    const origin = new URL(url).origin;
+    const p = this.rules.get(origin);
+    if (p && (await p).source === 'error') this.rules.delete(origin);
+  }
+
   /** May we request this URL? Own sites bypass robots, never the block list. */
   async allowed(url: string, lane: Lane = 'other'): Promise<Verdict> {
     const host = hostOf(url);

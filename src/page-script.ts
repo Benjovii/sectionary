@@ -307,6 +307,33 @@ export function detectSite(): SiteInfo {
   };
 }
 
+/**
+ * Same-origin links on the rendered page, in document order, without
+ * fragments or duplicates. The crawl worker uses the home page's links to find
+ * a store's collection and product pages on platforms that publish no feed.
+ */
+export function collectLinks(max: number): string[] {
+  const origin = location.origin;
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const a of Array.from(document.querySelectorAll('a[href]'))) {
+    let u: URL;
+    try {
+      u = new URL((a as HTMLAnchorElement).href, location.href);
+    } catch {
+      continue;
+    }
+    if (u.origin !== origin) continue;
+    u.hash = '';
+    const key = u.origin + u.pathname.replace(/\/+$/, '') + u.search;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(u.toString());
+    if (out.length >= max) break;
+  }
+  return out;
+}
+
 export function pageMeta(): PageMeta {
   const q = (s: string) => document.querySelector(s);
   const content = (s: string) => {

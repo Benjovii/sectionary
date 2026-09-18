@@ -4,6 +4,35 @@
 // filtered by robots.txt (Shopify's default disallows /cart, /checkout and
 // /account, so those drop out on third-party stores).
 import { Politeness, PoliteError } from './polite.js';
+import { pageType } from './capture-page.js';
+
+/**
+ * Page discovery for stores with no catalogue feed (everything that is not
+ * Shopify, and Shopify stores that turned the feed off): pick collection and
+ * product pages from the links on the rendered home page. Links come in
+ * document order, so the first matches are the ones the store itself puts
+ * forward (navigation, featured products).
+ */
+export function chooseFromLinks(links: string[], limits = { collections: 2, products: 2 }): string[] {
+  const collections: string[] = [];
+  const products: string[] = [];
+  let cart: string | null = null;
+  for (const link of links) {
+    let u: URL;
+    try {
+      u = new URL(link);
+    } catch {
+      continue;
+    }
+    // Filter, sort and tracking variants of a page are the same page.
+    if (u.search && /(sort|filter|page|utm_|variant|q=)/i.test(u.search)) continue;
+    const t = pageType(u);
+    if (t === 'collection' && collections.length < limits.collections) collections.push(u.toString());
+    else if (t === 'product' && products.length < limits.products) products.push(u.toString());
+    else if (t === 'cart' && !cart) cart = u.toString();
+  }
+  return [...collections, ...products, ...(cart ? [cart] : [])];
+}
 
 export type Discovery = {
   shopify: boolean;
@@ -13,7 +42,7 @@ export type Discovery = {
 
 async function getJson(polite: Politeness, url: string): Promise<any | null> {
   try {
-    const r = await polite.fetch(url, { headers: { accept: 'application/json' } });
+    const r = await polite.fetch(url, { headers: { accept: 'application/json' } }, 'shopify');
     if (!r.ok) return null;
     if (!(r.headers.get('content-type') || '').includes('json')) return null;
     return await r.json();
@@ -50,7 +79,7 @@ export async function discoverShopify(
 
   const urls: string[] = [];
   for (const url of candidates) {
-    const v = await polite.allowed(url);
+    const v = await polite.allowed(url, 'shopify');
     if (v.ok) urls.push(url);
     else skipped.push({ url, reason: v.reason });
   }
