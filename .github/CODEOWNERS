@@ -1,7 +1,7 @@
 # Who reviews what. The last matching line wins. See docs/TEAM-PLAN.md.
 
-# Lane C · Web (Leke). Add Leke's GitHub handle and uncomment:
-# /web/                   @leke-handle-here
+# Lane C · Web (Leke): everything in web/ that a later line does not claim
+/web/                     @lekeeeeee
 
 # Lane B · Platform (Buna)
 /platform/                @Buna-Hashimi
@@ -18,6 +18,6 @@
 /fixtures/manifests/      @Benjovii
 
 # Shared: every lane reviews a contract change
-/web/src/contracts/       @Benjovii @Buna-Hashimi
+/web/src/contracts/       @Benjovii @Buna-Hashimi @lekeeeeee
 /docs/                    @Benjovii
 /.github/                 @Benjovii
