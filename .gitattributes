@@ -1,0 +1,11 @@
+# One line-ending convention for everyone (Windows, Mac, Linux): LF in the
+# repository and in the working tree. Without this, git converts per machine
+# and whole files show up as changed in pull requests.
+* text=auto eol=lf
+
+*.jpg binary
+*.jpeg binary
+*.png binary
+*.webp binary
+*.ico binary
+*.zip binary
