@@ -1,28 +1,5 @@
-/** One captured block, as exported by scripts/export-sample.mjs (and later by the API). */
-export type Block = {
-  id: string;
-  host: string;
-  pageType: string;
-  pageUrl: string;
-  pageTitle: string | null;
-  viewport: "desktop" | "mobile";
-  typeHint: string;
-  headline: string | null;
-  bg: string;
-  /** CSS pixel size of the block: the image may be 2x on mobile. */
-  w: number;
-  h: number;
-  src: string;
-  platform: string | null;
-  theme: string | null;
-  apps: string[];
-  buttons: number;
-  images: number;
-  videos: number;
-  text: string;
-};
-
-export type BlockSet = { generatedAt: string; blocks: Block[] };
+// The Block shape is a cross-lane contract: it lives in src/contracts.
+export type { Block, BlockSet } from "@/contracts/block";
 
 export const PAGE_TYPE_LABEL: Record<string, string> = {
   home: "Home",

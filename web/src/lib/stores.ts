@@ -1,26 +1,5 @@
-/** One validated store, as exported by scripts/export-stores.mjs (later: the API). */
-export type Store = {
-  n: number;
-  host: string;
-  brand: string;
-  title: string | null;
-  platform: string | null;
-  builder: string | null;
-  theme: string | null;
-  themeVersion: string | null;
-  currency: string | null;
-  country: string | null;
-  industry: string;
-  industryScore: number;
-  apps: string[];
-  collections: number | null;
-  rank: number | null;
-  mentions: number;
-  sources: string[];
-  validatedAt: string | null;
-};
-
-export type StoreSet = { generatedAt: string; stores: Store[] };
+// The Store shape is a cross-lane contract: it lives in src/contracts.
+export type { Store, StoreSet } from "@/contracts/store";
 
 export const INDUSTRY_LABEL: Record<string, string> = {
   "fashion-apparel": "Fashion & apparel",

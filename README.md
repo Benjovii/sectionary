@@ -5,9 +5,21 @@ A reference library for real websites and online stores, cut into **blocks**
 width, with the platform, theme and apps behind each store detected
 automatically. Mobbin for storefronts, at block level, at scale.
 
-The plan, name research and session log live in the vault:
-`D:\Ben's Vault\To Do's\New APP Mobbin Recreate\`. Work is tracked on the
-private Next Level space **SEC**.
+Live preview: https://sectionary-pink.vercel.app
+
+## Start here
+
+| If you want to know | Read |
+|---|---|
+| Who does what, the milestones, how we avoid collisions | [docs/TEAM-PLAN.md](docs/TEAM-PLAN.md) |
+| Branches, pull requests, setup, the rules | [CONTRIBUTING.md](CONTRIBUTING.md) |
+| The shapes that cross lanes and how to change them | [docs/CONTRACTS.md](docs/CONTRACTS.md) |
+| What we are building and why | [docs/PLAN.md](docs/PLAN.md) |
+| The name question | [docs/NAMES.md](docs/NAMES.md) |
+
+Work is tracked on the private Next Level space **SEC**. Three lanes: Capture
+(`src/`, Ben), Platform (`platform/` and the API routes, Buna), Web (`web/`,
+Leke).
 
 ## Layout
 

@@ -5,6 +5,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { STORES_SRC } from "@/lib/data-source";
 import { industryLabel, platformLabel, rankLabel, type Store, type StoreSet } from "@/lib/stores";
 
 type Sort = "rank" | "brand" | "platform" | "industry";
@@ -43,7 +44,7 @@ function Select({ value, onChange, label, options }: { value: string; onChange: 
   );
 }
 
-export function StoresTable({ src = "/sample/stores.json" }: { src?: string }) {
+export function StoresTable({ src = STORES_SRC }: { src?: string }) {
   const [data, setData] = useState<StoreSet | null>(null);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();

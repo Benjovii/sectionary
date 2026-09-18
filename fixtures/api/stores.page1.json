@@ -1,0 +1,677 @@
+{
+  "items": [
+    {
+      "n": 1,
+      "host": "store.duolingo.com",
+      "brand": "Duolingo",
+      "title": "Duolingo Store",
+      "platform": "shopify",
+      "builder": null,
+      "theme": "Debut",
+      "themeVersion": "17.14.0",
+      "currency": "EUR",
+      "country": "EU",
+      "industry": "fashion-apparel",
+      "industryScore": 7,
+      "apps": [
+        "Klaviyo",
+        "Shop Pay"
+      ],
+      "collections": 6,
+      "rank": 477,
+      "mentions": 1,
+      "sources": [
+        "ecomm"
+      ],
+      "validatedAt": "2026-09-17"
+    },
+    {
+      "n": 2,
+      "host": "nike.com",
+      "brand": "Nike.com",
+      "title": "Nike. Just Do It. Nike.com",
+      "platform": "nextjs",
+      "builder": null,
+      "theme": null,
+      "themeVersion": null,
+      "currency": null,
+      "country": "US",
+      "industry": "fashion-apparel",
+      "industryScore": 24,
+      "apps": [
+        "Meta Pixel"
+      ],
+      "collections": null,
+      "rank": 638,
+      "mentions": 1,
+      "sources": [
+        "ecomm"
+      ],
+      "validatedAt": "2026-09-17"
+    },
+    {
+      "n": 3,
+      "host": "de.stance.com",
+      "brand": "Stance Europe",
+      "title": "Haltung: Socken, Unterwäsche und Bekleidung. Wohlfühlen, Gutes tun. – Stance Europe",
+      "platform": "shopify",
+      "builder": null,
+      "theme": "Sleek",
+      "themeVersion": "2.0.1",
+      "currency": "EUR",
+      "country": "EU",
+      "industry": "fashion-apparel",
+      "industryScore": 24,
+      "apps": [
+        "Klaviyo",
+        "Gorgias",
+        "Yotpo",
+        "Microsoft Clarity",
+        "Wishlist Plus",
+        "Shop Pay",
+        "Cookie consent (Pandectes)",
+        "Nosto"
+      ],
+      "collections": 50,
+      "rank": 1008,
+      "mentions": 1,
+      "sources": [
+        "ecomm"
+      ],
+      "validatedAt": "2026-09-17"
+    },
+    {
+      "n": 4,
+      "host": "barnesandnoble.com",
+      "brand": "Barnes & Noble",
+      "title": "Online Bookstore: Books, NOOK ebooks, Music, Movies & Toys | Barnes & Noble®",
+      "platform": "shopify",
+      "builder": null,
+      "theme": null,
+      "themeVersion": null,
+      "currency": null,
+      "country": null,
+      "industry": "kids-baby",
+      "industryScore": 16,
+      "apps": [
+        "Shop Pay"
+      ],
+      "collections": 50,
+      "rank": 2153,
+      "mentions": 1,
+      "sources": [
+        "ecomm"
+      ],
+      "validatedAt": "2026-09-17"
+    },
+    {
+      "n": 5,
+      "host": "wayfair.com",
+      "brand": "Wayfair",
+      "title": "Wayfair.com - Online Home Store for Furniture, Decor, Outdoors & More",
+      "platform": "nextjs",
+      "builder": null,
+      "theme": null,
+      "themeVersion": null,
+      "currency": null,
+      "country": null,
+      "industry": "home-furniture",
+      "industryScore": 42,
+      "apps": [
+        "Klarna"
+      ],
+      "collections": null,
+      "rank": 2541,
+      "mentions": 1,
+      "sources": [
+        "ecomm"
+      ],
+      "validatedAt": "2026-09-17"
+    },
+    {
+      "n": 6,
+      "host": "minecraftshop.com",
+      "brand": "Official Minecraft Shop",
+      "title": "Minecraft Official Shop | Clothing, Accessories, and Plush Gifts | Official Minecraft Shop",
+      "platform": "shopify",
+      "builder": null,
+      "theme": "Snow Blizzard",
+      "themeVersion": "3.0.2",
+      "currency": "USD",
+      "country": "US",
+      "industry": "fashion-apparel",
+      "industryScore": 26,
+      "apps": [
+        "Klaviyo",
+        "Hotjar",
+        "Wishlist Plus",
+        "Shop Pay",
+        "PayPal"
+      ],
+      "collections": null,
+      "rank": 2840,
+      "mentions": 1,
+      "sources": [
+        "ecomm"
+      ],
+      "validatedAt": "2026-09-17"
+    },
+    {
+      "n": 7,
+      "host": "ouraring.com",
+      "brand": "Oura Ring",
+      "title": "Oura Ring. Smart Ring for Fitness, Stress, Sleep & Health.",
+      "platform": "nextjs",
+      "builder": null,
+      "theme": null,
+      "themeVersion": null,
+      "currency": null,
+      "country": null,
+      "industry": "jewellery-watches",
+      "industryScore": 29.5,
+      "apps": [
+        "Klarna",
+        "Zendesk",
+        "Cookie consent (OneTrust)",
+        "Sentry"
+      ],
+      "collections": null,
+      "rank": 3435,
+      "mentions": 1,
+      "sources": [
+        "ecomm"
+      ],
+      "validatedAt": "2026-09-17"
+    },
+    {
+      "n": 8,
+      "host": "athleta.gap.com",
+      "brand": "Shop Athleta for Women's Yoga Clothing, Technical Athletic Clothing, and Athleis",
+      "title": "Shop Athleta for Women's Yoga Clothing, Technical Athletic Clothing, and Athleisure",
+      "platform": "nextjs",
+      "builder": null,
+      "theme": null,
+      "themeVersion": null,
+      "currency": null,
+      "country": "US",
+      "industry": "sports-outdoor",
+      "industryScore": 15,
+      "apps": [
+        "Attentive",
+        "Klarna",
+        "Afterpay",
+        "Cookie consent (OneTrust)",
+        "Optimizely"
+      ],
+      "collections": null,
+      "rank": 3500,
+      "mentions": 1,
+      "sources": [
+        "search"
+      ],
+      "validatedAt": "2026-09-17"
+    },
+    {
+      "n": 9,
+      "host": "bananarepublic.gap.com",
+      "brand": "Banana Republic",
+      "title": "Banana Republic | Timeless Style for Women’s & Men’s Clothing",
+      "platform": "nextjs",
+      "builder": null,
+      "theme": null,
+      "themeVersion": null,
+      "currency": null,
+      "country": "US",
+      "industry": "kids-baby",
+      "industryScore": 6,
+      "apps": [
+        "Attentive",
+        "Klarna",
+        "Afterpay",
+        "Cookie consent (OneTrust)",
+        "Optimizely"
+      ],
+      "collections": null,
+      "rank": 3500,
+      "mentions": 1,
+      "sources": [
+        "ecomm"
+      ],
+      "validatedAt": "2026-09-17"
+    },
+    {
+      "n": 10,
+      "host": "gap.com",
+      "brand": "Gap Individual style for Women's, Men's, Baby & Kids' Clothing",
+      "title": "Gap Individual style for Women's, Men's, Baby & Kids' Clothing",
+      "platform": "nextjs",
+      "builder": null,
+      "theme": null,
+      "themeVersion": null,
+      "currency": null,
+      "country": "US",
+      "industry": "kids-baby",
+      "industryScore": 19,
+      "apps": [
+        "Klarna",
+        "Afterpay",
+        "Cookie consent (OneTrust)",
+        "Optimizely"
+      ],
+      "collections": null,
+      "rank": 3500,
+      "mentions": 1,
+      "sources": [
+        "ecomm"
+      ],
+      "validatedAt": "2026-09-17"
+    },
+    {
+      "n": 11,
+      "host": "store.dji.com",
+      "brand": "DJI Store",
+      "title": "DJI Store - Drones, Cameras, Gimbals and Power Stations (United States)",
+      "platform": null,
+      "builder": null,
+      "theme": null,
+      "themeVersion": null,
+      "currency": null,
+      "country": null,
+      "industry": "tech-gadgets",
+      "industryScore": 21.5,
+      "apps": [
+        "Google Tag Manager",
+        "Klarna"
+      ],
+      "collections": null,
+      "rank": 3824,
+      "mentions": 1,
+      "sources": [
+        "ecomm"
+      ],
+      "validatedAt": "2026-09-17"
+    },
+    {
+      "n": 12,
+      "host": "farfetch.com",
+      "brand": "FARFETCH",
+      "title": "FARFETCH | The Global Destination For Modern Luxury",
+      "platform": "nextjs",
+      "builder": null,
+      "theme": null,
+      "themeVersion": null,
+      "currency": null,
+      "country": "US",
+      "industry": "fashion-apparel",
+      "industryScore": 25,
+      "apps": [
+        "Google Analytics",
+        "Klarna",
+        "Afterpay"
+      ],
+      "collections": null,
+      "rank": 3857,
+      "mentions": 1,
+      "sources": [
+        "ecomm"
+      ],
+      "validatedAt": "2026-09-17"
+    },
+    {
+      "n": 13,
+      "host": "store-usa.arduino.cc",
+      "brand": "Arduino Online Shop",
+      "title": "Arduino Official Store | Boards Shields Kits Accessories — Arduino Online Shop",
+      "platform": "shopify",
+      "builder": "pagefly",
+      "theme": "Empire",
+      "themeVersion": "8.1.0",
+      "currency": "USD",
+      "country": "US",
+      "industry": "tech-gadgets",
+      "industryScore": 9,
+      "apps": [
+        "Klaviyo",
+        "Loox",
+        "Microsoft Clarity",
+        "Afterpay",
+        "Shop Pay",
+        "Crisp",
+        "Algolia"
+      ],
+      "collections": null,
+      "rank": 3872,
+      "mentions": 1,
+      "sources": [
+        "ecomm"
+      ],
+      "validatedAt": "2026-09-17"
+    },
+    {
+      "n": 14,
+      "host": "nanit.com",
+      "brand": "Nanit",
+      "title": "Nanit Smart Baby Monitor | Tracks Sleep and Breathing",
+      "platform": "shopify",
+      "builder": null,
+      "theme": "Concept",
+      "themeVersion": "4.3.1",
+      "currency": "USD",
+      "country": "US",
+      "industry": "kids-baby",
+      "industryScore": 17.5,
+      "apps": [
+        "Recharge",
+        "Yotpo",
+        "Microsoft Clarity",
+        "Google Tag Manager",
+        "Attentive",
+        "Triple Whale",
+        "Afterpay",
+        "Shop Pay",
+        "Cookie consent (Cookiebot)",
+        "Sentry"
+      ],
+      "collections": null,
+      "rank": 4302,
+      "mentions": 1,
+      "sources": [
+        "gallery"
+      ],
+      "validatedAt": "2026-09-17"
+    },
+    {
+      "n": 15,
+      "host": "johnlewis.com",
+      "brand": "John Lewis & Partners",
+      "title": "John Lewis & Partners | Never Knowingly Undersold",
+      "platform": "nextjs",
+      "builder": null,
+      "theme": null,
+      "themeVersion": null,
+      "currency": null,
+      "country": null,
+      "industry": "home-furniture",
+      "industryScore": 7.5,
+      "apps": [],
+      "collections": null,
+      "rank": 4634,
+      "mentions": 1,
+      "sources": [
+        "ecomm"
+      ],
+      "validatedAt": "2026-09-17"
+    },
+    {
+      "n": 16,
+      "host": "qodeinteractive.com",
+      "brand": "We Bring Beauty to WordPress",
+      "title": "We Bring Beauty to WordPress - Qode Interactive",
+      "platform": "woocommerce",
+      "builder": "elementor",
+      "theme": "masterds",
+      "themeVersion": null,
+      "currency": null,
+      "country": "US",
+      "industry": "food-drink",
+      "industryScore": 19,
+      "apps": [
+        "Google Tag Manager",
+        "Google Analytics",
+        "Meta Pixel"
+      ],
+      "collections": null,
+      "rank": 5260,
+      "mentions": 1,
+      "sources": [
+        "search-result"
+      ],
+      "validatedAt": "2026-09-17"
+    },
+    {
+      "n": 17,
+      "host": "webstaurantstore.com",
+      "brand": "WebstaurantStore",
+      "title": "WebstaurantStore: Commercial Supplies & Restaurant Equipment",
+      "platform": null,
+      "builder": null,
+      "theme": null,
+      "themeVersion": null,
+      "currency": "USD",
+      "country": "US",
+      "industry": "food-drink",
+      "industryScore": 21,
+      "apps": [
+        "Microsoft Clarity",
+        "Google Tag Manager",
+        "Google Analytics",
+        "PayPal",
+        "Sentry"
+      ],
+      "collections": null,
+      "rank": 5698,
+      "mentions": 1,
+      "sources": [
+        "ecomm"
+      ],
+      "validatedAt": "2026-09-17"
+    },
+    {
+      "n": 18,
+      "host": "diy.com",
+      "brand": "B&Q",
+      "title": "DIY Products at Everyday Low Prices at B&Q",
+      "platform": null,
+      "builder": null,
+      "theme": null,
+      "themeVersion": null,
+      "currency": null,
+      "country": "GB",
+      "industry": "home-furniture",
+      "industryScore": 19,
+      "apps": [
+        "Klarna",
+        "Zendesk",
+        "Intercom",
+        "Optimizely"
+      ],
+      "collections": null,
+      "rank": 6100,
+      "mentions": 1,
+      "sources": [
+        "ecomm"
+      ],
+      "validatedAt": "2026-09-17"
+    },
+    {
+      "n": 19,
+      "host": "ulta.com",
+      "brand": "Ulta Beauty",
+      "title": "Ulta Beauty | Makeup, Skin Care, Fragrance, Hair Care & Beauty Products",
+      "platform": null,
+      "builder": null,
+      "theme": null,
+      "themeVersion": null,
+      "currency": null,
+      "country": "US",
+      "industry": "beauty-skincare",
+      "industryScore": 75,
+      "apps": [
+        "Afterpay"
+      ],
+      "collections": null,
+      "rank": 6151,
+      "mentions": 1,
+      "sources": [
+        "search"
+      ],
+      "validatedAt": "2026-09-17"
+    },
+    {
+      "n": 20,
+      "host": "yesstyle.com",
+      "brand": "YesStyle",
+      "title": "Beauty, Skin Care, and Health and Wellness | YesStyle",
+      "platform": "nextjs",
+      "builder": null,
+      "theme": null,
+      "themeVersion": null,
+      "currency": null,
+      "country": null,
+      "industry": "beauty-skincare",
+      "industryScore": 61.5,
+      "apps": [
+        "Google Tag Manager",
+        "Cloudflare"
+      ],
+      "collections": null,
+      "rank": 6303,
+      "mentions": 1,
+      "sources": [
+        "ecomm"
+      ],
+      "validatedAt": "2026-09-17"
+    },
+    {
+      "n": 21,
+      "host": "onepeloton.com",
+      "brand": "Peloton",
+      "title": "Peloton: Innovative exercise equipment and personalized workout plans",
+      "platform": "nextjs",
+      "builder": null,
+      "theme": null,
+      "themeVersion": null,
+      "currency": null,
+      "country": "US",
+      "industry": "sports-outdoor",
+      "industryScore": 33,
+      "apps": [
+        "Klarna",
+        "Cookie consent (OneTrust)",
+        "Optimizely"
+      ],
+      "collections": null,
+      "rank": 6436,
+      "mentions": 2,
+      "sources": [
+        "ecomm"
+      ],
+      "validatedAt": "2026-09-17"
+    },
+    {
+      "n": 22,
+      "host": "shop.ecobee.com",
+      "brand": "ecobee",
+      "title": null,
+      "platform": "shopify",
+      "builder": null,
+      "theme": "Release-us-v2.43.0",
+      "themeVersion": null,
+      "currency": "USD",
+      "country": "US",
+      "industry": "other",
+      "industryScore": 0,
+      "apps": [
+        "Shop Pay"
+      ],
+      "collections": 6,
+      "rank": 6877,
+      "mentions": 1,
+      "sources": [
+        "ecomm"
+      ],
+      "validatedAt": "2026-09-17"
+    },
+    {
+      "n": 23,
+      "host": "swatch.com",
+      "brand": "Swatch watch styles",
+      "title": "Swatch watch styles | Swatch® International",
+      "platform": "salesforce",
+      "builder": null,
+      "theme": null,
+      "themeVersion": null,
+      "currency": null,
+      "country": null,
+      "industry": "jewellery-watches",
+      "industryScore": 51,
+      "apps": [
+        "TikTok Pixel",
+        "YouTube",
+        "Cookie consent (OneTrust)"
+      ],
+      "collections": null,
+      "rank": 8104,
+      "mentions": 1,
+      "sources": [
+        "ecomm"
+      ],
+      "validatedAt": "2026-09-17"
+    },
+    {
+      "n": 24,
+      "host": "anker.com",
+      "brand": "Anker",
+      "title": "Anker | Live Charged. - Anker US",
+      "platform": "shopify",
+      "builder": null,
+      "theme": null,
+      "themeVersion": null,
+      "currency": null,
+      "country": "US",
+      "industry": "tech-gadgets",
+      "industryScore": 26,
+      "apps": [
+        "Klaviyo",
+        "Judge.me",
+        "Yotpo",
+        "Hotjar",
+        "Microsoft Clarity",
+        "Pinterest Tag",
+        "Snap Pixel",
+        "Klarna",
+        "PayPal"
+      ],
+      "collections": null,
+      "rank": 8562,
+      "mentions": 1,
+      "sources": [
+        "ecomm"
+      ],
+      "validatedAt": "2026-09-17"
+    },
+    {
+      "n": 25,
+      "host": "jbhifi.com.au",
+      "brand": "JB Hi-Fi",
+      "title": "JB Hi-Fi - Australia's Largest Home Entertainment Retailer",
+      "platform": "shopify",
+      "builder": "pagefly",
+      "theme": "JB Hi-Fi",
+      "themeVersion": "1.0.0",
+      "currency": "AUD",
+      "country": "AU",
+      "industry": "other",
+      "industryScore": 1,
+      "apps": [
+        "Klaviyo",
+        "Google Tag Manager",
+        "Google Analytics",
+        "Meta Pixel",
+        "Afterpay",
+        "Shop Pay",
+        "Algolia",
+        "Optimizely"
+      ],
+      "collections": 50,
+      "rank": 9406,
+      "mentions": 1,
+      "sources": [
+        "ecomm"
+      ],
+      "validatedAt": "2026-09-17"
+    }
+  ],
+  "nextCursor": "25",
+  "total": 1005
+}

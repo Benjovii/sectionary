@@ -5,6 +5,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { BlockCard, BlockCardSkeleton } from "@/components/block-card";
 import { BlockDialog } from "@/components/block-dialog";
+import { BLOCKS_SRC } from "@/lib/data-source";
 import { labelFor, PAGE_TYPE_LABEL, type Block, type BlockSet } from "@/lib/blocks";
 
 const SKELETON_RATIOS = [0.55, 1.4, 0.8, 1.9, 0.7, 1.1, 0.5, 1.6, 0.9, 1.3, 0.6, 1.2];
@@ -26,7 +27,7 @@ function readFilters(sp: URLSearchParams): Filters {
   return { page: sp.get("page") ?? "", block: sp.get("block") ?? "", vp: sp.get("vp") ?? "", q: sp.get("q") ?? "" };
 }
 
-export function Wall({ src = "/sample/blocks.json" }: { src?: string }) {
+export function Wall({ src = BLOCKS_SRC }: { src?: string }) {
   const [data, setData] = useState<BlockSet | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [open, setOpen] = useState<Block | null>(null);

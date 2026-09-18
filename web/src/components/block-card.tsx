@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Monitor, Smartphone } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { assetUrl } from "@/lib/data-source";
 import { labelFor, type Block } from "@/lib/blocks";
 
 /**
@@ -30,7 +31,7 @@ export function BlockCard({ block, onOpen }: { block: Block; onOpen: (b: Block) 
           {!loaded && <div className="shimmer absolute inset-0 opacity-70" aria-hidden />}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={block.src}
+            src={assetUrl(block.src)}
             alt=""
             width={block.w}
             height={block.h}

@@ -3,11 +3,26 @@ data/
 *.log
 .env
 .env.*
+!.env.example
 _tmp/
-web/public/sample/
+
+# Web app
 web/.next/
 web/node_modules/
 web/.vercel/
+# Sample data: the two JSON files are committed so a fresh clone renders;
+# the block screenshots (13 MB) are not, they load from the deployed site in dev.
+web/public/sample/*
+!web/public/sample/blocks.json
+!web/public/sample/stores.json
+
+# Platform (Lane B)
+platform/node_modules/
+platform/.env
+platform/.env.*
+!platform/.env.example
+
+# Harvest and validation working files
 seeds/live-cache.json
 seeds/*.interim*.csv
 seeds/validate-cache.json

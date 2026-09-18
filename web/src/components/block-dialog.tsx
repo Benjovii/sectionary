@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { ExternalLink, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { assetUrl } from "@/lib/data-source";
 import { labelFor, PAGE_TYPE_LABEL, type Block } from "@/lib/blocks";
 
 /** Block detail: full-height sheet on phones, centred panel from 900px up. */
@@ -30,7 +31,7 @@ export function BlockDialog({ block, onClose }: { block: Block | null; onClose: 
           <div className="relative flex-1 overflow-auto bg-white" style={{ background: block.bg }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={block.src}
+              src={assetUrl(block.src)}
               alt={`${labelFor(block.typeHint)} block from ${block.host}`}
               width={block.w}
               height={block.h}
