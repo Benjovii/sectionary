@@ -195,6 +195,11 @@ export class Queue {
     return Number(res.changes);
   }
 
+  /** Every store the queue knows, in any state. */
+  hosts(): string[] {
+    return (this.db.prepare(`select host from stores`).all() as { host: string }[]).map((r) => r.host);
+  }
+
   counts(): Record<string, number> {
     const out: Record<string, number> = {};
     for (const r of this.db.prepare(`select status, count(*) n from stores group by status`).all() as { status: string; n: number }[]) out[r.status] = r.n;

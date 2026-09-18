@@ -334,6 +334,29 @@ export function collectLinks(max: number): string[] {
   return out;
 }
 
+/**
+ * Is this page a wall instead of the store? A human check ("press and hold"),
+ * an access-denied page or a geo-block often answers 200 OK and would pass for
+ * a captured page. We only recognise walls, we never try to get past one.
+ * Walls are short pages, which keeps a store that merely mentions "access
+ * denied" somewhere in its help text from matching.
+ */
+export function detectWall(): { kind: string; text: string } | null {
+  const text = ((document.body && document.body.innerText) || '').replace(/\s+/g, ' ').trim();
+  if (text.length > 1500) return null;
+  const hay = `${document.title || ''} ${text}`;
+  const tests: [string, RegExp][] = [
+    ['human-check', /verify (that )?you('| a)?re (a |not a )?(human|robot)|press (&|and) hold|are you a robot|complete the security check|checking (if the site connection is secure|your browser)|just a moment|needs to review the security of your connection/i],
+    ['access-denied', /access (to this page has been |is )?denied|you don.?t have permission to access|request unsuccessful|pardon our interruption|unusual traffic|has been blocked|sorry, you have been blocked/i],
+    ['geo-block', /restricted access|(not available|unavailable|cannot visit|can.?t visit|not accessible|do not ship|don.?t ship).{0,60}(your (current )?(location|country|region))/i],
+  ];
+  for (const [kind, re] of tests) if (re.test(hay)) return { kind, text: text.slice(0, 120) };
+  if (document.querySelector('#px-captcha, #challenge-form, #challenge-stage, .cf-browser-verification, iframe[src*="captcha-delivery"], iframe[src*="hcaptcha.com"], iframe[src*="recaptcha/api2/bframe"]')) {
+    return { kind: 'human-check', text: text.slice(0, 120) };
+  }
+  return null;
+}
+
 export function pageMeta(): PageMeta {
   const q = (s: string) => document.querySelector(s);
   const content = (s: string) => {

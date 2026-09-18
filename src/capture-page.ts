@@ -3,10 +3,10 @@
 // (crawl.ts). The manifest it writes is a cross-lane contract:
 // web/src/contracts/manifest.ts, guarded by src/contract-check.ts.
 import type { Browser, BrowserContext, Page } from 'playwright';
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, stat, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { createHash } from 'node:crypto';
-import { collectBlocks, collectLinks, detectSite, pageMeta, type BlockInfo, type SiteInfo, type PageMeta } from './page-script.js';
+import { collectBlocks, collectLinks, detectSite, detectWall, pageMeta, type BlockInfo, type SiteInfo, type PageMeta } from './page-script.js';
 import { Politeness, botUserAgent, DESKTOP_BASE_UA, MOBILE_BASE_UA, type Lane } from './polite.js';
 
 export type ViewportName = 'desktop' | 'mobile';
@@ -38,7 +38,7 @@ export const DEFAULT_CAPTURE: CaptureOptions = { out: 'data', only: null, maxBlo
 export type CapturedBlock = BlockInfo & { viewport: ViewportName; file: string | null; error?: string };
 
 type ViewportResult =
-  | { ok: true; status: number | null; site: SiteInfo; meta: PageMeta; strategy: string; fullFile: string; fullHeight: number; blocks: CapturedBlock[]; links: string[]; finalUrl: string; ms: number }
+  | { ok: true; status: number | null; site: SiteInfo; meta: PageMeta; strategy: string; fullFile: string; fullHeight: number; blocks: CapturedBlock[]; links: string[]; finalUrl: string; emptyText: string | null; ms: number }
   | { ok: false; status: number | null; error: string; ms: number };
 
 export type PageResult = {
@@ -55,6 +55,8 @@ export type PageResult = {
   links: string[];
   /** Where the browser ended up (brand.com often lands on www.brand.com or a regional host). */
   finalUrl: string | null;
+  /** When no block was found at all: what the page says instead ("Restricted Access. Sorry, you cannot visit our store from your current location."). */
+  emptyText: string | null;
   lines: string[];
 };
 
@@ -136,6 +138,17 @@ async function dismissOverlays(page: Page): Promise<void> {
       for (const el of [document.documentElement, document.body]) {
         if (el && getComputedStyle(el).overflowY === 'hidden' && el.scrollHeight > window.innerHeight * 1.5) el.style.setProperty('overflow-y', 'auto', 'important');
       }
+      // Home-made cookie bars that no vendor list can know: something pinned to
+      // the screen, short, that talks about cookies and offers an accept-style
+      // button. Hidden like the vendor dialogs, never clicked. A pinned header
+      // that happens to mention cookies has many links and is left alone.
+      for (const el of Array.from(document.querySelectorAll<HTMLElement>('body *'))) {
+        const pos = getComputedStyle(el).position;
+        if (pos !== 'fixed' && pos !== 'sticky') continue;
+        const text = (el.innerText || '').trim();
+        if (!text || text.length > 1200 || el.querySelectorAll('a').length > 6) continue;
+        if (/cookie|gdpr|consent/i.test(text) && /\b(accept|agree|ok|okay|got it|allow|decline|reject|understood|dismiss)\b/i.test(text)) el.style.setProperty('display', 'none', 'important');
+      }
     })
     .catch(() => {});
   await page.keyboard.press('Escape').catch(() => {});
@@ -213,6 +226,15 @@ async function captureViewportInner(context: BrowserContext, url: string, vp: Vi
       .addStyleTag({ content: '*,*::before,*::after{animation-duration:0s!important;animation-delay:0s!important;transition-duration:0s!important;scroll-behavior:auto!important}' + HIDE_CONSENT_CSS })
       .catch(() => {});
     await page.waitForTimeout(1200);
+    // A wall instead of the store (human check, access denied, geo-block),
+    // usually served as 200 OK. Some browser checks clear by themselves within
+    // seconds, so look twice. We never interact with one: a wall is a "no".
+    let wall = await page.evaluate(detectWall).catch(() => null);
+    if (wall) {
+      await page.waitForTimeout(8000);
+      wall = await page.evaluate(detectWall).catch(() => null);
+    }
+    if (wall) return { ok: false, status, error: `wall:${wall.kind}: "${wall.text}"`, ms: Date.now() - t0 };
     await dismissOverlays(page);
     await autoScroll(page);
     await page.waitForTimeout(600);
@@ -224,15 +246,33 @@ async function captureViewportInner(context: BrowserContext, url: string, vp: Vi
     const meta = await page.evaluate(pageMeta);
     const links = opts.wantLinks ? await page.evaluate(collectLinks, 400).catch(() => [] as string[]) : [];
     const collected = await page.evaluate(collectBlocks, { minHeight: opts.minHeight, maxBlocks: opts.maxBlocks });
+    // A page with nothing to cut up is a geo-block, a bot wall answering 200, or an empty shell. Keep what it says for the failure report.
+    const emptyText = collected.blocks.length
+      ? null
+      : await page.evaluate(() => (document.body?.innerText || '').replace(/\s+/g, ' ').trim().slice(0, 160)).catch(() => '');
 
     const fullFile = `${vp}.jpg`;
-    let fullHeight = collected.docHeight;
+    const fullPath = path.join(pageDir, fullFile);
+    // A JPEG cannot be taller than 65,535 pixels. An endless listing at phone
+    // sharpness (2x) gets there at about 32,000 CSS pixels and used to come out
+    // as an empty file. Cut such pages off at the limit instead.
+    const maxCssHeight = Math.floor(65_000 / VIEWPORTS[vp].deviceScaleFactor);
+    let fullHeight = Math.min(collected.docHeight, maxCssHeight);
+    const written = async () => (await stat(fullPath).catch(() => null))?.size || 0;
     try {
-      await page.screenshot({ path: path.join(pageDir, fullFile), fullPage: true, type: 'jpeg', quality: opts.quality });
+      await page.screenshot({
+        path: fullPath,
+        fullPage: true,
+        type: 'jpeg',
+        quality: opts.quality,
+        ...(collected.docHeight > maxCssHeight ? { clip: { x: 0, y: 0, width: VIEWPORTS[vp].width, height: maxCssHeight } } : {}),
+      });
+      if (!(await written())) throw new Error('empty screenshot');
     } catch {
-      await page.screenshot({ path: path.join(pageDir, fullFile), type: 'jpeg', quality: opts.quality }).catch(() => {});
+      await page.screenshot({ path: fullPath, type: 'jpeg', quality: opts.quality }).catch(() => {});
       fullHeight = VIEWPORTS[vp].height;
     }
+    if (!(await written())) return { ok: false, status, error: 'screenshot-failed', ms: Date.now() - t0 };
 
     await mkdir(path.join(pageDir, 'blocks'), { recursive: true });
     const blocks: CapturedBlock[] = [];
@@ -243,12 +283,14 @@ async function captureViewportInner(context: BrowserContext, url: string, vp: Vi
         await loc.scrollIntoViewIfNeeded({ timeout: 10_000 });
         await page.waitForTimeout(120);
         await loc.screenshot({ path: path.join(pageDir, file), type: 'jpeg', quality: opts.quality, animations: 'disabled', timeout: 30_000 });
+        // Too tall for a JPEG comes out as an empty file rather than an error.
+        if (!((await stat(path.join(pageDir, file)).catch(() => null))?.size || 0)) throw new Error('empty screenshot (block too tall for a JPEG?)');
         blocks.push({ ...b, viewport: vp, file });
       } catch (e) {
         blocks.push({ ...b, viewport: vp, file: null, error: (e as Error).message.split('\n')[0] });
       }
     }
-    return { ok: true, status, site, meta, strategy: collected.strategy, fullFile, fullHeight, blocks, links, finalUrl: page.url(), ms: Date.now() - t0 };
+    return { ok: true, status, site, meta, strategy: collected.strategy, fullFile, fullHeight, blocks, links, finalUrl: page.url(), emptyText, ms: Date.now() - t0 };
   } catch (e) {
     return { ok: false, status, error: (e as Error).message.split('\n')[0], ms: Date.now() - t0 };
   }
@@ -292,7 +334,7 @@ export async function capturePage(browser: Browser, url: string, opts: CaptureOp
   const host = opts.host || u.hostname.replace(/^www\./, '');
   const slug = pageSlug(u);
   const type = pageType(u);
-  const result: PageResult = { url, host, slug, type, status: 'failed', reason: null, blocks: 0, ms: {}, site: null, links: [], finalUrl: null, lines: [] };
+  const result: PageResult = { url, host, slug, type, status: 'failed', reason: null, blocks: 0, ms: {}, site: null, links: [], finalUrl: null, emptyText: null, lines: [] };
 
   const verdict = await polite.allowed(url, opts.lane);
   if (!verdict.ok) {
@@ -320,8 +362,8 @@ export async function capturePage(browser: Browser, url: string, opts: CaptureOp
       manifest.viewports[vp] = { error: r.error, status: r.status };
       errors.push(`${vp}: ${r.error}`);
       result.lines.push(`  ${vp}: FAILED ${r.error}`);
-      // A 4xx/5xx or a dead page will not improve at another width.
-      if (/^http-|ERR_NAME_NOT_RESOLVED|ERR_CONNECTION/.test(r.error)) break;
+      // A 4xx/5xx, a wall or a dead page will not improve at another width.
+      if (/^http-|^wall:|ERR_NAME_NOT_RESOLVED|ERR_CONNECTION/.test(r.error)) break;
       continue;
     }
     okCount++;
@@ -334,6 +376,7 @@ export async function capturePage(browser: Browser, url: string, opts: CaptureOp
     if (!result.site) result.site = r.site;
     if (!result.links.length) result.links = r.links;
     if (!result.finalUrl) result.finalUrl = r.finalUrl;
+    if (result.emptyText === null && r.emptyText !== null) result.emptyText = r.emptyText;
     manifest.blocks.push(...r.blocks);
     result.blocks += okBlocks;
   }

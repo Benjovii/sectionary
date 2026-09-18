@@ -180,7 +180,9 @@ async function report(q: Queue, opts: Options, toFile: boolean): Promise<string>
 type Ctx = { q: Queue; polite: Politeness; opts: Options; capture: CaptureOptions; browser: () => Promise<Browser>; log: (e: Record<string, unknown>) => Promise<void>; stopping: () => boolean };
 type Outcome = { status: StoreStatus; pages: number; blocks: number; ms: number; reason: string | null };
 
-const BROWSER_GONE = /browser:|has been closed|Target closed|Browser closed|disconnected|crashed/i;
+// Marketplaces, social profiles and domain sellers: a store domain that forwards to one of these has no site of its own to capture.
+const ELSEWHERE = /(^|\.)(amazon\.[a-z.]{2,6}|etsy\.com|ebay\.[a-z.]{2,6}|walmart\.com|aliexpress\.com|linktr\.ee|facebook\.com|instagram\.com|tiktok\.com|hugedomains\.com|dan\.com|sedo\.com|afternic\.com|godaddy\.com)$/i;
+const BROWSER_GONE =/browser:|has been closed|Target closed|Browser closed|disconnected|crashed/i;
 // Worth a second try after a cool-off. A bot wall (403) or a missing page (404) is not.
 const TRANSIENT = /robots-unreachable|page-timeout|ERR_TIMED_OUT|ERR_NETWORK|ERR_CONNECTION_RESET|ERR_ABORTED|ERR_INTERNET_DISCONNECTED|http-429|http-5\d\d|Timeout \d+ms exceeded|browser:|has been closed|crashed/i;
 
@@ -189,6 +191,15 @@ async function captureResilient(ctx: Ctx, url: string, extra: Partial<CaptureOpt
   const o = { ...ctx.capture, ...extra };
   let r = await capturePage(await ctx.browser(), url, o, ctx.polite);
   if (r.status === 'failed' && r.reason && BROWSER_GONE.test(r.reason) && !ctx.stopping()) r = await capturePage(await ctx.browser(), url, o, ctx.polite);
+  // A page that loaded fine but has nothing to cut up: a geo-block ("you cannot
+  // visit our store from your location"), a bot wall answering 200, an empty
+  // shell. Useless to a block library, so it is a failure with the page's own
+  // words as the reason, and its files do not stay around to be imported.
+  if ((r.status === 'captured' || r.status === 'partial') && r.blocks === 0) {
+    await rm(path.join(o.out, r.host, r.slug), { recursive: true, force: true }).catch(() => {});
+    r.status = 'failed';
+    r.reason = r.emptyText !== null ? `no-content: "${r.emptyText.slice(0, 120)}"` : 'no block could be captured';
+  }
   return r;
 }
 
@@ -213,6 +224,7 @@ async function processStore(ctx: Ctx, s: StoreRow): Promise<Outcome> {
   let blocks = 0;
   const problems: string[] = [];
   let urls: string[];
+  let robotsRetried = false;
 
   // A resumed store whose home page is safely on disk keeps its page list: no second visit just to rediscover it.
   const homeDone = q.pageCaptured(s.host, home);
@@ -232,6 +244,15 @@ async function processStore(ctx: Ctx, s: StoreRow): Promise<Outcome> {
       homeRes.reason = 'password-page';
       homeRes.blocks = 0;
     }
+    // The brand gave up its own shop: the domain now forwards to a marketplace
+    // storefront (britishknights.com -> amazon.com) or to a domain seller.
+    const landedOn = homeRes.finalUrl ? new URL(homeRes.finalUrl).hostname : '';
+    if (ELSEWHERE.test(landedOn) && !ELSEWHERE.test(s.host)) {
+      await rm(path.join(opts.out, s.host, 'home'), { recursive: true, force: true }).catch(() => {});
+      homeRes.status = 'skipped';
+      homeRes.reason = `redirects-to: ${landedOn.replace(/^www\./, '')}`;
+      homeRes.blocks = 0;
+    }
     await record(homeRes);
     if (homeRes.status === 'skipped' || homeRes.status === 'failed') {
       const reason = homeRes.reason || 'home page failed';
@@ -246,18 +267,22 @@ async function processStore(ctx: Ctx, s: StoreRow): Promise<Outcome> {
     if (homeRes.status === 'partial' && homeRes.reason) problems.push(`home: ${homeRes.reason}`);
     if (homeRes.site && homeRes.site.platform !== 'unknown') q.setPlatform(s.host, homeRes.site.platform);
 
-    // Which other pages: Shopify's catalogue feeds when they answer, the home page's own links otherwise.
+    // Which other pages: the collections and products the store features on its
+    // own home page first. On Shopify the catalogue feeds fill the gaps (and add
+    // the cart); elsewhere the links are all there is.
     const origin = new URL(homeRes.finalUrl || home).origin;
+    const limits = { collections: opts.perType, products: opts.perType };
+    const fromLinks = opts.perType > 0 ? chooseFromLinks(homeRes.links, limits) : [];
     urls = [];
     if (opts.perType > 0 && (homeRes.site?.platform === 'shopify' || /shopify/i.test(s.platform || ''))) {
       try {
-        const d = await discoverShopify(polite, origin, { collections: opts.perType, products: opts.perType });
+        const d = await discoverShopify(polite, origin, limits, fromLinks);
         if (d.shopify) urls = d.urls.filter((u) => new URL(u).pathname !== '/');
       } catch {
         /* feed refused: fall back to the links */
       }
     }
-    if (!urls.length && opts.perType > 0) urls = chooseFromLinks(homeRes.links, { collections: opts.perType, products: opts.perType });
+    if (!urls.length) urls = fromLinks;
     urls = [...new Set(urls)];
     q.setPlan(s.host, urls);
   }
@@ -273,13 +298,22 @@ async function processStore(ctx: Ctx, s: StoreRow): Promise<Outcome> {
       blocks += already.blocks;
       continue;
     }
-    const r = await captureResilient(ctx, url, extra);
+    let r = await captureResilient(ctx, url, extra);
+    // robots.txt did not answer (often the www or regional host the store
+    // redirected to). That is a hiccup, not a "no": one more try after a pause,
+    // and if it still fails the store ends "partial" so --retry-failed returns to it.
+    if (r.status === 'skipped' && r.reason === 'robots-unreachable' && !robotsRetried) {
+      robotsRetried = true;
+      await sleep(15_000);
+      await polite.forgetFailure(url);
+      r = await captureResilient(ctx, url, extra);
+    }
     await record(r);
     if (r.status === 'captured' || r.status === 'partial') {
       pagesOk++;
       blocks += r.blocks;
     }
-    if (r.status === 'partial' || r.status === 'failed') problems.push(`${r.type}: ${r.reason}`);
+    if (r.status === 'partial' || r.status === 'failed' || (r.status === 'skipped' && r.reason === 'robots-unreachable')) problems.push(`${r.type}: ${r.reason}`);
   }
 
   const status: StoreStatus = problems.length === 0 ? 'done' : 'partial';

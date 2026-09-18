@@ -28,7 +28,7 @@
     "url": "https://myzoobox.com/",
     "type": "home",
     "slug": "home",
-    "capturedAt": "2026-09-16T20:56:01.629Z",
+    "capturedAt": "2026-09-18T09:20:38.036Z",
     "title": "My ZOO Box",
     "description": "My ZOO Box",
     "canonical": "https://myzoobox.com/",
@@ -43,7 +43,7 @@
       "fullHeight": 18165,
       "strategy": "shopify-sections+refine",
       "status": 200,
-      "ms": 33171
+      "ms": 37504
     },
     "mobile": {
       "file": "mobile.jpg",
@@ -51,7 +51,7 @@
       "fullHeight": 22444,
       "strategy": "shopify-sections+refine",
       "status": 200,
-      "ms": 34662
+      "ms": 42169
     }
   },
   "blocks": [

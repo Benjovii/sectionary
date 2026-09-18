@@ -1,0 +1,348 @@
+[
+  {
+    "dir": "anker.com/collections-all-products-charging",
+    "host": "anker.com",
+    "platform": "shopify",
+    "pageType": "collection",
+    "blocks": 13,
+    "shows": [
+      "edge:no-theme-info"
+    ]
+  },
+  {
+    "dir": "anker.com/collections-power-banks-ee151e",
+    "host": "anker.com",
+    "platform": "shopify",
+    "pageType": "collection",
+    "blocks": 17,
+    "shows": [
+      "edge:no-theme-info"
+    ]
+  },
+  {
+    "dir": "charlottetilbury.com/home",
+    "host": "charlottetilbury.com",
+    "platform": "nextjs",
+    "pageType": "home",
+    "blocks": 9,
+    "shows": [
+      "platform:nextjs"
+    ]
+  },
+  {
+    "dir": "charlottetilbury.com/uk-products-new",
+    "host": "charlottetilbury.com",
+    "platform": "nextjs",
+    "pageType": "product",
+    "blocks": 6,
+    "shows": [
+      "edge:region-in-path",
+      "platform:nextjs"
+    ]
+  },
+  {
+    "dir": "copperandbrass.net/category-all-products",
+    "host": "copperandbrass.net",
+    "platform": "wix",
+    "pageType": "collection",
+    "blocks": 12,
+    "shows": [
+      "platform:wix-stores"
+    ]
+  },
+  {
+    "dir": "copperandbrass.net/home",
+    "host": "copperandbrass.net",
+    "platform": "wix",
+    "pageType": "home",
+    "blocks": 6,
+    "shows": [
+      "platform:wix-stores"
+    ]
+  },
+  {
+    "dir": "farrow-ball.com/collection-the-purnon-papers",
+    "host": "farrow-ball.com",
+    "platform": "magento",
+    "pageType": "collection",
+    "blocks": 4,
+    "shows": [
+      "platform:magento"
+    ]
+  },
+  {
+    "dir": "farrow-ball.com/home",
+    "host": "farrow-ball.com",
+    "platform": "magento",
+    "pageType": "home",
+    "blocks": 4,
+    "shows": [
+      "platform:magento"
+    ]
+  },
+  {
+    "dir": "melula.com/home",
+    "host": "melula.com",
+    "platform": "squarespace",
+    "pageType": "home",
+    "blocks": 17,
+    "shows": [
+      "platform:squarespace-commerce"
+    ]
+  },
+  {
+    "dir": "myzoobox.com/cart",
+    "host": "myzoobox.com",
+    "platform": "shopify",
+    "pageType": "cart",
+    "blocks": 6,
+    "shows": [
+      "baseline"
+    ]
+  },
+  {
+    "dir": "myzoobox.com/collections-edventures",
+    "host": "myzoobox.com",
+    "platform": "shopify",
+    "pageType": "collection",
+    "blocks": 8,
+    "shows": [
+      "baseline"
+    ]
+  },
+  {
+    "dir": "myzoobox.com/home",
+    "host": "myzoobox.com",
+    "platform": "shopify",
+    "pageType": "home",
+    "blocks": 42,
+    "shows": [
+      "baseline"
+    ]
+  },
+  {
+    "dir": "myzoobox.com/products-zoologist-club-sibling-kit-easy-reader-3-month-plan",
+    "host": "myzoobox.com",
+    "platform": "shopify",
+    "pageType": "product",
+    "blocks": 10,
+    "shows": [
+      "baseline"
+    ]
+  },
+  {
+    "dir": "nanit.com/collections-accessories",
+    "host": "nanit.com",
+    "platform": "shopify",
+    "pageType": "collection",
+    "blocks": 10,
+    "shows": [
+      "platform:shopify"
+    ]
+  },
+  {
+    "dir": "nanit.com/home",
+    "host": "nanit.com",
+    "platform": "shopify",
+    "pageType": "home",
+    "blocks": 24,
+    "shows": [
+      "platform:shopify"
+    ]
+  },
+  {
+    "dir": "nanit.com/products-cammies",
+    "host": "nanit.com",
+    "platform": "shopify",
+    "pageType": "product",
+    "blocks": 10,
+    "shows": [
+      "platform:shopify"
+    ]
+  },
+  {
+    "dir": "oliveclothing.com/categories-women-skirts-shorts",
+    "host": "oliveclothing.com",
+    "platform": "bigcommerce",
+    "pageType": "collection",
+    "blocks": 4,
+    "shows": [
+      "platform:bigcommerce"
+    ]
+  },
+  {
+    "dir": "oliveclothing.com/home",
+    "host": "oliveclothing.com",
+    "platform": "bigcommerce",
+    "pageType": "home",
+    "blocks": 12,
+    "shows": [
+      "platform:bigcommerce"
+    ]
+  },
+  {
+    "dir": "papyrusonline.com/home",
+    "host": "papyrusonline.com",
+    "platform": "woocommerce",
+    "pageType": "home",
+    "blocks": 6,
+    "shows": [
+      "platform:woocommerce"
+    ]
+  },
+  {
+    "dir": "papyrusonline.com/product-recipe-for-perfection-birthday-greeting-card",
+    "host": "papyrusonline.com",
+    "platform": "woocommerce",
+    "pageType": "product",
+    "blocks": 4,
+    "shows": [
+      "platform:woocommerce"
+    ]
+  },
+  {
+    "dir": "shop.penguin.co.uk/products-groovy-chick-the-official-colouring-book-by-groovy-chick",
+    "host": "shop.penguin.co.uk",
+    "platform": "shopify",
+    "pageType": "product",
+    "blocks": 12,
+    "shows": [
+      "edge:block-without-image"
+    ]
+  },
+  {
+    "dir": "store-usa.arduino.cc/collections-accessories",
+    "host": "store-usa.arduino.cc",
+    "platform": "shopify",
+    "pageType": "collection",
+    "blocks": 26,
+    "shows": [
+      "platform:shopify"
+    ]
+  },
+  {
+    "dir": "store-usa.arduino.cc/home",
+    "host": "store-usa.arduino.cc",
+    "platform": "shopify",
+    "pageType": "home",
+    "blocks": 18,
+    "shows": [
+      "platform:shopify"
+    ]
+  },
+  {
+    "dir": "store-usa.arduino.cc/products-usb-c-power-supply-65w",
+    "host": "store-usa.arduino.cc",
+    "platform": "shopify",
+    "pageType": "product",
+    "blocks": 10,
+    "shows": [
+      "platform:shopify"
+    ]
+  },
+  {
+    "dir": "store.dji.com/home",
+    "host": "store.dji.com",
+    "platform": "unknown",
+    "pageType": "home",
+    "blocks": 12,
+    "shows": [
+      "edge:platform-unknown",
+      "platform:unknown"
+    ]
+  },
+  {
+    "dir": "store.dji.com/shop-camera-drones-a10e7f",
+    "host": "store.dji.com",
+    "platform": "unknown",
+    "pageType": "collection",
+    "blocks": 6,
+    "shows": [
+      "edge:platform-unknown",
+      "platform:unknown"
+    ]
+  },
+  {
+    "dir": "store.duolingo.com/collections-accessories",
+    "host": "store.duolingo.com",
+    "platform": "shopify",
+    "pageType": "collection",
+    "blocks": 31,
+    "shows": [
+      "platform:shopify"
+    ]
+  },
+  {
+    "dir": "store.duolingo.com/home",
+    "host": "store.duolingo.com",
+    "platform": "shopify",
+    "pageType": "home",
+    "blocks": 22,
+    "shows": [
+      "platform:shopify"
+    ]
+  },
+  {
+    "dir": "store.duolingo.com/products-duolingo-chess-set",
+    "host": "store.duolingo.com",
+    "platform": "shopify",
+    "pageType": "product",
+    "blocks": 8,
+    "shows": [
+      "platform:shopify"
+    ]
+  },
+  {
+    "dir": "theordinary.com/en-ca-category-best-sellers",
+    "host": "theordinary.com",
+    "platform": "salesforce-commerce-cloud",
+    "pageType": "collection",
+    "blocks": 7,
+    "shows": [
+      "edge:region-in-path",
+      "platform:salesforce"
+    ]
+  },
+  {
+    "dir": "theordinary.com/home",
+    "host": "theordinary.com",
+    "platform": "salesforce-commerce-cloud",
+    "pageType": "home",
+    "blocks": 9,
+    "shows": [
+      "platform:salesforce"
+    ]
+  },
+  {
+    "dir": "typology.com/collections-best-sellers",
+    "host": "typology.com",
+    "platform": "nuxt",
+    "pageType": "collection",
+    "blocks": 8,
+    "shows": [
+      "edge:redirected-host",
+      "platform:nuxt"
+    ]
+  },
+  {
+    "dir": "typology.com/home",
+    "host": "typology.com",
+    "platform": "nuxt",
+    "pageType": "home",
+    "blocks": 21,
+    "shows": [
+      "platform:nuxt"
+    ]
+  },
+  {
+    "dir": "typology.com/products-regenerating-micro-spicules-serum-pdrn-egf-complex",
+    "host": "typology.com",
+    "platform": "nuxt",
+    "pageType": "product",
+    "blocks": 7,
+    "shows": [
+      "edge:redirected-host",
+      "platform:nuxt"
+    ]
+  }
+]

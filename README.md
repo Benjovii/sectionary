@@ -25,6 +25,8 @@ Leke).
 
 ```
 src/crawl.ts          the crawl worker: works through the queue unattended (npm run crawl)
+src/sample-seeds.ts   picks a varied set of stores for a pilot run
+src/review-sheets.ts  contact sheets for reviewing a crawl by eye
 src/queue.ts          the crawl queue, one SQLite file: data/queue.sqlite
 src/capture-page.ts   captures one page: both viewports, screenshots, manifest
 src/capture.ts        one-off capture CLI for a single store or URL
@@ -62,12 +64,15 @@ in `%LOCALAPPDATA%\ms-playwright`. Secrets go in `.env` (git-ignored):
 |---|---|
 | `npm run harvest` | Builds `seeds/stores.csv`: stores from ecomm.design's API, stores.gallery and catalog.cool sitemaps, industry searches and hand-picked articles, ranked by Tranco traffic rank, alive and shop-like only. Merges with the previous run. Flags: `--limit 1000`, `--sources ecomm,gallery,catalog,search,lists`, `--no-live`, `--fresh`. |
 | `npm run polite-check` | Verifies robots parsing, block list, pacing and a live robots.txt. |
+| `npm run wall-check` | Verifies that bot walls and geo-blocks are recognised and that normal pages are not mistaken for one. Offline. |
 | `npm run capture -- myzoobox.com --discover` | Captures a store: pages found through Shopify's JSON, desktop + mobile, full page + every block, platform/theme/apps, manifests. Robots and pacing enforced; skips logged in `data/crawl-log.jsonl`. |
 | `npm run capture -- --seeds seeds/phase0.txt --discover` | Same for a seed list. |
 | `npm run crawl -- --seed seeds/stores.validated.csv --limit 50` | Puts the top 50 stores in the queue and captures them, three stores at a time. See "The crawl worker" below. |
 | `npm run crawl` | Carries on with whatever is still queued (after a stop, a crash or a reboot). |
 | `npm run crawl -- --report` | Progress, failure reasons, disk use and time left. Safe while a crawl is running. |
 | `npm run crawl -- --stop` | Asks a running crawl to finish its pages and stop cleanly. |
+| `npm run sample-seeds -- --n 50` | Picks a varied set of stores for a pilot run into `seeds/pilot-50.csv`: Shopify capped at half, every other platform represented, industries rotated, clear store evidence first. Same input, same output. |
+| `npm run review-sheets` | Contact sheets of a crawl in `data/_review/`: the top of each store's home, product and collection page, desktop and mobile. The fast way to spot consent dialogs, popups, bot walls and geo-blocks. |
 | `npm run viewer` | Serves the local viewer at http://localhost:4321. |
 | `node scripts/export-sample.mjs myzoobox.com` | Copies captured blocks into `web/public/sample` for the web app. |
 | `cd web && npm run dev` | The web app locally (http://localhost:3000). `vercel deploy --prod --yes` deploys it. |
@@ -79,8 +84,10 @@ in `%LOCALAPPDATA%\ms-playwright`. Secrets go in `.env` (git-ignored):
 capture lane needs no database server.
 
 For each store it captures the home page, then picks two collection pages, two
-product pages and the cart: from Shopify's JSON feeds when the store has them,
-from the links on the home page otherwise. Pages of one store go one at a time;
+product pages and the cart. The pages a store features on its own home page
+come first (they are the merchandised ones). On Shopify the JSON feeds fill
+the gaps, fullest non-empty collections first, because the top of the feed is
+often an empty or internal collection. Pages of one store go one at a time;
 `--parallel 3` (default) is how many stores run side by side.
 
 What it is built to survive:
@@ -109,6 +116,16 @@ starts the named stores over, every page afresh. Every page is logged to
 Store states: `pending`, `running`, `done` (every page captured), `partial`
 (some pages or one viewport failed), `failed`, `skipped` (robots.txt or the
 block list said no, or the store sits behind Shopify's password page).
+
+Walls are recognised, never worked around. A human check ("press and hold"),
+an access-denied page or a geo-block usually answers "200 OK" and would pass
+for a captured page. `detectWall` in `src/page-script.ts` knows their wording
+(`npm run wall-check` tests it offline), and the page fails with a reason such
+as `wall:human-check: "Please verify you are a human..."`. A page that loads
+but has nothing to cut into blocks fails the same way, with the page's own
+words as the reason (`no-content: "..."`), and its files are removed so they
+cannot be imported. robots.txt that does not answer is a hiccup, not a "no":
+it gets a second try, and if that fails the store ends `partial`.
 
 Known gap: on stores with free-form addresses (most Magento, Salesforce and
 custom builds) the home page's links cannot be told apart by their address, so
