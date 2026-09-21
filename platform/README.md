@@ -14,6 +14,20 @@ other lanes depend on is only the contract in `web/src/contracts/`.
   expects are in `fixtures/api/`. Route handlers live in
   `web/src/app/api/` and shared server code in `web/src/server/`, both yours.
 
+## Schema and importer
+
+1. Copy `.env.example` to `.env` and set the Supabase pooler `DATABASE_URL`.
+2. Run `npm install` in this directory, then `npm run db:migrate` once.
+3. Run `npm run import -- ../fixtures/manifests` (or point it at a capture
+   directory). Imports are transactional and idempotent; a new `capturedAt`
+   creates history, while replaying the same manifest updates the same rows.
+4. Set the same server-only `DATABASE_URL` in `web/.env.local`, plus
+   `NEXT_PUBLIC_BLOCKS_SRC=/api/blocks` and
+   `NEXT_PUBLIC_STORES_SRC=/api/stores`, to read the imported store in the app.
+
+`S3_PUBLIC_BASE_URL` controls the prefix stored for screenshots. Without it,
+the importer records root-relative keys based on the imported directory.
+
 ## Suggested first week (M1)
 
 1. Supabase project for Sectionary, separate from Next Level (SEC-34, with
