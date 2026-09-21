@@ -13,7 +13,11 @@
     "harvest": "node scripts/with-dns-pool.mjs src/harvest.ts",
     "validate": "node scripts/with-dns-pool.mjs src/validate.ts",
     "seeds-report": "node scripts/seeds-report.mjs",
-    "export-stores": "tsx src/export-stores.ts"
+    "export-stores": "tsx src/export-stores.ts",
+    "crawl": "node scripts/with-dns-pool.mjs src/crawl.ts",
+    "sample-seeds": "tsx src/sample-seeds.ts",
+    "review-sheets": "tsx src/review-sheets.ts",
+    "wall-check": "tsx src/wall-check.ts"
   },
   "dependencies": {
     "cheerio": "^1.2.0",

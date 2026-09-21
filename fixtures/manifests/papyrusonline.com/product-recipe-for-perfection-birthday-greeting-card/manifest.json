@@ -1,0 +1,132 @@
+{
+  "site": {
+    "host": "papyrusonline.com",
+    "origin": "https://www.papyrusonline.com",
+    "platform": "woocommerce",
+    "theme": {
+      "name": "kadence-child"
+    },
+    "builder": "divi",
+    "apps": [
+      "Google Analytics"
+    ],
+    "currency": null,
+    "locale": "en-US"
+  },
+  "page": {
+    "url": "https://www.papyrusonline.com/product/recipe-for-perfection-birthday-greeting-card",
+    "type": "product",
+    "slug": "product-recipe-for-perfection-birthday-greeting-card",
+    "capturedAt": "2026-09-18T12:45:44.493Z",
+    "title": "Recipe For Perfection Birthday Greeting Card - Papyrus",
+    "description": "Shop Your Recipe For Perfection Birthday Greeting Card. Great For Celebrating . Shop Today!",
+    "canonical": "https://www.papyrusonline.com/product/recipe-for-perfection-birthday-greeting-card",
+    "ogImage": "http://images.salsify.com/image/upload/q_70/546dc27a8d588bbee2b3a8fc485c94c32e109030.jpg",
+    "lang": "en-US",
+    "h1": "Recipe For Perfection Birthday Greeting Card"
+  },
+  "viewports": {
+    "desktop": {
+      "file": "desktop.jpg",
+      "width": 1440,
+      "fullHeight": 2319,
+      "strategy": "semantic",
+      "status": 200,
+      "ms": 8562
+    },
+    "mobile": {
+      "file": "mobile.jpg",
+      "width": 390,
+      "fullHeight": 3826,
+      "strategy": "semantic",
+      "status": 200,
+      "ms": 5939
+    }
+  },
+  "blocks": [
+    {
+      "ref": "b1",
+      "index": 1,
+      "typeHint": "header",
+      "parentType": null,
+      "tag": "header",
+      "id": "masthead",
+      "classes": "site-header",
+      "top": 0,
+      "height": 212,
+      "width": 1440,
+      "text": "Celebrations Lifestyle About Us Retail Locator GREETING CARDS & STATIONERY GIFT PACKAGING CANDLES PAPYRUS BY REEDS JEWELERS",
+      "textLength": 123,
+      "headline": null,
+      "buttons": 26,
+      "images": 2,
+      "videos": 0,
+      "bg": "rgb(255, 255, 255)",
+      "viewport": "desktop",
+      "file": "blocks/d-01-header.jpg"
+    },
+    {
+      "ref": "b2",
+      "index": 2,
+      "typeHint": "footer",
+      "parentType": null,
+      "tag": "footer",
+      "id": "colophon",
+      "classes": "site-footer",
+      "top": 2028,
+      "height": 215,
+      "width": 1440,
+      "text": "ABOUT RETAIL LOCATIONS ONLINE RETAIL PARTNERS FAQS DO NOT SELL OR SHARE MY INFO COOKIE SETTINGS",
+      "textLength": 95,
+      "headline": null,
+      "buttons": 5,
+      "images": 6,
+      "videos": 0,
+      "bg": "rgb(255, 255, 255)",
+      "viewport": "desktop",
+      "file": "blocks/d-02-footer.jpg"
+    },
+    {
+      "ref": "b1",
+      "index": 1,
+      "typeHint": "header",
+      "parentType": null,
+      "tag": "header",
+      "id": "masthead",
+      "classes": "site-header",
+      "top": 0,
+      "height": 170,
+      "width": 390,
+      "text": "CelebrationsExpand Summer Shop Birthday Wedding Baby Candles LifestyleExpand View All What to Write Series Articles Featured Artists Featured Collections About UsExpand Our Story Our Greeting Card Treatments Sustainability Our BCRF Partnership Testimonials Retail Locator Search Search Close search Open search Account Shopping Cart 0 GREETING CARDS & STATIONERYExpand CategoryExpand Greeting Cards S",
+      "textLength": 1770,
+      "headline": null,
+      "buttons": 26,
+      "images": 2,
+      "videos": 0,
+      "bg": "rgb(255, 255, 255)",
+      "viewport": "mobile",
+      "file": "blocks/m-01-header.jpg"
+    },
+    {
+      "ref": "b2",
+      "index": 2,
+      "typeHint": "footer",
+      "parentType": null,
+      "tag": "footer",
+      "id": "colophon",
+      "classes": "site-footer",
+      "top": 3320,
+      "height": 431,
+      "width": 390,
+      "text": "ABOUT RETAIL LOCATIONS ONLINE RETAIL PARTNERS FAQS DO NOT SELL OR SHARE MY INFO COOKIE SETTINGS",
+      "textLength": 95,
+      "headline": null,
+      "buttons": 5,
+      "images": 6,
+      "videos": 0,
+      "bg": "rgb(255, 255, 255)",
+      "viewport": "mobile",
+      "file": "blocks/m-02-footer.jpg"
+    }
+  ]
+}

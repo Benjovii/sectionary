@@ -28,7 +28,7 @@
     "url": "https://myzoobox.com/collections/edventures",
     "type": "collection",
     "slug": "collections-edventures",
-    "capturedAt": "2026-09-16T20:50:08.199Z",
+    "capturedAt": "2026-09-18T09:21:59.153Z",
     "title": "EDventures – My ZOO Box",
     "description": "My ZOO Box",
     "canonical": "https://myzoobox.com/collections/edventures",
@@ -43,7 +43,7 @@
       "fullHeight": 2281,
       "strategy": "shopify-sections",
       "status": 200,
-      "ms": 22329
+      "ms": 21929
     },
     "mobile": {
       "file": "mobile.jpg",
@@ -51,7 +51,7 @@
       "fullHeight": 3166,
       "strategy": "shopify-sections",
       "status": 200,
-      "ms": 22509
+      "ms": 22848
     }
   },
   "blocks": [
