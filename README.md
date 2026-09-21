@@ -133,6 +133,73 @@ only the home page is captured. The report counts those stores. Each home page
 also saves its links (`links.json`), so better discovery can be re-run later
 without visiting the store again.
 
+## How a page is cut into blocks
+
+`collectBlocks` in `src/page-script.ts` runs inside the page. It tries three
+ways and trusts none of them blindly:
+
+1. **Shopify's own section markers** (`.shopify-section`).
+2. **Tags and page-builder classes**: `header`, `footer`, `section`, Elementor
+   and Webflow section classes.
+3. **The page's flow**: starting at the body, take the full-width rows, and
+   keep descending into anything taller than about two screens.
+
+Each way is scored by **how much of the page's height it covers with
+block-sized pieces**. The first way that covers at least 60% wins (markers
+beat tags, tags beat flow); otherwise the best cover wins. The score exists
+because a way can "work" and still miss nearly everything: farrow-ball.com has
+a header and a footer tag and 16 plain rows in between (14% covered), and
+jbhifi.com.au marks only its header and footer as Shopify sections (8%).
+
+Details that matter:
+
+- An element's own height cannot be trusted. store.dji.com's `main` claims one
+  screen while its content runs for eight, so the cutter measures how far the
+  content extends.
+- A child counts as a row only if it is at least half the screen wide, so
+  side-by-side columns never split their parent. A product grid stays one
+  block however tall it is.
+- Pinned and absolutely placed elements are overlays, not rows, except a
+  header laid over the hero (wide, short, at the top). A sticky layer as tall
+  as the screen is a pinned backdrop (anker.com's video stages), not a row:
+  its picture would only repeat its neighbours.
+- Blocks with nothing to look at are dropped: no words, no media, no
+  background picture. Page builders space their rows with empty strips and
+  reserve scroll room with empty full-screen boxes.
+- The header has a safety net. A pinned header often sits in a zero-height
+  wrapper that no walk through the rows reaches (zwift.com), so if no chosen
+  block is or contains the header, it is looked up near the top and added.
+- The walk from the body always makes its first cut, however short the page
+  (amydiener.com is under two screens and used to come out as its footer).
+- A block's label comes from the block itself. What a split wrapper says about
+  itself is passed down as `<type>-part`; the body's classes never are
+  (WordPress puts `wp-custom-logo` there).
+- The manifest records which way won (`strategy`: `shopify-sections`,
+  `semantic`, `flow`, with `+refine` when something tall was split).
+
+**Nothing floats on a block's picture.** While one block is photographed,
+everything pinned to the screen that is not part of it is hidden and then put
+back: sticky headers, chat bubbles, discount tabs, location dialogs and their
+backdrops. The sticky header still gets a clean shot of its own. The full-page
+picture hides the same things but keeps a header pinned to the top, because
+that is part of the design. Pinned elements are looked for twice, at the top
+and further down, because many headers only become pinned after scrolling.
+Hidden by making them transparent, which moves nothing on the page and which
+no child element can override. Never clicked. A pinned layer as large as the
+screen that sits behind the content (a video backdrop) is left alone.
+
+Before a block is photographed the capture waits up to three seconds for the
+pictures inside it, because lazy images only start loading once the block is
+on screen.
+
+To judge the result by eye: `npm run review-sheets -- --blocks` shows every
+block a page was cut into, in order (`--type product`, `--viewport mobile`,
+`--stores-per-sheet 3`). Measured on 21 September 2026 on the home pages of 24
+non-Shopify stores: 198 blocks, 8 bad (4%). Known leftovers: a heading that
+is its own row becomes its own block, a very tall section that cannot be
+split stays one giant block, and a store whose content never loads for the
+crawler (shop.swatch.com) yields blank blocks.
+
 ## Why the crawler scripts go through `scripts/with-dns-pool.mjs`
 
 Node resolves host names on a pool of four threads. A crawler that meets a few

@@ -6,7 +6,7 @@ import type { Browser, BrowserContext, Page } from 'playwright';
 import { mkdir, stat, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { createHash } from 'node:crypto';
-import { collectBlocks, collectLinks, detectSite, detectWall, pageMeta, type BlockInfo, type SiteInfo, type PageMeta } from './page-script.js';
+import { collectBlocks, collectLinks, detectSite, detectWall, hidePinned, pageMeta, restorePinned, type BlockInfo, type SiteInfo, type PageMeta } from './page-script.js';
 import { Politeness, botUserAgent, DESKTOP_BASE_UA, MOBILE_BASE_UA, type Lane } from './polite.js';
 
 export type ViewportName = 'desktop' | 'mobile';
@@ -110,6 +110,7 @@ const HIDE_CONSENT_CSS = `
 #usercentrics-root, #usercentrics-cmp-ui, #uc-center-container,
 #didomi-host, #didomi-notice, .didomi-popup-backdrop,
 #truste-consent-track, .truste_overlay, .truste_box_overlay, #consent_blackbar, #teconsent,
+#trustarc-banner-overlay, .truste-consent-content-wrapper, #truste-consent-content,
 #shopify-pc__banner, .shopify-pc__banner__dialog,
 #iubenda-cs-banner,
 .cky-consent-container, .cky-overlay,
@@ -259,6 +260,9 @@ async function captureViewportInner(context: BrowserContext, url: string, vp: Vi
     const maxCssHeight = Math.floor(65_000 / VIEWPORTS[vp].deviceScaleFactor);
     let fullHeight = Math.min(collected.docHeight, maxCssHeight);
     const written = async () => (await stat(fullPath).catch(() => null))?.size || 0;
+    // The full-page picture without what floats over it (chat bubbles, discount
+    // tabs, dialogs and their backdrops). A header pinned to the top stays.
+    await page.evaluate(hidePinned, { ref: null, rescan: true }).catch(() => 0);
     try {
       await page.screenshot({
         path: fullPath,
@@ -272,15 +276,40 @@ async function captureViewportInner(context: BrowserContext, url: string, vp: Vi
       await page.screenshot({ path: fullPath, type: 'jpeg', quality: opts.quality }).catch(() => {});
       fullHeight = VIEWPORTS[vp].height;
     }
+    await page.evaluate(restorePinned).catch(() => {});
     if (!(await written())) return { ok: false, status, error: 'screenshot-failed', ms: Date.now() - t0 };
 
     await mkdir(path.join(pageDir, 'blocks'), { recursive: true });
     const blocks: CapturedBlock[] = [];
+    // Many headers only become pinned once the page has scrolled, so look for
+    // pinned elements a second time from further down before the block shots.
+    await page.evaluate(() => window.scrollTo(0, Math.min(document.documentElement.scrollHeight / 2, 3000))).catch(() => {});
+    await page.waitForTimeout(250);
+    let rescan = true;
     for (const b of collected.blocks) {
       const file = `blocks/${vp[0]}-${String(b.index).padStart(2, '0')}-${slugify(b.typeHint)}.jpg`;
       const loc = page.locator(`[data-secref="${b.ref}"]`).first();
       try {
+        // A block's picture shows the block and nothing pinned on top of it. A sticky header still gets its own shot.
+        await page.evaluate(hidePinned, { ref: b.ref, rescan }).catch(() => 0);
+        rescan = false;
         await loc.scrollIntoViewIfNeeded({ timeout: 10_000 });
+        // Lazy pictures start loading only now that the block is on screen. Give them a moment, otherwise
+        // the shot shows empty frames and spinners (shop.swatch.com: six of nine blocks were blank).
+        await page
+          .waitForFunction(
+            (ref) => {
+              const el = document.querySelector(`[data-secref="${ref}"]`);
+              if (!el) return true;
+              return Array.from(el.querySelectorAll('img')).every((img) => {
+                const r = img.getBoundingClientRect();
+                return r.width < 40 || r.height < 40 || img.complete;
+              });
+            },
+            b.ref,
+            { timeout: 3000 },
+          )
+          .catch(() => {});
         await page.waitForTimeout(120);
         await loc.screenshot({ path: path.join(pageDir, file), type: 'jpeg', quality: opts.quality, animations: 'disabled', timeout: 30_000 });
         // Too tall for a JPEG comes out as an empty file rather than an error.

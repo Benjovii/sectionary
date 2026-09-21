@@ -6,6 +6,8 @@
 //   npm run review-sheets                 -> data/_review/sheet-01.jpg, ...
 //   npm run review-sheets -- --per-sheet 5 --only partial,failed
 //   npm run review-sheets -- --seed seeds/pilot-50.csv     only the stores of one seed file
+//   npm run review-sheets -- --blocks [--type product] [--viewport mobile] [--stores-per-sheet 4]
+//                                          every block one page was cut into, in order
 //
 // No image library: the sheets are small HTML pages that the already installed
 // Chromium turns into JPEGs.
@@ -43,6 +45,49 @@ async function main(): Promise<void> {
   await mkdir(reviewDir, { recursive: true });
   const browser = await chromium.launch();
   const page = await browser.newPage({ viewport: { width: 1840, height: 900 } });
+
+  // --blocks: one sheet per store with every block one page was cut into, in
+  // order. This is how segmentation is judged: is each tile one sensible block,
+  // and is anything floating on top of it?
+  if (argv.includes('--blocks')) {
+    const type = arg('--type', 'home');
+    const viewport = arg('--viewport', 'desktop');
+    const group = Number(arg('--stores-per-sheet', '1'));
+    const tile = group > 1 ? (viewport === 'mobile' ? 150 : 292) : viewport === 'mobile' ? 215 : 440;
+    const sections: string[] = [];
+    for (const s of stores) {
+      const p = (pagesOf.all(s.host) as PageRow[]).find((x) => x.type === type && x.status !== 'failed' && x.status !== 'skipped');
+      if (!p) continue;
+      const slug = pageSlug(new URL(p.url));
+      const manifestFile = path.join(out, s.host, slug, 'manifest.json');
+      if (!existsSync(manifestFile)) continue;
+      const manifest = JSON.parse(readFileSync(manifestFile, 'utf8')) as { viewports: Record<string, { strategy?: string }>; blocks: { viewport: string; file: string | null; index: number; typeHint: string; width: number; height: number }[] };
+      const blocks = manifest.blocks.filter((b) => b.viewport === viewport && b.file).slice(0, 30);
+      const tiles = blocks
+        .map((b) => `<figure><figcaption>${b.index} · ${esc(b.typeHint)} · ${b.width}x${b.height}</figcaption><img src="../${s.host}/${slug}/${b.file}"></figure>`)
+        .join('');
+      sections.push(`<h1>${esc(s.host)} · ${esc(s.platform || 'unknown')} · ${esc(type)} · ${viewport} · ${blocks.length} blocks · cut by ${esc(manifest.viewports[viewport]?.strategy || '?')}</h1><div class="grid">${tiles}</div>`);
+    }
+    let made = 0;
+    for (let i = 0; i < sections.length; i += group) {
+      made++;
+      const html = `<!doctype html><meta charset="utf-8"><style>
+        body{margin:0;padding:12px;background:#111;color:#ddd;font:13px/1.35 system-ui,sans-serif;width:1816px}
+        h1{font-size:15px;margin:14px 0 8px;padding-top:10px;border-top:1px solid #333} .grid{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-start}
+        figure{margin:0;width:${tile}px} figcaption{color:#999;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:${group > 1 ? 11 : 13}px}
+        img{width:100%;max-height:${Math.round(tile * 0.75)}px;object-fit:cover;object-position:top;background:#222;display:block}
+      </style>${sections.slice(i, i + group).join('')}`;
+      const htmlFile = path.join(reviewDir, `blocks-${type}-${viewport}-${String(made).padStart(2, '0')}.html`);
+      await writeFile(htmlFile, html, 'utf8');
+      await page.goto('file:///' + path.resolve(htmlFile).split(path.sep).join('/'));
+      await page.waitForLoadState('networkidle').catch(() => {});
+      await page.screenshot({ path: htmlFile.slice(0, -'.html'.length) + '.jpg', fullPage: true, type: 'jpeg', quality: 80 });
+    }
+    await browser.close();
+    db.close();
+    console.log(`${made} block sheet(s) for ${sections.length} store(s) -> ${reviewDir}`);
+    return;
+  }
 
   let sheet = 0;
   for (let i = 0; i < stores.length; i += perSheet) {
