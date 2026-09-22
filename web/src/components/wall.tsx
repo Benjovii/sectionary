@@ -5,8 +5,10 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { BlockCard, BlockCardSkeleton } from "@/components/block-card";
 import { BlockDialog } from "@/components/block-dialog";
+import { TechFilters } from "@/components/tech-filters";
 import { BLOCKS_SRC } from "@/lib/data-source";
 import { labelFor, PAGE_TYPE_LABEL, type Block, type BlockSet } from "@/lib/blocks";
+import { blockHas, countTech, techFromFacets, type Facets, type TechKey } from "@/lib/tech";
 
 const SKELETON_RATIOS = [0.55, 1.4, 0.8, 1.9, 0.7, 1.1, 0.5, 1.6, 0.9, 1.3, 0.6, 1.2];
 
@@ -21,14 +23,16 @@ export function WallSkeleton() {
   );
 }
 
-type Filters = { page: string; block: string; vp: string; q: string };
+// Same names as BlocksQuery, so a wall URL maps straight onto /api/blocks.
+type Filters = { page: string; block: string; vp: string; q: string; platform: string; theme: string; app: string };
+const KEYS: (keyof Filters)[] = ["page", "block", "vp", "q", "platform", "theme", "app"];
 
 function readFilters(sp: URLSearchParams): Filters {
-  return { page: sp.get("page") ?? "", block: sp.get("block") ?? "", vp: sp.get("vp") ?? "", q: sp.get("q") ?? "" };
+  return Object.fromEntries(KEYS.map((k) => [k, sp.get(k) ?? ""])) as Filters;
 }
 
 export function Wall({ src = BLOCKS_SRC }: { src?: string }) {
-  const [data, setData] = useState<BlockSet | null>(null);
+  const [data, setData] = useState<(BlockSet & { facets?: Facets }) | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [open, setOpen] = useState<Block | null>(null);
   const router = useRouter();
@@ -59,18 +63,34 @@ export function Wall({ src = BLOCKS_SRC }: { src?: string }) {
   );
   const clear = () => router.replace(pathname, { scroll: false });
 
-  const blocks = data?.blocks ?? [];
+  const blocks = useMemo(() => data?.blocks ?? [], [data]);
   const pageTypes = useMemo(() => [...new Set(blocks.map((b) => b.pageType))], [blocks]);
   const blockTypes = useMemo(() => [...new Set(blocks.map((b) => b.typeHint))].sort(), [blocks]);
   const q = filters.q.trim().toLowerCase();
-  const shown = blocks.filter(
-    (b) =>
+  const matches = useCallback(
+    (b: Block, skip?: TechKey) =>
       (!filters.page || b.pageType === filters.page) &&
       (!filters.block || b.typeHint === filters.block) &&
       (!filters.vp || b.viewport === filters.vp) &&
+      (skip === "platform" || !filters.platform || blockHas(b, "platform", filters.platform)) &&
+      (skip === "theme" || !filters.theme || blockHas(b, "theme", filters.theme)) &&
+      (skip === "app" || !filters.app || blockHas(b, "app", filters.app)) &&
       (!q || (b.headline ?? "").toLowerCase().includes(q) || b.text.toLowerCase().includes(q) || b.typeHint.includes(q)),
+    [filters, q],
   );
-  const active = Boolean(filters.page || filters.block || filters.vp || filters.q);
+  const shown = blocks.filter((b) => matches(b));
+  const active = KEYS.some((k) => filters[k]);
+  // Each facet counts what it would show under the other filters.
+  const techCounts = useMemo(
+    () => ({
+      platform: countTech(blocks.filter((b) => matches(b, "platform"))).platform,
+      theme: countTech(blocks.filter((b) => matches(b, "theme"))).theme,
+      app: countTech(blocks.filter((b) => matches(b, "app"))).app,
+    }),
+    [blocks, matches],
+  );
+  // The detail view shows library-wide counts: the API's facets when it sends them.
+  const libraryCounts = useMemo(() => techFromFacets(data?.facets) ?? countTech(blocks), [data, blocks]);
 
   return (
     <div className="flex flex-col gap-3">
@@ -122,6 +142,10 @@ export function Wall({ src = BLOCKS_SRC }: { src?: string }) {
         </span>
       </div>
 
+      {data && blocks.length > 0 && (
+        <TechFilters counts={techCounts} value={{ platform: filters.platform, theme: filters.theme, app: filters.app }} onChange={setFilter} />
+      )}
+
       {error ? (
         <div className="rounded-lg border border-dashed p-8 text-center text-muted-foreground">
           <p>The block set could not be loaded ({error}).</p>
@@ -146,7 +170,15 @@ export function Wall({ src = BLOCKS_SRC }: { src?: string }) {
         </div>
       )}
 
-      <BlockDialog block={open} onClose={() => setOpen(null)} />
+      <BlockDialog
+        block={open}
+        onClose={() => setOpen(null)}
+        counts={libraryCounts}
+        onFilter={(key, value) => {
+          setOpen(null);
+          setFilter(key, value);
+        }}
+      />
     </div>
   );
 }

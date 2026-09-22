@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Bricolage_Grotesque, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "next-themes";
-import { AppShell } from "@/components/app-shell";
 import "./globals.css";
 
 // Same three faces as Next Level: Inter carries the UI, Bricolage Grotesque
@@ -30,7 +29,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     <html lang="en" suppressHydrationWarning className={`${inter.variable} ${bricolage.variable} ${geistMono.variable}`}>
       <body className="min-h-dvh">
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} disableTransitionOnChange>
-          <AppShell>{children}</AppShell>
+          {children}
         </ThemeProvider>
       </body>
     </html>

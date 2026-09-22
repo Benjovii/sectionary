@@ -12,7 +12,14 @@
 export const BLOCKS_SRC = process.env.NEXT_PUBLIC_BLOCKS_SRC ?? "/sample/blocks.json";
 export const STORES_SRC = process.env.NEXT_PUBLIC_STORES_SRC ?? "/sample/stores.json";
 
-const DEPLOYED = "https://sectionary-pink.vercel.app";
+/**
+ * True when blocks come from the platform's API (and so have database ids).
+ * Boards and the time machine then use the API too; with the sample JSON,
+ * boards live in this browser and their share link carries the whole board.
+ */
+export const API_MODE = BLOCKS_SRC.startsWith("/api/");
+
+const DEPLOYED ="https://sectionary-pink.vercel.app";
 export const ASSET_BASE = process.env.NEXT_PUBLIC_ASSET_BASE ?? (process.env.NODE_ENV === "development" ? DEPLOYED : "");
 
 /** Resolve a block screenshot path against the asset base; absolute URLs pass through. */

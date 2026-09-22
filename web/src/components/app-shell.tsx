@@ -6,10 +6,11 @@ const NAV = [
   { href: "/", label: "Blocks" },
   { href: "/pages", label: "Pages" },
   { href: "/sites", label: "Sites" },
+  { href: "/boards", label: "Boards" },
 ];
 
 /** Top bar (48px, hairline) plus the page. Mobile first: the nav stays inline
- *  because it is three short words; the search field grows on wider screens. */
+ *  because it is four short words; the search field grows on wider screens. */
 export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-dvh flex-col">

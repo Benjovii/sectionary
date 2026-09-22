@@ -78,4 +78,53 @@ present: the wall reserves the block's aspect ratio before the image loads.
 Cursor pagination everywhere (`Page<T>`): an opaque `cursor` in, `nextCursor`
 or null out, plus `total`. Multi-value filters are comma-separated
 (`platform=shopify,woocommerce`). Errors are `{ error, code? }` with a fitting
-HTTP status. `facets` on `/api/blocks` is optional and can arrive later.
+HTTP status. `facets` on `/api/blocks` carries `platform`, `theme` and `app`
+counts; each facet is counted under every other active filter, so choosing an
+app still shows what the other apps would give.
+
+## Boards, time machine and briefs (additive, M3)
+
+All additive: no existing field changed, `CONTRACT_VERSION` stays 1. Shapes in
+`api.ts`, real responses in `fixtures/api/`.
+
+| Endpoint | In | Out | Fixture |
+|---|---|---|---|
+| `POST /api/boards` | `BoardCreate` | `BoardCreated` (201) | `board.created.json` |
+| `GET /api/boards/[id]` | `x-board-token` | `Board` | `board.json` |
+| `PATCH /api/boards/[id]` | `x-board-token`, `BoardPatch` | `Board` | |
+| `DELETE /api/boards/[id]` | `x-board-token` | 204 | |
+| `POST /api/boards/[id]/items` | `x-board-token`, `BoardItemAdd` | `Board` | |
+| `PATCH /api/boards/[id]/items/[blockId]` | `x-board-token`, `{ note }` | `Board` | |
+| `DELETE /api/boards/[id]/items/[blockId]` | `x-board-token` | `Board` | |
+| `GET /api/share/[slug]` | | `SharedBoard`, or 404 while sharing is off | `share.json` |
+| `GET /api/blocks/[id]/history` | | `BlockHistory` | `block.history.json` |
+| `POST /api/brief` | `BriefRequest` | streamed `text/plain` (Markdown) | |
+
+- **Boards before accounts.** Until auth (SEC-27) a board belongs to whoever
+  holds its edit token. `POST /api/boards` returns it once; the web app keeps
+  it in the browser and sends it as `x-board-token`. Only its SHA-256 is
+  stored. A wrong or missing token is 403. When accounts arrive, a signed-in
+  user claims a board by presenting its token.
+- **Share links.** `shareSlug` exists from creation; `/b/<slug>` and
+  `/api/share/<slug>` serve the board only while `shared` is true. Turning
+  sharing off and on again keeps the same link. `SharedBoard` has no ids and no
+  tokens.
+- **Reordering** sends the full list of block ids: `PATCH { order: [...] }`.
+- **Time machine.** Every capture of the block's page, newest first. `block`
+  is the best match in that capture (same viewport and type, nearest index
+  and position), null when the page had no such block. `fullPage` is derived
+  from the capture's block keys; it is only as right as the image key layout
+  (see the note on keys below). The history fixture comes from a test database
+  with a seeded older capture, so its dates and changes are made up.
+- **Briefs.** `target` is `claude-code`, `cursor` or `designer`. The server
+  looks the block up itself (database, or the sample JSON when there is no
+  database) and never trusts a block sent by the browser. With
+  `ANTHROPIC_API_KEY` set, Claude writes it from the screenshot and metadata;
+  without it, `x-brief-source: template` and the brief is assembled from
+  metadata alone.
+
+Image keys and history: the importer derives keys from each capture's folder
+path, without `capturedAt`. If a recapture is written to the same folder as
+the previous one, both captures point at the same image and the time machine
+compares identical pictures. The layout in the manifest section below
+(`sites/<host>/<capturedAt>/...`) avoids that.

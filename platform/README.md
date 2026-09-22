@@ -28,6 +28,17 @@ other lanes depend on is only the contract in `web/src/contracts/`.
 `S3_PUBLIC_BASE_URL` controls the prefix stored for screenshots. Without it,
 the importer records root-relative keys based on the imported directory.
 
+## Boards, time machine, briefs
+
+Migration `0003_boards_sharing.sql` lets a board exist before accounts: it is
+owned by an edit token (only the SHA-256 is stored) and has a public
+`share_slug` served while `shared` is true. `org_id`, `created_by` and
+`added_by` become optional until auth (SEC-27) fills them in. The routes are
+in `web/src/app/api/boards`, `share`, `blocks/[id]/history` and `brief`,
+with shared code in `web/src/server/`; the shapes and fixtures are listed in
+`docs/CONTRACTS.md`. Set `ANTHROPIC_API_KEY` in the web app's environment for
+briefs written by Claude.
+
 ## Suggested first week (M1)
 
 1. Supabase project for Sectionary, separate from Next Level (SEC-34, with
