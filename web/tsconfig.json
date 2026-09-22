@@ -9,6 +9,10 @@
     "esModuleInterop": true,
     "module": "esnext",
     "moduleResolution": "bundler",
+    // lib/mock-blocks, lib/block-source, lib/colour and lib/wall-layout are run
+    // directly by scripts/mock-blocks.mjs under Node's type stripping, and Node
+    // needs the extension on a relative import. Safe with noEmit.
+    "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "react-jsx",
