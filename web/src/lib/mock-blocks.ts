@@ -106,6 +106,15 @@ function poolsByPageType(samples: Block[]): Map<string, Pools> {
  * the wall shows real images and the search filter has real text to match. Only
  * the identity (host, page, size, tech stack) is swapped for the store's.
  */
+/**
+ * True for a block this file made up: a real screenshot re-hosted under
+ * another store's name. The wall uses them for scale; anything that claims to
+ * show a particular store (its profile, its card on Sites) must skip them.
+ */
+export function isMock(block: Block): boolean {
+  return (block as Block & { mock?: boolean }).mock === true;
+}
+
 export function expandBlocks(samples: Block[], stores: Store[], target: number, seed = 1): Block[] {
   if (samples.length === 0 || stores.length === 0 || target <= 0) return [];
 
@@ -166,7 +175,10 @@ export function expandBlocks(samples: Block[], stores: Store[], target: number, 
             platform: store.platform,
             theme: store.theme,
             apps: store.apps,
-          });
+            // Marked so the Sites pages can tell a borrowed screenshot from a
+            // real capture of this store. Not part of the contract.
+            mock: true,
+          } as Block);
         }
       }
     }

@@ -186,10 +186,9 @@ function Detail({
             <dt className="text-muted-foreground">Site</dt>
             <dd className="min-w-0">
               <Link
-                href={`/?host=${encodeURIComponent(focus.host)}`}
-                onClick={onClose}
+                href={`/sites/${encodeURIComponent(focus.host)}`}
                 className="block truncate underline-offset-4 hover:text-primary hover:underline"
-                title={`Every block from ${focus.host}`}
+                title={`${focus.host}: tech stack and every captured page`}
               >
                 {focus.host}
               </Link>
