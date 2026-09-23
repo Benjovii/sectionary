@@ -194,6 +194,11 @@ Before a block is photographed the capture waits up to three seconds for the
 pictures inside it, because lazy images only start loading once the block is
 on screen.
 
+Both widths are captured at 2x sharpness (desktop 2,880 pixels wide, phone
+780), JPEG quality 88. The manifest's sizes stay in CSS pixels (1440 and 390).
+A very tall page is cut off at the JPEG limit of 65,535 pixels, which at 2x is
+32,500 CSS pixels.
+
 To judge the result by eye: `npm run review-sheets -- --blocks` shows every
 block a page was cut into, in order (`--type product`, `--viewport mobile`,
 `--stores-per-sheet 3`). Measured on 21 September 2026 on the home pages of 24

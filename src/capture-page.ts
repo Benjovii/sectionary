@@ -13,7 +13,7 @@ export type ViewportName = 'desktop' | 'mobile';
 
 // The real browser UA plus our bot token, so site owners can see who we are.
 export const VIEWPORTS: Record<ViewportName, { width: number; height: number; deviceScaleFactor: number; isMobile: boolean; hasTouch: boolean; userAgent: string }> = {
-  desktop: { width: 1440, height: 900, deviceScaleFactor: 1, isMobile: false, hasTouch: false, userAgent: botUserAgent(DESKTOP_BASE_UA) },
+  desktop: { width: 1440, height: 900, deviceScaleFactor: 2, isMobile: false, hasTouch: false, userAgent: botUserAgent(DESKTOP_BASE_UA) },
   mobile: { width: 390, height: 844, deviceScaleFactor: 2, isMobile: true, hasTouch: true, userAgent: botUserAgent(MOBILE_BASE_UA) },
 };
 
