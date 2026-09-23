@@ -4,31 +4,55 @@ import { useState } from "react";
 import { Monitor, Smartphone } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { assetUrl } from "@/lib/data-source";
-import { labelFor, type Block } from "@/lib/blocks";
+import { blurOf, labelFor, type Block } from "@/lib/blocks";
 
 /**
  * A block on the wall. The frame reserves the block's exact aspect ratio and
  * paints its real background colour, so nothing shifts when the screenshot
  * arrives; the shimmer runs until then and the image fades in over 150 ms.
+ *
+ * On the virtualised wall the height is already known (see lib/wall-layout.ts),
+ * so it is passed in and the card fills it exactly rather than deriving its own
+ * aspect ratio. That keeps the rendered card and the computed layout identical,
+ * which is what stops the wall drifting as you scroll.
  */
-export function BlockCard({ block, onOpen }: { block: Block; onOpen: (b: Block) => void }) {
+export function BlockCard({ block, onOpen, height }: { block: Block; onOpen: (b: Block) => void; height?: number }) {
   const [loaded, setLoaded] = useState(false);
   const mobile = block.viewport === "mobile";
+  const fixed = height != null;
+  const blur = blurOf(block);
   return (
     <figure
       className={cn(
         "group overflow-hidden rounded-lg border bg-card transition-colors duration-150 hover:border-primary/60",
-        mobile && "mx-auto max-w-[300px]",
+        fixed ? "flex h-full flex-col" : mobile && "mx-auto max-w-[300px]",
       )}
     >
       <button
         type="button"
         onClick={() => onOpen(block)}
-        className="block w-full cursor-zoom-in outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+        className={cn(
+          "block w-full cursor-zoom-in outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
+          fixed && "min-h-0 flex-1",
+        )}
         aria-label={`${labelFor(block.typeHint)} block from ${block.host}, ${block.viewport}`}
       >
-        <div className="relative w-full overflow-hidden" style={{ aspectRatio: `${block.w} / ${block.h}`, background: block.bg }}>
-          {!loaded && <div className="shimmer absolute inset-0 opacity-70" aria-hidden />}
+        <div
+          className="relative h-full w-full overflow-hidden"
+          style={fixed ? { background: block.bg } : { aspectRatio: `${block.w} / ${block.h}`, background: block.bg }}
+        >
+          {/* The placeholder: a real blur when SEC-9 ships one, the captured
+              background colour until then, with the shimmer over it. Both sit
+              inside the card's reserved box, so none of this moves anything. */}
+          {!loaded && (
+            <>
+              {blur && (
+                /* eslint-disable-next-line @next/next/no-img-element */
+                <img src={blur} alt="" aria-hidden className="absolute inset-0 h-full w-full scale-105 object-cover object-top blur-lg" />
+              )}
+              <div className="shimmer absolute inset-0 opacity-70" aria-hidden />
+            </>
+          )}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={assetUrl(block.src)}
@@ -38,11 +62,21 @@ export function BlockCard({ block, onOpen }: { block: Block; onOpen: (b: Block) 
             loading="lazy"
             decoding="async"
             onLoad={() => setLoaded(true)}
-            className={cn("block h-full w-full object-cover object-top transition-opacity duration-150", loaded ? "opacity-100" : "opacity-0")}
+            className={cn(
+              // Blur to sharp rather than a plain fade, so the screenshot
+              // resolves into place. Filter and opacity only: no layout.
+              "block h-full w-full object-cover object-top transition-[opacity,filter] duration-150",
+              loaded ? "opacity-100 blur-0" : "opacity-0 blur-md",
+            )}
           />
         </div>
       </button>
-      <figcaption className="flex items-center gap-1.5 px-2.5 py-2 text-[11px] text-muted-foreground">
+      <figcaption
+        className={cn(
+          "flex items-center gap-1.5 px-2.5 text-[11px] text-muted-foreground",
+          fixed ? "h-8 shrink-0" : "py-2",
+        )}
+      >
         <span className="truncate font-medium text-foreground">{labelFor(block.typeHint)}</span>
         <span className="truncate">{block.host}</span>
         <span className="ml-auto inline-flex shrink-0 items-center gap-1 font-mono tabular-nums">
