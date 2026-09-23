@@ -38,15 +38,11 @@ async function generateBlurhash(buffer: Buffer): Promise<string> {
 
   const resized = await sharp(buffer)
     .resize(100, 100, { fit: "fill" })
+    .ensureAlpha()
     .raw()
     .toBuffer({ resolveWithObject: true });
 
-  const pixels: number[][] = [];
-  for (let i = 0; i < resized.data.length; i += 4) {
-    pixels.push([resized.data[i], resized.data[i + 1], resized.data[i + 2]]);
-  }
-
-  return blurhashEncode(pixels, 100, 100, 4, 3);
+  return blurhashEncode(new Uint8ClampedArray(resized.data), resized.info.width, resized.info.height, 4, 3);
 }
 
 // Get image dimensions and blurhash from JPEG

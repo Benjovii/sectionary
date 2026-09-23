@@ -12,7 +12,7 @@
 
 import { readFile, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
-import { eq, isNull, limit, shuffle } from "drizzle-orm";
+import { eq, isNull, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import Anthropic from "@anthropic-ai/sdk";
@@ -70,14 +70,14 @@ async function createEvalSet(): Promise<void> {
     .select()
     .from(blocks)
     .where(eq(blocks.viewport, "desktop"))
-    .orderBy(shuffle)
+    .orderBy(sql`random()`)
     .limit(100);
 
   const mobileBlocks = await db
     .select()
     .from(blocks)
     .where(eq(blocks.viewport, "mobile"))
-    .orderBy(shuffle)
+    .orderBy(sql`random()`)
     .limit(100);
 
   const evalSet: EvalBlock[] = [

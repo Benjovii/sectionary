@@ -73,20 +73,12 @@ async function generateBlurhash(buffer: Buffer): Promise<string> {
   // Resize to 100x100 for blurhash computation (fast & small)
   const resized = await sharp(buffer)
     .resize(100, 100, { fit: "fill" })
+    .ensureAlpha()
     .raw()
     .toBuffer({ resolveWithObject: true });
 
-  const pixels: number[][] = [];
-  for (let i = 0; i < resized.data.length; i += 4) {
-    pixels.push([
-      resized.data[i], // R
-      resized.data[i + 1], // G
-      resized.data[i + 2], // B
-    ]);
-  }
-
   // blurhash components: x=4, y=3
-  return blurhashEncode(pixels, 100, 100, 4, 3);
+  return blurhashEncode(new Uint8ClampedArray(resized.data), resized.info.width, resized.info.height, 4, 3);
 }
 
 // Generate stable R2 key based on path and content
