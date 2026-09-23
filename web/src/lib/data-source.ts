@@ -13,6 +13,12 @@ export const BLOCKS_SRC = process.env.NEXT_PUBLIC_BLOCKS_SRC ?? "/sample/blocks.
 export const STORES_SRC = process.env.NEXT_PUBLIC_STORES_SRC ?? "/sample/stores.json";
 
 /**
+ * Site profiles (SEC-19). Set NEXT_PUBLIC_SITES_SRC=/api/sites to read
+ * /api/sites/[host]; unset, a profile is assembled from the loaded blocks.
+ */
+export const SITES_SRC = process.env.NEXT_PUBLIC_SITES_SRC ?? "";
+
+/**
  * Scale fixture (SEC-46). Unset in normal use. Set NEXT_PUBLIC_MOCK_BLOCKS=30000
  * in web/.env.local to multiply the sample into a capture-sized set in the
  * browser, which is how the wall's virtualisation and the filters get tested
