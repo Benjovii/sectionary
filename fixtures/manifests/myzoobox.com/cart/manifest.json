@@ -29,7 +29,7 @@
     "url": "https://myzoobox.com/cart",
     "type": "cart",
     "slug": "cart",
-    "capturedAt": "2026-09-16T20:53:08.125Z",
+    "capturedAt": "2026-09-18T09:25:06.039Z",
     "title": "Your Shopping Cart – My ZOO Box",
     "description": "My ZOO Box",
     "canonical": "https://myzoobox.com/cart",
@@ -44,7 +44,7 @@
       "fullHeight": 1599,
       "strategy": "shopify-sections",
       "status": 200,
-      "ms": 20418
+      "ms": 23012
     },
     "mobile": {
       "file": "mobile.jpg",
@@ -52,7 +52,7 @@
       "fullHeight": 2318,
       "strategy": "shopify-sections",
       "status": 200,
-      "ms": 21242
+      "ms": 21566
     }
   },
   "blocks": [

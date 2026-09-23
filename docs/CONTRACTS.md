@@ -54,6 +54,30 @@ data/myzoobox.com/home/
 The importer should treat `host + page.url + capturedAt` as the identity of a
 capture, and keep every capture: history is a feature.
 
+Two things real stores do, both visible in the fixtures:
+
+- `site.host` is the store's identity and the folder name. `site.origin` and
+  `page.url` can sit on another host, because stores redirect to `www.` or to
+  a regional address (`stance.eu.com` serves its pages from `de.stance.com`).
+  Group by `site.host`, never by the URL's host.
+- Only pages worth importing have a manifest. Bot walls, geo-blocks, empty
+  pages and password pages fail in the crawler and leave no manifest behind,
+  so the importer needs no junk filter. A home page folder may also hold a
+  `links.json` (the crawler's own notes); ignore it.
+
+### Fixtures for the importer
+
+`fixtures/manifests/` holds real manifests from the 50-store pilot, chosen by
+`scripts/make-fixtures.mjs`: the four My ZOO Box pages that have been there
+from the start (tests may name them), one store per platform (three for
+Shopify, for theme variety) with its home, a product and a collection page,
+and real examples of each awkward case. `fixtures/manifests/index.json` lists
+every fixture with its platform, page type and what it shows
+(`edge:redirected-host`, `edge:region-in-path`, `edge:platform-unknown`,
+`edge:no-theme-info`, `edge:block-without-image`, `edge:viewport-failed`).
+An importer that loads every entry of that index without special cases passes
+the M1 exit test. Images are not part of the fixtures.
+
 When images move to object storage (SEC-9) the key layout will be
 `sites/<host>/<capturedAt>/<viewport>/<nn>-<type>.webp` and the manifest gains
 an optional `assetBase`. That is an additive change.

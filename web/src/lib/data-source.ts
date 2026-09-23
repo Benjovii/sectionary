@@ -19,7 +19,22 @@ export const STORES_SRC = process.env.NEXT_PUBLIC_STORES_SRC ?? "/sample/stores.
  */
 export const API_MODE = BLOCKS_SRC.startsWith("/api/");
 
-const DEPLOYED ="https://sectionary-pink.vercel.app";
+/**
+ * Site profiles (SEC-19). Set NEXT_PUBLIC_SITES_SRC=/api/sites to read
+ * /api/sites/[host]; unset, a profile is assembled from the loaded blocks.
+ */
+export const SITES_SRC = process.env.NEXT_PUBLIC_SITES_SRC ?? "";
+
+/**
+ * Scale fixture (SEC-46). Unset in normal use. Set NEXT_PUBLIC_MOCK_BLOCKS=30000
+ * in web/.env.local to multiply the sample into a capture-sized set in the
+ * browser, which is how the wall's virtualisation and the filters get tested
+ * before the full capture exists. Nothing extra is downloaded: the expansion
+ * runs on the sample JSON the app already fetched.
+ */
+export const MOCK_BLOCKS = Number(process.env.NEXT_PUBLIC_MOCK_BLOCKS) || 0;
+
+const DEPLOYED = "https://sectionary-pink.vercel.app";
 export const ASSET_BASE = process.env.NEXT_PUBLIC_ASSET_BASE ?? (process.env.NODE_ENV === "development" ? DEPLOYED : "");
 
 /** Resolve a block screenshot path against the asset base; absolute URLs pass through. */

@@ -76,7 +76,7 @@ it in your head.
 ## Rules that protect the others
 
 - **Do not run the crawler against third-party stores** (`npm run harvest`,
-  `validate`, `capture`). Only Lane A does, from one machine. Shopify throttles
+  `validate`, `capture`, `crawl`). Only Lane A does, from one machine. Shopify throttles
   by IP across all of its stores and a second crawler from the same network
   ruins both runs. Your own test store or `config/own-sites.txt` is fine.
 - **Do not deploy to production.** Ben deploys until block images live in
