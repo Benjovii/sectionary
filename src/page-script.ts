@@ -457,8 +457,17 @@ export function detectWall(): { kind: string; text: string } | null {
     ['location-gate', /(choose|select|pick) your (location|country|region|shipping destination|delivery country)|where (do you want|would you like) (us )?to (ship|deliver)/i],
   ];
   for (const [kind, re] of tests) if (re.test(hay)) return { kind, text: text.slice(0, 120) };
-  if (document.querySelector('#px-captcha, #challenge-form, #challenge-stage, .cf-browser-verification, iframe[src*="captcha-delivery"], iframe[src*="hcaptcha.com"], iframe[src*="recaptcha/api2/bframe"]')) {
+  // Elements that exist only on a challenge page.
+  if (document.querySelector('#px-captcha, #challenge-form, #challenge-stage, .cf-browser-verification, iframe[src*="captcha-delivery"]')) {
     return { kind: 'human-check', text: text.slice(0, 120) };
+  }
+  // A reCAPTCHA or hCaptcha frame also sits, hidden and empty, on any page with
+  // a protected form (stores with a newsletter box were failed as walls). Only
+  // a frame that is actually shown, at challenge size, counts.
+  for (const f of Array.from(document.querySelectorAll<HTMLIFrameElement>('iframe[src*="hcaptcha.com"], iframe[src*="recaptcha/api2/bframe"]'))) {
+    const r = f.getBoundingClientRect();
+    const cs = getComputedStyle(f);
+    if (r.width >= 200 && r.height >= 200 && cs.visibility !== 'hidden' && cs.display !== 'none' && Number(cs.opacity) > 0) return { kind: 'human-check', text: text.slice(0, 120) };
   }
   return null;
 }
