@@ -7,7 +7,8 @@ import { BlockCard, BlockCardSkeleton } from "@/components/block-card";
 import { BlockDialog } from "@/components/block-dialog";
 import { FilterBar, FilterBarSkeleton } from "@/components/filter-bar";
 import { loadBlockIndex } from "@/lib/load-blocks";
-import { queryBlocks, type BlockIndex } from "@/lib/block-source";
+import { queryBlocks, type BlockIndex, type WallQuery } from "@/lib/block-source";
+import { detailIndex } from "@/lib/block-detail";
 import { layOut, visible, GAP, type Layout } from "@/lib/wall-layout";
 import { FILTERS, readSelected, writeSelected, toggleValue, toQuery, countSelected, SEARCH_KEY, type FilterKey } from "@/lib/filters";
 import { type Block } from "@/lib/blocks";
@@ -27,6 +28,9 @@ const OVERSCAN = 800;
  * when it is replaced and the shift never reaches the viewport.
  */
 const LOADING_STRIP = 420;
+
+/** The URL key that holds the open block's id. Not "block": that is the block-type filter. */
+const BLOCK_KEY = "open";
 
 /**
  * Everything above the blocks plus the blocks, as placeholders. The route's
@@ -57,7 +61,6 @@ export function WallSkeleton() {
 export function Wall() {
   const [index, setIndex] = useState<BlockIndex | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [open, setOpen] = useState<Block | null>(null);
 
   const router = useRouter();
   const pathname = usePathname();
@@ -77,7 +80,10 @@ export function Wall() {
   const params = useMemo(() => new URLSearchParams(searchParams.toString()), [searchParams]);
   const selected = useMemo(() => readSelected(params), [params]);
   const search = params.get(SEARCH_KEY) ?? "";
-  const query = useMemo(() => toQuery(selected, search), [selected, search]);
+  // Keyed by its JSON so a URL change that leaves the filters alone, like
+  // opening a block, does not re-run the query over the whole set.
+  const queryKey = useMemo(() => JSON.stringify(toQuery(selected, search)), [selected, search]);
+  const query = useMemo(() => JSON.parse(queryKey) as WallQuery, [queryKey]);
 
   const replace = useCallback(
     (next: URLSearchParams) => router.replace(next.size ? `${pathname}?${next}` : pathname, { scroll: false }),
@@ -109,7 +115,6 @@ export function Wall() {
   // The first page is derived, not stored: a filter change recomputes it and
   // the appended pages below fall away with it. This is the same call that will
   // travel to /api/blocks, cursor and all.
-  const queryKey = useMemo(() => JSON.stringify(query), [query]);
   const first = useMemo(() => (index ? queryBlocks(index, { ...query, limit: PAGE_SIZE }) : null), [index, query]);
 
   // Pages fetched by scrolling, tagged with the query they belong to so a stale
@@ -207,6 +212,59 @@ export function Wall() {
     latest.current = { layout, cursor, top: box.top, key: queryKey, loadMore };
   });
 
+  // The open block lives in the URL too (`?open=<id>`), so a detail view is a
+  // link. Opening from the wall pushes a history entry, so Back closes it;
+  // moving between blocks inside the view replaces it, so Back still closes
+  // rather than stepping through everything seen.
+  const openId = params.get(BLOCK_KEY);
+  const detail = useMemo(() => (index ? detailIndex(index) : null), [index]);
+  const open = openId && detail ? (detail.byId.get(openId) ?? null) : null;
+  const pushed = useRef(false);
+
+  const withBlock = useCallback(
+    (id: string | null) => {
+      const next = new URLSearchParams(params.toString());
+      if (id) next.set(BLOCK_KEY, id);
+      else next.delete(BLOCK_KEY);
+      return next.size ? `${pathname}?${next}` : pathname;
+    },
+    [params, pathname],
+  );
+
+  const onOpen = useCallback(
+    (block: Block) => {
+      pushed.current = true;
+      router.push(withBlock(block.id), { scroll: false });
+    },
+    [router, withBlock],
+  );
+
+  const onShow = useCallback((block: Block) => router.replace(withBlock(block.id), { scroll: false }), [router, withBlock]);
+
+  const onCloseBlock = useCallback(() => {
+    if (!openId) return;
+    if (pushed.current) {
+      pushed.current = false;
+      router.back();
+    } else {
+      router.replace(withBlock(null), { scroll: false });
+    }
+  }, [openId, router, withBlock]);
+
+  // Opened by a pasted link, then closed by Back: nothing of ours to pop.
+  useEffect(() => {
+    if (!openId) pushed.current = false;
+  }, [openId]);
+
+  const onStep = useMemo(() => {
+    const at = open ? items.findIndex((b) => b.id === open.id) : -1;
+    if (at < 0) return {};
+    return {
+      prev: at > 0 ? () => onShow(items[at - 1]) : undefined,
+      next: at < items.length - 1 ? () => onShow(items[at + 1]) : undefined,
+    };
+  }, [open, items, onShow]);
+
   const anyFilter = countSelected(selected) > 0 || Boolean(search.trim());
 
   // When nothing matches, name the one filter actually responsible rather than
@@ -296,13 +354,15 @@ export function Wall() {
                 height: card.height,
               }}
             >
-              <BlockCard block={card.block} onOpen={setOpen} height={card.height} />
+              <BlockCard block={card.block} onOpen={onOpen} height={card.height} />
             </div>
           ))}
 
+          {/* Clipped: CSS columns at a fixed height spill sideways into extra
+              columns, which on one-column phones widened the whole page. */}
           {cursor && layout && (
             <div
-              className="wall absolute inset-x-0"
+              className="wall absolute inset-x-0 overflow-hidden"
               style={{ top: layout.height + GAP, height: LOADING_STRIP }}
               aria-hidden
             >
@@ -314,7 +374,14 @@ export function Wall() {
         </div>
       )}
 
-      <BlockDialog block={open} onClose={() => setOpen(null)} />
+      <BlockDialog
+        block={open}
+        missing={Boolean(openId && detail && !open)}
+        detail={detail}
+        onClose={onCloseBlock}
+        onOpen={onShow}
+        onStep={onStep}
+      />
     </div>
   );
 }
