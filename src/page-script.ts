@@ -451,6 +451,10 @@ export function detectWall(): { kind: string; text: string } | null {
     ['human-check', /verify (that )?you('| a)?re (a |not a )?(human|robot)|press (&|and) hold|are you a robot|complete the security check|checking (if the site connection is secure|your browser)|just a moment|needs to review the security of your connection/i],
     ['access-denied', /access (to this page has been |is )?denied|you don.?t have permission to access|request unsuccessful|pardon our interruption|unusual traffic|has been blocked|sorry, you have been blocked/i],
     ['geo-block', /restricted access|(not available|unavailable|cannot visit|can.?t visit|not accessible|do not ship|don.?t ship).{0,60}(your (current )?(location|country|region))/i],
+    // The site fell over (mytheresa.com: "Something went wrong", a "report issue" button and nothing else).
+    ['error-page', /something went wrong|an (unexpected )?error (has )?occurred|internal server error|service (is )?(temporarily )?unavailable|we.?re sorry, (something|an error|this page)/i],
+    // A country chooser instead of the store (canyon.com: "Choose your location and language").
+    ['location-gate', /(choose|select|pick) your (location|country|region|shipping destination|delivery country)|where (do you want|would you like) (us )?to (ship|deliver)/i],
   ];
   for (const [kind, re] of tests) if (re.test(hay)) return { kind, text: text.slice(0, 120) };
   if (document.querySelector('#px-captcha, #challenge-form, #challenge-stage, .cf-browser-verification, iframe[src*="captcha-delivery"], iframe[src*="hcaptcha.com"], iframe[src*="recaptcha/api2/bframe"]')) {
