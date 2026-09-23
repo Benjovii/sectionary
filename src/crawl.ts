@@ -184,7 +184,10 @@ type Outcome = { status: StoreStatus; pages: number; blocks: number; ms: number;
 const ELSEWHERE = /(^|\.)(amazon\.[a-z.]{2,6}|etsy\.com|ebay\.[a-z.]{2,6}|walmart\.com|aliexpress\.com|linktr\.ee|facebook\.com|instagram\.com|tiktok\.com|hugedomains\.com|dan\.com|sedo\.com|afternic\.com|godaddy\.com)$/i;
 const BROWSER_GONE =/browser:|has been closed|Target closed|Browser closed|disconnected|crashed/i;
 // Worth a second try after a cool-off. A bot wall (403) or a missing page (404) is not.
-const TRANSIENT = /robots-unreachable|page-timeout|ERR_TIMED_OUT|ERR_NETWORK|ERR_CONNECTION_RESET|ERR_ABORTED|ERR_INTERNET_DISCONNECTED|http-429|http-5\d\d|Timeout \d+ms exceeded|browser:|has been closed|crashed/i;
+// "dead" (DNS failed) is here on purpose: on the full run four household names
+// came back "dead" and answered a minute later. A domain that is really gone
+// fails again after the cool-off and is then marked failed.
+const TRANSIENT = /^dead$|robots-unreachable|page-timeout|ERR_TIMED_OUT|ERR_NETWORK|ERR_CONNECTION_RESET|ERR_CONNECTION_TIMED_OUT|ERR_NAME_NOT_RESOLVED|ERR_HTTP2_PROTOCOL_ERROR|ERR_ABORTED|ERR_INTERNET_DISCONNECTED|http-429|http-5\d\d|Timeout \d+ms exceeded|browser:|has been closed|crashed/i;
 
 /** One page, tried again once when the browser (not the site) was the problem. `ctx.browser()` starts a new browser if the old one died. */
 async function captureResilient(ctx: Ctx, url: string, extra: Partial<CaptureOptions>): Promise<PageResult> {

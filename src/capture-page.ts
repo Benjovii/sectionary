@@ -240,6 +240,25 @@ async function captureViewportInner(context: BrowserContext, url: string, vp: Vi
     await autoScroll(page);
     await page.waitForTimeout(600);
     await dismissOverlays(page);
+    // A video the browser cannot decode shows an error message where the hero
+    // should be. Show its poster picture instead, or nothing.
+    await page
+      .evaluate(() => {
+        for (const v of Array.from(document.querySelectorAll('video'))) {
+          if (!v.error) continue;
+          if (v.poster) {
+            const img = document.createElement('img');
+            img.src = v.poster;
+            img.alt = '';
+            const cs = getComputedStyle(v);
+            img.style.cssText = `display:block;width:${cs.width};height:${cs.height};object-fit:cover;object-position:${cs.objectPosition || 'center'}`;
+            v.replaceWith(img);
+          } else {
+            v.style.setProperty('visibility', 'hidden', 'important');
+          }
+        }
+      })
+      .catch(() => {});
     await page.evaluate(() => window.scrollTo(0, 0));
     await page.waitForTimeout(500);
 
