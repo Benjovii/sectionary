@@ -32,7 +32,7 @@ function Select({ value, onChange, label, options }: { value: string; onChange: 
       aria-label={label}
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="h-7 max-w-full rounded-lg border bg-background px-2 text-[12px] outline-none focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30"
+      className="h-7 max-w-full rounded-lg border bg-background px-2 text-[12px] outline-none focus-visible:ring-2 focus-visible:ring-ring dark:bg-input/30 touch:h-11"
     >
       <option value="">{label}</option>
       {options.map(([v, l, n]) => (
@@ -102,7 +102,7 @@ export function StoresTable({ src = STORES_SRC }: { src?: string }) {
 
   const th = (key: Sort, label: string, className = "") => (
     <th className={cn("px-3 py-2 text-left font-medium", className)}>
-      <button type="button" onClick={() => set("sort", key === "rank" ? "" : key)} className={cn("rounded outline-none hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50", f.sort === key && "text-foreground")}>
+      <button type="button" onClick={() => set("sort", key === "rank" ? "" : key)} className={cn("rounded outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring", f.sort === key && "text-foreground")}>
         {label}
         {f.sort === key ? " ↓" : ""}
       </button>
@@ -121,7 +121,7 @@ export function StoresTable({ src = STORES_SRC }: { src?: string }) {
           aria-label="Search stores"
           defaultValue={f.q}
           onChange={(e) => set("q", e.target.value)}
-          className="h-7 min-w-0 flex-1 basis-44 rounded-lg border bg-background px-2.5 text-[12px] outline-none placeholder:text-muted-foreground focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30 sm:max-w-72"
+          className="h-7 min-w-0 flex-1 basis-44 rounded-lg border bg-background px-2.5 text-[12px] outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring dark:bg-input/30 sm:max-w-72 touch:h-11"
         />
         {active && (
           <Button variant="ghost" size="sm" onClick={() => router.replace(pathname, { scroll: false })}>
@@ -151,7 +151,7 @@ export function StoresTable({ src = STORES_SRC }: { src?: string }) {
               <li key={s.host} className="rounded-lg border bg-card px-3 py-2.5">
                 <div className="flex items-baseline gap-2">
                   <span className="truncate font-medium">{s.brand}</span>
-                  <a href={`https://${s.host}/`} target="_blank" rel="noopener noreferrer" className="ml-auto inline-flex shrink-0 items-center gap-1 font-mono text-[11px] text-primary">
+                  <a href={`https://${s.host}/`} target="_blank" rel="noopener noreferrer" className="ml-auto inline-flex shrink-0 items-center gap-1 rounded-sm font-mono text-[11px] text-link outline-none focus-visible:ring-2 focus-visible:ring-ring touch:-my-3 touch:h-11">
                     {s.host} <ExternalLink className="size-3" />
                   </a>
                 </div>
@@ -183,9 +183,9 @@ export function StoresTable({ src = STORES_SRC }: { src?: string }) {
                   <tr key={s.host} className="border-b border-border/60 last:border-0 hover:bg-muted/50">
                     <td className="px-3 py-1.5 text-right font-mono text-[11px] tabular-nums text-muted-foreground">{i + 1}</td>
                     <td className="px-3 py-1.5">
-                      <a href={`https://${s.host}/`} target="_blank" rel="noopener noreferrer" className="group inline-flex items-center gap-1.5 outline-none focus-visible:ring-3 focus-visible:ring-ring/50">
+                      <a href={`https://${s.host}/`} target="_blank" rel="noopener noreferrer" className="group inline-flex items-center gap-1.5 outline-none focus-visible:ring-2 focus-visible:ring-ring">
                         <span className="font-medium">{s.brand}</span>
-                        <span className="font-mono text-[11px] text-muted-foreground group-hover:text-primary">{s.host}</span>
+                        <span className="font-mono text-[11px] text-muted-foreground group-hover:text-link">{s.host}</span>
                       </a>
                     </td>
                     <td className="px-3 py-1.5">

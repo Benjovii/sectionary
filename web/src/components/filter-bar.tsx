@@ -8,6 +8,21 @@ import { FILTERS, countSelected, type FilterKey, type Selected } from "@/lib/fil
 
 type Facets = Record<string, { value: string; count: number }[]>;
 
+/*
+ * Two layouts, one DOM order, so Tab walks the same path on both.
+ * Phones: the chips on one line that scrolls sideways (ten chips at 44px would
+ * otherwise wrap into four rows and push the wall off the first screen), then
+ * search and the count beneath. From sm, both wrappers dissolve (`contents`)
+ * and everything wraps in a single row as before.
+ */
+const ROW = "flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-1.5";
+// The vertical padding keeps focus rings inside the scroller, which clips.
+const CHIPS =
+  "-mx-3 -my-1 flex gap-1.5 overflow-x-auto px-3 py-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:contents";
+const TOOLS = "flex items-center gap-1.5 sm:contents";
+const SEARCH =
+  "h-7 min-w-0 flex-1 basis-40 rounded-lg border bg-background px-2.5 text-[12px] outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring dark:bg-input/30 sm:max-w-56 touch:h-11";
+
 /**
  * Multi-select filters for the wall (SEC-16).
  *
@@ -40,6 +55,7 @@ export function FilterBar({
   const [open, setOpen] = useState<FilterKey | null>(null);
   const [needle, setNeedle] = useState("");
   const root = useRef<HTMLDivElement>(null);
+  const chips = useRef(new Map<FilterKey, HTMLButtonElement>());
 
   // Close on Escape or a click outside, the two things people expect.
   useEffect(() => {
@@ -48,7 +64,10 @@ export function FilterBar({
       if (root.current && !root.current.contains(event.target as Node)) setOpen(null);
     };
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setOpen(null);
+      if (event.key !== "Escape") return;
+      // Back to the chip, or focus falls to the page when the panel unmounts.
+      if (root.current?.contains(document.activeElement)) chips.current.get(open)?.focus();
+      setOpen(null);
     };
     document.addEventListener("pointerdown", onPointerDown);
     document.addEventListener("keydown", onKeyDown);
@@ -79,57 +98,65 @@ export function FilterBar({
 
   return (
     <div ref={root} className="flex flex-col gap-2">
-      <div className="flex flex-wrap items-center gap-1.5">
-        {FILTERS.map((filter) => {
-          const chosen = selected[filter.key] ?? [];
-          const isOpen = open === filter.key;
-          return (
-            <Button
-              key={filter.key}
-              variant="outline"
-              size="sm"
-              active={chosen.length > 0}
-              aria-expanded={isOpen}
-              aria-controls={isOpen ? "filter-panel" : undefined}
-              onClick={() => {
-                setNeedle("");
-                setOpen((prev) => (prev === filter.key ? null : filter.key));
-              }}
-            >
-              {filter.label}
-              {chosen.length > 0 && (
-                <span className="rounded-full bg-background/25 px-1.5 font-mono text-[10px] tabular-nums">{chosen.length}</span>
-              )}
-              <ChevronDown className={cn("size-3 transition-transform duration-150", isOpen && "rotate-180")} />
+      <div className={ROW}>
+        <div className={CHIPS}>
+          {FILTERS.map((filter) => {
+            const chosen = selected[filter.key] ?? [];
+            const isOpen = open === filter.key;
+            return (
+              <Button
+                key={filter.key}
+                ref={(el) => {
+                  if (el) chips.current.set(filter.key, el);
+                  else chips.current.delete(filter.key);
+                }}
+                variant="outline"
+                size="sm"
+                active={chosen.length > 0}
+                aria-expanded={isOpen}
+                aria-controls={isOpen ? "filter-panel" : undefined}
+                onClick={() => {
+                  setNeedle("");
+                  setOpen((prev) => (prev === filter.key ? null : filter.key));
+                }}
+              >
+                {filter.label}
+                {chosen.length > 0 && (
+                  <span className="rounded-full bg-background/25 px-1.5 font-mono text-[10px] tabular-nums">{chosen.length}</span>
+                )}
+                <ChevronDown className={cn("size-3 transition-transform duration-150", isOpen && "rotate-180")} />
+              </Button>
+            );
+          })}
+        </div>
+
+        <div className={TOOLS}>
+          <input
+            type="search"
+            value={search}
+            placeholder="Search headline or copy…"
+            aria-label="Search"
+            onChange={(e) => onSearch(e.target.value)}
+            className={SEARCH}
+          />
+
+          {activeCount > 0 && (
+            <Button variant="ghost" size="sm" onClick={onClearAll}>
+              <X className="size-3" />
+              Clear all
             </Button>
-          );
-        })}
+          )}
 
-        <input
-          type="search"
-          value={search}
-          placeholder="Search headline or copy…"
-          aria-label="Search"
-          onChange={(e) => onSearch(e.target.value)}
-          className="h-7 min-w-0 flex-1 basis-40 rounded-lg border bg-background px-2.5 text-[12px] outline-none placeholder:text-muted-foreground focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30 sm:max-w-56"
-        />
-
-        {activeCount > 0 && (
-          <Button variant="ghost" size="sm" onClick={onClearAll}>
-            <X className="size-3" />
-            Clear all
-          </Button>
-        )}
-
-        {/* Fixed width: "loading…" and "30,000 blocks" are different lengths,
-            and without this the count nudges itself sideways on arrival. That
-            was the only layout shift left on the wall. */}
-        <span
-          className="ml-auto min-w-[96px] shrink-0 text-right font-mono text-[11px] tabular-nums text-muted-foreground"
-          aria-live="polite"
-        >
-          {ready ? `${total.toLocaleString("en-US")} blocks` : "loading…"}
-        </span>
+          {/* Fixed width: "loading…" and "30,000 blocks" are different lengths,
+              and without this the count nudges itself sideways on arrival. That
+              was the only layout shift left on the wall. */}
+          <span
+            className="ml-auto min-w-[96px] shrink-0 text-right font-mono text-[11px] tabular-nums text-muted-foreground"
+            aria-live="polite"
+          >
+            {ready ? `${total.toLocaleString("en-US")} blocks` : "loading…"}
+          </span>
+        </div>
       </div>
 
       {spec && (
@@ -142,7 +169,7 @@ export function FilterBar({
               placeholder={`Find a ${spec.label.toLowerCase()}…`}
               aria-label={`Find a ${spec.label.toLowerCase()}`}
               onChange={(e) => setNeedle(e.target.value)}
-              className="mb-1 h-8 w-full rounded-md border bg-background px-2.5 text-[12px] outline-none placeholder:text-muted-foreground focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30"
+              className="mb-1 h-8 w-full rounded-md border bg-background px-2.5 text-[12px] outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring dark:bg-input/30 touch:h-11"
             />
           )}
 
@@ -160,7 +187,7 @@ export function FilterBar({
                     role="checkbox"
                     aria-checked={on}
                     onClick={() => onToggle(spec.key, option.value)}
-                    className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-left text-[13px] transition-colors duration-150 outline-none hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50"
+                    className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-left text-[13px] transition-colors duration-150 outline-none hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring touch:min-h-11"
                   >
                     <span
                       aria-hidden
@@ -198,15 +225,19 @@ export function FilterBar({
 export function FilterBarSkeleton() {
   return (
     <div className="flex flex-col gap-2" aria-busy="true" aria-label="Loading filters">
-      <div className="flex flex-wrap items-center gap-1.5">
-        {FILTERS.map((filter) => (
-          <Button key={filter.key} variant="outline" size="sm" disabled className="opacity-50">
-            {filter.label}
-            <ChevronDown className="size-3" />
-          </Button>
-        ))}
-        <div className="h-7 min-w-0 flex-1 basis-40 rounded-lg border bg-background dark:bg-input/30 sm:max-w-56" aria-hidden />
-        <span className="ml-auto min-w-[96px] shrink-0 text-right font-mono text-[11px] tabular-nums text-muted-foreground">loading…</span>
+      <div className={ROW}>
+        <div className={CHIPS}>
+          {FILTERS.map((filter) => (
+            <Button key={filter.key} variant="outline" size="sm" disabled className="opacity-50">
+              {filter.label}
+              <ChevronDown className="size-3" />
+            </Button>
+          ))}
+        </div>
+        <div className={TOOLS}>
+          <div className={SEARCH} aria-hidden />
+          <span className="ml-auto min-w-[96px] shrink-0 text-right font-mono text-[11px] tabular-nums text-muted-foreground">loading…</span>
+        </div>
       </div>
     </div>
   );
