@@ -7,6 +7,7 @@ import { BlockCard, BlockCardSkeleton } from "@/components/block-card";
 import { BlockDialog } from "@/components/block-dialog";
 import { FilterBar, FilterBarSkeleton } from "@/components/filter-bar";
 import { loadBlockIndex } from "@/lib/load-blocks";
+import { clearReturn, returnsFor } from "@/lib/return-to";
 import { queryBlocks, type BlockIndex, type WallQuery } from "@/lib/block-source";
 import { detailIndex } from "@/lib/block-detail";
 import { layOut, visible, GAP, type Layout } from "@/lib/wall-layout";
@@ -31,12 +32,6 @@ const LOADING_STRIP = 420;
 
 /** The URL key that holds the open block's id. Not "block": that is the block-type filter. */
 const BLOCK_KEY = "open";
-
-/**
- * Set by links that open a block from another page (a flow, a site's page
- * viewer): closing the detail then goes back there instead of to the wall.
- */
-const BACK_KEY = "back";
 
 /**
  * Everything above the blocks plus the blocks, as placeholders. The route's
@@ -226,15 +221,14 @@ export function Wall() {
   const detail = useMemo(() => (index ? detailIndex(index) : null), [index]);
   const open = openId && detail ? (detail.byId.get(openId) ?? null) : null;
   const pushed = useRef(false);
+  // Opened from a flow or a site's page viewer, in this tab: closing goes back there.
+  const [returnOnClose] = useState(() => returnsFor(openId));
 
   const withBlock = useCallback(
     (id: string | null) => {
       const next = new URLSearchParams(params.toString());
       if (id) next.set(BLOCK_KEY, id);
-      else {
-        next.delete(BLOCK_KEY);
-        next.delete(BACK_KEY);
-      }
+      else next.delete(BLOCK_KEY);
       return next.size ? `${pathname}?${next}` : pathname;
     },
     [params, pathname],
@@ -252,18 +246,20 @@ export function Wall() {
 
   const onCloseBlock = useCallback(() => {
     if (!openId) return;
-    // history.length guards a pasted link opened in a fresh tab: nothing to go back to.
-    if (pushed.current || (params.get(BACK_KEY) && window.history.length > 1)) {
+    if (pushed.current || returnOnClose) {
       pushed.current = false;
+      clearReturn();
       router.back();
     } else {
       router.replace(withBlock(null), { scroll: false });
     }
-  }, [openId, params, router, withBlock]);
+  }, [openId, returnOnClose, router, withBlock]);
 
   // Opened by a pasted link, then closed by Back: nothing of ours to pop.
   useEffect(() => {
-    if (!openId) pushed.current = false;
+    if (openId) return;
+    pushed.current = false;
+    clearReturn();
   }, [openId]);
 
   const onStep = useMemo(() => {

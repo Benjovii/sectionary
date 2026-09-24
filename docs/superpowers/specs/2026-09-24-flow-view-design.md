@@ -29,7 +29,7 @@ Shopify's default robots.txt keeps it out of `/cart` too. So:
 | --- | --- |
 | `web/src/lib/flows.ts` | Pure. `flowOf(pages)` turns a store's pages into five steps; `flowSummaries(index)` does it for every captured store in one pass; `flowCounts`. |
 | `web/src/lib/site-profile.ts` | Gains two exports reused by flows: `pagesFromBlocks(blocks)` and `storeFromBlocks(host, blocks)`. No behaviour change. |
-| `web/scripts/flow-check.ts` | Case table for flows.ts plus the real sample. `npm run flow-check`. |
+| `web/scripts/flow-check.mts` | Case table for flows.ts plus the real sample. `npm run flow-check`. |
 | `web/src/components/flow-view.tsx` | The flow page for one store. |
 | `web/src/components/flows-index.tsx` | Every captured store's flow status, with the count. |
 | `web/src/app/sites/[host]/flow/page.tsx` | Route for the flow page. |
@@ -77,6 +77,13 @@ accessibility 100 on the flow page and the index, both themes.
 
 Capturing more stores (Lane A). Checkout capture (policy). Block positions
 for API full-page screenshots (contract change, Lane B).
+
+## Source of the count
+
+The index counts from the block set. With NEXT_PUBLIC_SITES_SRC on, a store's
+flow page reads the API's full-page screenshots instead, so the two agree only
+as far as the API and the block export do. A flows summary endpoint (Lane B)
+would let both read one source.
 
 ## Risk
 

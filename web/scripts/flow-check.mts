@@ -2,7 +2,7 @@
 // gaps, and that mock blocks never count. No network:  npm run flow-check
 import { readFileSync } from "node:fs";
 import { buildIndex } from "../src/lib/block-source.ts";
-import { flowCounts, flowOf, flowSummaries, FLOW_STEPS } from "../src/lib/flows.ts";
+import { cutBlocks, flowCounts, flowOf, flowSummaries, pageView, FLOW_STEPS } from "../src/lib/flows.ts";
 import { pagesFromBlocks } from "../src/lib/site-profile.ts";
 import { expandBlocks } from "../src/lib/mock-blocks.ts";
 import type { Block } from "../src/contracts/block.ts";
@@ -77,7 +77,23 @@ const zoo = real.find((s) => s.store.host === "myzoobox.com");
 check("sample: myzoobox has a complete flow with cart", Boolean(zoo?.flow.complete && zoo.flow.steps[3].pages.length === 1));
 check("sample: collections and products are two each", zoo?.flow.steps[1].pages.length === 2 && zoo.flow.steps[2].pages.length === 2);
 
-// 4. Capture scale. The mock's blocks, stripped of their mock flag, stand in
+// 4. Drawing a page.
+const tall = (h: number) => block("draw.test", "home", "/", { w: 100, h });
+const page = pagesFromBlocks([tall(100), tall(100), block("draw.test", "home", "/", { viewport: "mobile", w: 100, h: 50 })])[0];
+check("pageView: the wanted viewport", pageView(page, "desktop")?.blocks.length === 2 && pageView(page, "desktop")?.fallback === false);
+const onlyDesktop = { ...page, mobileBlocks: [] };
+check("pageView: falls back to the other viewport and says so", pageView(onlyDesktop, "mobile")?.viewport === "desktop" && pageView(onlyDesktop, "mobile")?.fallback === true);
+check("pageView: ratio sums the blocks", pageView(page, "desktop")?.ratio === 2);
+check("pageView: a full screenshot is taken as tall", pageView({ ...page, desktop: "/p.jpg" }, "desktop")?.ratio === Number.POSITIVE_INFINITY);
+check("pageView: nothing in either viewport is null", pageView({ ...page, desktopBlocks: [], mobileBlocks: [] }, "desktop") === null);
+const ones = [tall(100), tall(100), tall(100)];
+const cut = cutBlocks(ones, 1.5);
+check("cutBlocks: stops at the cap and cuts the block crossing it", cut.length === 2 && cut[0].cut === null && cut[1].cut === 0.5, JSON.stringify(cut.map((c) => c.cut)));
+check("cutBlocks: no cap draws everything", cutBlocks(ones, null).length === 3);
+check("cutBlocks: an exact fit is not cut", cutBlocks([tall(75), tall(75), tall(100)], 1.5).every((c) => c.cut === null) && cutBlocks([tall(75), tall(75), tall(100)], 1.5).length === 2);
+check("cutBlocks: a sliver left over is not drawn", cutBlocks([tall(149), tall(100)], 1.5).length === 1);
+
+// 5. Capture scale. The mock's blocks, stripped of their mock flag, stand in
 // for a full run: 30,000 blocks over the 1,005 listed stores. This proves the
 // count and the one-pass grouping hold up at the size SEC-20 is judged at,
 // not that 200 stores are captured (the mock never reaches the app's flows).

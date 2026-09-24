@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { assetUrl } from "@/lib/data-source";
 import { loadSiteView } from "@/lib/load-blocks";
 import { flowOf } from "@/lib/flows";
+import { markReturn } from "@/lib/return-to";
 import { labelFor, PAGE_TYPE_LABEL, type Block } from "@/lib/blocks";
 import { industryLabel, platformLabel, rankLabel } from "@/lib/stores";
 import type { ProfilePage, SiteView } from "@/lib/site-profile";
@@ -336,7 +337,8 @@ function PageViewer({ page, onClose }: { page: ProfilePage | null; onClose: () =
                 blocks.map((b) => (
                   <Link
                     key={b.id}
-                    href={`/?open=${encodeURIComponent(b.id)}&back=1`}
+                    href={`/?open=${encodeURIComponent(b.id)}`}
+                    onClick={() => markReturn(b.id)}
                     className="group relative block outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     style={{ aspectRatio: `${b.w} / ${b.h}`, background: b.bg }}
                     aria-label={`${labelFor(b.typeHint)} block, open its detail`}

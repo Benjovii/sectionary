@@ -7,7 +7,7 @@
 // docs/bot-page.md), so it is always a gap, and the view says why.
 //
 // Pure: no React, no DOM, no fetch. Relative imports, so
-// `node scripts/flow-check.ts` runs it under Node's type stripping.
+// `npm run flow-check` runs it under Node's type stripping.
 
 import type { Block } from "@/contracts/block";
 import type { Store } from "@/contracts/store";
@@ -91,4 +91,51 @@ export function flowCounts(summaries: FlowSummary[]): { complete: number; withCa
     withCart: complete.filter((s) => s.flow.steps[FLOW_STEPS.indexOf("cart")].pages.length > 0).length,
     captured: summaries.length,
   };
+}
+
+export type Viewport = "desktop" | "mobile";
+
+/** What to draw for one page in one viewport. */
+export type PageView = {
+  viewport: Viewport;
+  /** A full-page screenshot (API source), or null when the page is its blocks. */
+  full: string | null;
+  blocks: Block[];
+  /** Height over width of the whole page. Unknown, so infinite, for a full screenshot. */
+  ratio: number;
+  /** True when the wanted viewport had nothing and this is the other one. */
+  fallback: boolean;
+};
+
+/** The page in the wanted viewport, or in the other when that is all there is. Null when neither has anything. */
+export function pageView(page: ProfilePage, want: Viewport): PageView | null {
+  const other: Viewport = want === "desktop" ? "mobile" : "desktop";
+  for (const viewport of [want, other]) {
+    const full = viewport === "desktop" ? page.desktop : page.mobile;
+    const blocks = viewport === "desktop" ? page.desktopBlocks : page.mobileBlocks;
+    if (!full && blocks.length === 0) continue;
+    const ratio = full ? Number.POSITIVE_INFINITY : blocks.reduce((sum, b) => sum + b.h / b.w, 0);
+    return { viewport, full, blocks, ratio, fallback: viewport !== want };
+  }
+  return null;
+}
+
+/** A leftover thinner than this (height over width) is not worth a link: at 340px it is under 7px. */
+const SLIVER = 0.02;
+
+/**
+ * The blocks of a page cut at `cap` (height over width), or all of them when
+ * cap is null. Blocks below the cap are dropped and the one crossing it is
+ * cut to fit, so no link reaches past the frame.
+ */
+export function cutBlocks(blocks: Block[], cap: number | null): { block: Block; ratio: number; cut: number | null }[] {
+  const drawn: { block: Block; ratio: number; cut: number | null }[] = [];
+  let used = 0;
+  for (const block of blocks) {
+    if (cap !== null && cap - used < SLIVER) break;
+    const ratio = block.h / block.w;
+    drawn.push({ block, ratio, cut: cap !== null && used + ratio > cap ? cap - used : null });
+    used += ratio;
+  }
+  return drawn;
 }

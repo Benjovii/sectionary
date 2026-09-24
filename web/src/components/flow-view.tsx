@@ -1,18 +1,18 @@
 "use client";
 
-import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, ChevronLeft, ChevronRight, Monitor, Smartphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StoreIcon } from "@/components/store-icon";
 import { cn } from "@/lib/utils";
 import { assetUrl } from "@/lib/data-source";
 import { loadSiteView } from "@/lib/load-blocks";
-import { labelFor, PAGE_TYPE_LABEL, type Block } from "@/lib/blocks";
-import { flowOf, FLOW_STEPS, type FlowStep } from "@/lib/flows";
+import { labelFor, PAGE_TYPE_LABEL } from "@/lib/blocks";
+import { cutBlocks, flowOf, pageView, FLOW_STEPS, type FlowStep, type FlowStepType, type PageView, type Viewport } from "@/lib/flows";
+import { markReturn } from "@/lib/return-to";
 import type { ProfilePage, SiteView } from "@/lib/site-profile";
-
-type Viewport = "desktop" | "mobile";
 
 /** From here up the steps sit side by side; below, they stack. */
 const WIDE = "(min-width: 900px)";
@@ -20,17 +20,46 @@ const WIDE = "(min-width: 900px)";
 /** On phones a step shows this much of its page (height over width) until opened. */
 const PREVIEW_RATIO = 1.5;
 
+// Module scope, so useSyncExternalStore does not resubscribe on every render.
+const subscribeWide = (onChange: () => void) => {
+  const query = window.matchMedia(WIDE);
+  query.addEventListener("change", onChange);
+  return () => query.removeEventListener("change", onChange);
+};
+const isWide = () => window.matchMedia(WIDE).matches;
+const notWide = () => false;
+
 /** Whether the steps sit side by side. False on the server, where nothing is drawn yet anyway. */
 function useWide(): boolean {
-  return useSyncExternalStore(
-    (onChange) => {
-      const query = window.matchMedia(WIDE);
-      query.addEventListener("change", onChange);
-      return () => query.removeEventListener("change", onChange);
-    },
-    () => window.matchMedia(WIDE).matches,
-    () => false,
-  );
+  return useSyncExternalStore(subscribeWide, isWide, notWide);
+}
+
+/**
+ * Where the person was, saved as they open a block and put back when they
+ * return: the page's scroll, each column's scroll, and which steps were opened
+ * in full. The viewport, markers and which collection or product is shown live
+ * in the URL instead, so Back restores those on its own.
+ */
+type Place = { y: number; columns: Partial<Record<FlowStepType, number>>; open: FlowStepType[] };
+const placeKey = (host: string) => `sectionary:flow-place:${host}`;
+
+function savePlace(host: string, place: Place): void {
+  try {
+    sessionStorage.setItem(placeKey(host), JSON.stringify(place));
+  } catch {
+    // Private mode or storage blocked: the flow still works, it just starts at the top.
+  }
+}
+
+/** The saved place, once: it is removed as it is read. */
+function takePlace(host: string): Place | null {
+  try {
+    const raw = sessionStorage.getItem(placeKey(host));
+    sessionStorage.removeItem(placeKey(host));
+    return raw ? (JSON.parse(raw) as Place) : null;
+  } catch {
+    return null;
+  }
 }
 
 /**
@@ -41,15 +70,28 @@ function useWide(): boolean {
  */
 export function FlowView({ host }: { host: string }) {
   const [state, setState] = useState<{ host: string; view: SiteView | null; error: string | null } | null>(null);
-  // Null until the person picks: then the default follows the screen.
-  const [picked, setPicked] = useState<Viewport | null>(null);
-  const [markers, setMarkers] = useState(true);
+  const [open, setOpen] = useState<FlowStepType[]>([]);
   const wide = useWide();
+
+  const router = useRouter();
+  const pathname = usePathname();
+  const params = useSearchParams();
+  const picked = params.get("v");
+  const markers = params.get("markers") !== "off";
+
+  const regions = useRef(new Map<FlowStepType, HTMLDivElement>());
+  const restoring = useRef<Place | null>(null);
 
   useEffect(() => {
     let alive = true;
     loadSiteView(host).then(
-      (view) => alive && setState({ host, view, error: null }),
+      (view) => {
+        if (!alive) return;
+        const place = takePlace(host);
+        restoring.current = place;
+        setOpen(place?.open ?? []);
+        setState({ host, view, error: null });
+      },
       (e: Error) => alive && setState({ host, view: null, error: e.message }),
     );
     return () => {
@@ -57,7 +99,33 @@ export function FlowView({ host }: { host: string }) {
     };
   }, [host]);
 
+  // Put the scroll back once the returning flow has drawn. The frames take
+  // their height from the blocks' known sizes, so there is nothing to wait for.
+  useEffect(() => {
+    const place = restoring.current;
+    if (!state?.view || !place) return;
+    restoring.current = null;
+    for (const [type, top] of Object.entries(place.columns)) {
+      const region = regions.current.get(type as FlowStepType);
+      if (region && top) region.scrollTop = top;
+    }
+    window.scrollTo({ top: place.y });
+  }, [state]);
+
   const flow = useMemo(() => (state?.view ? flowOf(state.view.pages) : null), [state]);
+
+  const setParam = (key: string, value: string | null) => {
+    const next = new URLSearchParams(params.toString());
+    if (value === null) next.delete(key);
+    else next.set(key, value);
+    router.replace(next.size ? `${pathname}?${next}` : pathname, { scroll: false });
+  };
+
+  const rememberPlace = () => {
+    const columns: Place["columns"] = {};
+    for (const [type, region] of regions.current) if (region.scrollTop) columns[type] = region.scrollTop;
+    savePlace(host, { y: window.scrollY, columns, open });
+  };
 
   if (!state || state.host !== host) return <FlowSkeleton />;
   if (state.error) return <Empty>This flow could not be loaded ({state.error}).</Empty>;
@@ -72,7 +140,7 @@ export function FlowView({ host }: { host: string }) {
     );
   }
 
-  const viewport: Viewport = picked ?? (wide ? "desktop" : "mobile");
+  const viewport: Viewport = picked === "desktop" || picked === "mobile" ? picked : wide ? "desktop" : "mobile";
   const { store } = state.view;
 
   return (
@@ -86,7 +154,8 @@ export function FlowView({ host }: { host: string }) {
         </Link>
         <div className="flex flex-wrap items-center gap-x-3 gap-y-3">
           <StoreIcon key={store.host} host={store.host} brand={store.brand} size={40} className="rounded-lg" />
-          <div className="min-w-0 flex-1">
+          {/* The basis lets the switches drop to their own line on phones instead of squeezing the title. */}
+          <div className="min-w-0 flex-1 basis-52">
             <h1 className="font-heading text-[22px] leading-tight font-semibold">{store.brand} flow</h1>
             <p className="text-[12px] text-muted-foreground">
               {flow.captured} of {FLOW_STEPS.length} steps captured ·{" "}
@@ -98,28 +167,8 @@ export function FlowView({ host }: { host: string }) {
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <div role="radiogroup" aria-label="Viewport" className="flex rounded-lg border p-0.5">
-              {(["desktop", "mobile"] as const).map((v) => {
-                const Icon = v === "mobile" ? Smartphone : Monitor;
-                return (
-                  <button
-                    key={v}
-                    type="button"
-                    role="radio"
-                    aria-checked={viewport === v}
-                    onClick={() => setPicked(v)}
-                    className={cn(
-                      "inline-flex h-7 items-center gap-1.5 rounded-md px-2.5 text-[12px] font-medium transition-colors duration-150 outline-none focus-visible:ring-2 focus-visible:ring-ring touch:h-11",
-                      viewport === v ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground",
-                    )}
-                  >
-                    <Icon className="size-3.5" />
-                    {v === "mobile" ? "Mobile" : "Desktop"}
-                  </button>
-                );
-              })}
-            </div>
-            <Button variant="outline" size="sm" aria-pressed={markers} onClick={() => setMarkers((m) => !m)}>
+            <ViewportSwitch value={viewport} onChange={(v) => setParam("v", v)} />
+            <Button variant="outline" size="sm" aria-pressed={markers} onClick={() => setParam("markers", markers ? "off" : null)}>
               Markers
             </Button>
           </div>
@@ -133,13 +182,75 @@ export function FlowView({ host }: { host: string }) {
           aria-label="Flow, home to checkout"
           className="flex flex-col gap-8 min-[900px]:-mx-4 min-[900px]:flex-row min-[900px]:gap-4 min-[900px]:overflow-x-auto min-[900px]:px-4 min-[900px]:pb-3"
         >
-          {flow.steps.map((step, i) => (
-            <li key={step.type} className="flex min-w-0 flex-col gap-2 min-[900px]:w-[340px] min-[900px]:shrink-0">
-              <StepColumn step={step} number={i + 1} viewport={viewport} markers={markers} wide={wide} />
-            </li>
-          ))}
+          {flow.steps.map((step, i) => {
+            // 1-based in the URL (?collection=2), clamped: a page can drop out of a newer capture.
+            const at = Math.min(Math.max(Number(params.get(step.type)) - 1 || 0, 0), Math.max(step.pages.length - 1, 0));
+            return (
+              <li key={step.type} className="flex min-w-0 flex-col gap-2 min-[900px]:w-[340px] min-[900px]:shrink-0">
+                <StepColumn
+                  step={step}
+                  number={i + 1}
+                  at={at}
+                  onAt={(n) => setParam(step.type, n === 0 ? null : String(n + 1))}
+                  viewport={viewport}
+                  markers={markers}
+                  cut={!wide && !open.includes(step.type)}
+                  onToggleOpen={() => setOpen((list) => (list.includes(step.type) ? list.filter((t) => t !== step.type) : [...list, step.type]))}
+                  regionRef={(el) => {
+                    if (el) regions.current.set(step.type, el);
+                    else regions.current.delete(step.type);
+                  }}
+                  onLeave={rememberPlace}
+                />
+              </li>
+            );
+          })}
         </ol>
       )}
+    </div>
+  );
+}
+
+/** Desktop or Mobile, as a radio group: one tab stop, arrow keys move between the two. */
+function ViewportSwitch({ value, onChange }: { value: Viewport; onChange: (v: Viewport) => void }) {
+  const buttons = useRef(new Map<Viewport, HTMLButtonElement>());
+  const options = ["desktop", "mobile"] as const;
+  return (
+    <div
+      role="radiogroup"
+      aria-label="Viewport"
+      className="flex rounded-lg border p-0.5"
+      onKeyDown={(e) => {
+        if (!["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(e.key)) return;
+        e.preventDefault();
+        const next = value === "desktop" ? "mobile" : "desktop";
+        onChange(next);
+        buttons.current.get(next)?.focus();
+      }}
+    >
+      {options.map((v) => {
+        const Icon = v === "mobile" ? Smartphone : Monitor;
+        return (
+          <button
+            key={v}
+            ref={(el) => {
+              if (el) buttons.current.set(v, el);
+            }}
+            type="button"
+            role="radio"
+            aria-checked={value === v}
+            tabIndex={value === v ? 0 : -1}
+            onClick={() => onChange(v)}
+            className={cn(
+              "inline-flex h-7 items-center gap-1.5 rounded-md px-2.5 text-[12px] font-medium transition-colors duration-150 outline-none focus-visible:ring-2 focus-visible:ring-ring touch:h-11",
+              value === v ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground",
+            )}
+          >
+            <Icon className="size-3.5" />
+            {v === "mobile" ? "Mobile" : "Desktop"}
+          </button>
+        );
+      })}
     </div>
   );
 }
@@ -150,25 +261,35 @@ const FRAME = "relative overflow-hidden rounded-lg border bg-muted/40 min-[900px
 function StepColumn({
   step,
   number,
+  at,
+  onAt,
   viewport,
   markers,
-  wide,
+  cut,
+  onToggleOpen,
+  regionRef,
+  onLeave,
 }: {
   step: FlowStep;
   number: number;
+  /** Which of the step's pages is shown. */
+  at: number;
+  onAt: (n: number) => void;
   viewport: Viewport;
   markers: boolean;
-  wide: boolean;
+  /** Cut the page at PREVIEW_RATIO (stacked, not opened). */
+  cut: boolean;
+  onToggleOpen: () => void;
+  regionRef: (el: HTMLDivElement | null) => void;
+  /** Called as a block link is followed, to save the reader's place. */
+  onLeave: () => void;
 }) {
-  const [at, setAt] = useState(0);
-  const [open, setOpen] = useState(false);
   const label = PAGE_TYPE_LABEL[step.type] ?? step.type;
   const page = step.pages[at] ?? null;
   const path = page ? page.url.replace(/^https?:\/\/[^/]+/, "") || "/" : null;
-  const shown = page ? pageBlocks(page, viewport) : null;
+  const shown = page ? pageView(page, viewport) : null;
   const tall = shown ? shown.ratio > PREVIEW_RATIO : false;
-  // Side by side, each column scrolls the whole page; stacked, it is cut until opened.
-  const cap = tall && !open && !wide ? PREVIEW_RATIO : null;
+  const cap = tall && cut ? PREVIEW_RATIO : null;
 
   return (
     <>
@@ -188,13 +309,13 @@ function StepColumn({
         </h2>
         {step.pages.length > 1 && (
           <div className="ml-auto flex items-center gap-0.5">
-            <Button variant="ghost" size="icon-sm" aria-label={`Previous ${label.toLowerCase()}`} disabled={at === 0} onClick={() => { setAt(at - 1); setOpen(false); }}>
+            <Button variant="ghost" size="icon-sm" aria-label={`Previous ${label.toLowerCase()}`} disabled={at === 0} onClick={() => onAt(at - 1)}>
               <ChevronLeft />
             </Button>
             <span className="min-w-10 text-center font-mono text-[11px] text-muted-foreground tabular-nums">
               {at + 1} of {step.pages.length}
             </span>
-            <Button variant="ghost" size="icon-sm" aria-label={`Next ${label.toLowerCase()}`} disabled={at === step.pages.length - 1} onClick={() => { setAt(at + 1); setOpen(false); }}>
+            <Button variant="ghost" size="icon-sm" aria-label={`Next ${label.toLowerCase()}`} disabled={at === step.pages.length - 1} onClick={() => onAt(at + 1)}>
               <ChevronRight />
             </Button>
           </div>
@@ -205,28 +326,29 @@ function StepColumn({
       {!page || !shown ? (
         <div className={cn(FRAME, "flex aspect-[4/3] items-center justify-center border-dashed bg-transparent p-6 text-center min-[900px]:aspect-auto")}>
           <p className="max-w-56 text-[12px] text-muted-foreground">
-            {step.gap === "never" ? "Not captured: we never capture checkout." : `Not captured for this store.`}
+            {step.gap === "never" ? "Not captured: we never capture checkout." : "Not captured for this store."}
           </p>
         </div>
       ) : (
         <>
           <div
+            ref={regionRef}
             className={cn(FRAME, "min-[900px]:overflow-y-auto")}
             // The column scrolls on its own from 900px; a label lets a keyboard or screen reader find it.
             role="region"
             aria-label={`${label} page, ${shown.viewport}`}
           >
-            {shown.note && (
-              <p className="border-b bg-card px-2.5 py-1.5 text-[11px] text-muted-foreground">{shown.note}</p>
+            {shown.fallback && (
+              <p className="border-b bg-card px-2.5 py-1.5 text-[11px] text-muted-foreground">Only the {shown.viewport} page was captured.</p>
             )}
-            <PageBody page={page} shown={shown} markers={markers} cap={cap} />
+            <PageBody page={page} shown={shown} markers={markers} cap={cap} onLeave={onLeave} />
             {cap && (
               <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-background to-transparent min-[900px]:hidden" />
             )}
           </div>
           {tall && (
-            <Button variant="outline" size="sm" className="self-center min-[900px]:hidden" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
-              {open ? "Show less" : "Show whole page"}
+            <Button variant="outline" size="sm" className="self-center min-[900px]:hidden" aria-expanded={!cut} onClick={onToggleOpen}>
+              {cut ? "Show whole page" : "Show less"}
             </Button>
           )}
         </>
@@ -235,38 +357,24 @@ function StepColumn({
   );
 }
 
-type Shown = {
-  viewport: Viewport;
-  /** A full-page screenshot (API source), or null when the page is its blocks. */
-  full: string | null;
-  blocks: Block[];
-  /** Height over width of the whole page, for deciding whether it needs "Show whole page". */
-  ratio: number;
-  note: string | null;
-};
-
-/** What to draw for a page in the chosen viewport, falling back to the other one when that is all there is. */
-function pageBlocks(page: ProfilePage, want: Viewport): Shown | null {
-  const other: Viewport = want === "desktop" ? "mobile" : "desktop";
-  for (const viewport of [want, other]) {
-    const full = viewport === "desktop" ? page.desktop : page.mobile;
-    const blocks = viewport === "desktop" ? page.desktopBlocks : page.mobileBlocks;
-    if (!full && blocks.length === 0) continue;
-    const note = viewport === want ? null : `Only the ${viewport} page was captured.`;
-    // A full screenshot's height is unknown until it loads; treat it as tall.
-    const ratio = full ? Number.POSITIVE_INFINITY : blocks.reduce((sum, b) => sum + b.h / b.w, 0);
-    return { viewport, full, blocks, ratio, note };
-  }
-  return null;
-}
-
 /**
  * The page, top to bottom. With blocks, each is a link to its detail view and
- * carries a numbered marker. With a cap (height over width), the page stops
- * there: blocks below it are not drawn at all, and the one that crosses it is
- * cut to fit, so no link reaches past the frame into the next step.
+ * carries a numbered marker. With a cap, the page stops there (see cutBlocks),
+ * so no link reaches past the frame into the next step.
  */
-function PageBody({ page, shown, markers, cap }: { page: ProfilePage; shown: Shown; markers: boolean; cap: number | null }) {
+function PageBody({
+  page,
+  shown,
+  markers,
+  cap,
+  onLeave,
+}: {
+  page: ProfilePage;
+  shown: PageView;
+  markers: boolean;
+  cap: number | null;
+  onLeave: () => void;
+}) {
   if (shown.full) {
     const alt = `${page.title ?? PAGE_TYPE_LABEL[page.type] ?? page.type}, ${shown.viewport}`;
     return (
@@ -277,24 +385,18 @@ function PageBody({ page, shown, markers, cap }: { page: ProfilePage; shown: Sho
     );
   }
 
-  let used = 0;
-  const drawn: { block: Block; ratio: number; cut: number | null }[] = [];
-  for (const block of shown.blocks) {
-    const ratio = block.h / block.w;
-    if (cap !== null && used >= cap) break;
-    const cut = cap !== null && used + ratio > cap ? cap - used : null;
-    drawn.push({ block, ratio, cut });
-    used += ratio;
-  }
-
   return (
     <div className="bg-card">
-      {drawn.map(({ block: b, ratio, cut }, i) => {
+      {cutBlocks(shown.blocks, cap).map(({ block: b, ratio, cut }, i) => {
         const name = labelFor(b.typeHint);
         return (
           <Link
             key={b.id}
-            href={`/?open=${encodeURIComponent(b.id)}&back=1`}
+            href={`/?open=${encodeURIComponent(b.id)}`}
+            onClick={() => {
+              onLeave();
+              markReturn(b.id);
+            }}
             className="group relative block overflow-hidden border-t border-black/10 outline-none first:border-t-0"
             style={{ aspectRatio: `1 / ${cut ?? ratio}`, background: b.bg }}
           >

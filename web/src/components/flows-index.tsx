@@ -21,6 +21,12 @@ const THUMB_RATIO = 4 / 3;
  * Every captured store's flow (SEC-20), and the count the task is measured by:
  * stores whose home, collection and product pages are all captured. Complete
  * flows by default; "Show incomplete" lists the rest with what they lack.
+ *
+ * Counted from the block set (NEXT_PUBLIC_BLOCKS_SRC), which every store's
+ * blocks pass through. A store's flow page reads NEXT_PUBLIC_SITES_SRC when
+ * that is set, so with the API on the two agree only as far as the API and the
+ * block export do. Until the API offers a flows summary, this count is the
+ * block-based one, and the one SEC-20 is read from.
  */
 export function FlowsIndex() {
   const [list, setList] = useState<FlowSummary[] | null>(null);
