@@ -2,12 +2,14 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, ExternalLink, Monitor, Smartphone, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, ExternalLink, Monitor, Route, Smartphone, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StoreIcon } from "@/components/store-icon";
 import { cn } from "@/lib/utils";
 import { assetUrl } from "@/lib/data-source";
 import { loadSiteView } from "@/lib/load-blocks";
+import { flowOf } from "@/lib/flows";
+import { markReturn } from "@/lib/return-to";
 import { labelFor, PAGE_TYPE_LABEL, type Block } from "@/lib/blocks";
 import { industryLabel, platformLabel, rankLabel } from "@/lib/stores";
 import type { ProfilePage, SiteView } from "@/lib/site-profile";
@@ -55,7 +57,7 @@ export function SiteProfileView({ host }: { host: string }) {
       <Empty>
         <p className="text-foreground">We have no store at {host}.</p>
         <p className="mt-1 text-[12px]">It is not in the validated list and nothing from it has been captured.</p>
-        <Link href="/sites" className="mt-3 inline-block text-[13px] text-primary underline-offset-4 hover:underline">
+        <Link href="/sites" className="mt-3 inline-block rounded-sm text-[13px] text-link underline-offset-4 outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring touch:py-3">
           Browse every site
         </Link>
       </Empty>
@@ -64,13 +66,14 @@ export function SiteProfileView({ host }: { host: string }) {
 
   const { store, listed, pages, captures } = state.view;
   const blockTotal = pages.reduce((n, p) => n + p.blockCount, 0);
+  const hasFlow = flowOf(pages).captured > 0;
 
   return (
     <div className="flex flex-col gap-5">
       <header className="flex flex-col gap-3">
         <Link
           href="/sites"
-          className="inline-flex w-fit items-center gap-1 rounded-md text-[12px] text-muted-foreground outline-none hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
+          className="inline-flex w-fit items-center gap-1 rounded-md text-[12px] text-muted-foreground outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring touch:-my-3 touch:h-11 touch:pr-3"
         >
           <ArrowLeft className="size-3.5" /> Sites
         </Link>
@@ -82,18 +85,28 @@ export function SiteProfileView({ host }: { host: string }) {
               href={`https://${store.host}/`}
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-0.5 inline-flex items-center gap-1 font-mono text-[12px] text-muted-foreground underline-offset-4 hover:text-primary hover:underline"
+              className="mt-0.5 inline-flex items-center gap-1 rounded-sm font-mono text-[12px] text-muted-foreground underline-offset-4 outline-none hover:text-link hover:underline focus-visible:ring-2 focus-visible:ring-ring touch:-my-3 touch:h-11"
             >
               {store.host} <ExternalLink className="size-3" />
             </a>
           </div>
           {blockTotal > 0 && (
-            <Link
-              href={`/?host=${encodeURIComponent(store.host)}`}
-              className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-primary px-2.5 text-[13px] font-medium text-primary-foreground transition-colors duration-150 outline-none hover:bg-primary/80 focus-visible:ring-3 focus-visible:ring-ring/50 sm:ml-auto"
-            >
-              See all {blockTotal.toLocaleString("en-US")} blocks <ArrowRight className="size-3.5" />
-            </Link>
+            <div className="flex flex-wrap items-center gap-2 sm:ml-auto">
+              {hasFlow && (
+                <Link
+                  href={`/sites/${encodeURIComponent(store.host)}/flow`}
+                  className="inline-flex h-8 items-center gap-1.5 rounded-lg border bg-background px-2.5 text-[13px] font-medium transition-colors duration-150 outline-none hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring dark:border-input dark:bg-input/30 dark:hover:bg-input/50 touch:h-11 touch:px-3.5"
+                >
+                  <Route className="size-3.5" /> View flow
+                </Link>
+              )}
+              <Link
+                href={`/?host=${encodeURIComponent(store.host)}`}
+                className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-primary px-2.5 text-[13px] font-medium text-primary-foreground transition-colors duration-150 outline-none hover:bg-primary/80 focus-visible:ring-2 focus-visible:ring-ring touch:h-11 touch:px-3.5"
+              >
+                See all {blockTotal.toLocaleString("en-US")} blocks <ArrowRight className="size-3.5" />
+              </Link>
+            </div>
           )}
         </div>
       </header>
@@ -179,13 +192,15 @@ function PageCard({ page, onOpen }: { page: ProfilePage; onOpen: () => void }) {
     <button
       type="button"
       onClick={onOpen}
-      className="group flex w-full flex-col overflow-hidden rounded-lg border bg-card text-left transition-colors duration-150 outline-none hover:border-primary/60 focus-visible:ring-3 focus-visible:ring-ring/50"
-      aria-label={`${PAGE_TYPE_LABEL[page.type] ?? page.type} page, ${path}`}
+      className="group flex w-full flex-col overflow-hidden rounded-lg border bg-card text-left transition-colors duration-150 outline-none hover:border-primary/60 focus-visible:ring-2 focus-visible:ring-ring"
     >
       <PageThumb page={page} />
       <span className="flex flex-col gap-0.5 border-t px-2.5 py-2">
         <span className="flex items-baseline gap-2">
-          <span className="text-[13px] font-medium">{PAGE_TYPE_LABEL[page.type] ?? page.type}</span>
+          <span className="text-[13px] font-medium">
+            {PAGE_TYPE_LABEL[page.type] ?? page.type}
+            <span className="sr-only"> page,</span>
+          </span>
           <span className="ml-auto font-mono text-[11px] text-muted-foreground tabular-nums">{page.blockCount} blocks</span>
         </span>
         <span className="truncate font-mono text-[11px] text-muted-foreground">{path}</span>
@@ -292,7 +307,7 @@ function PageViewer({ page, onClose }: { page: ProfilePage | null; onClose: () =
                       aria-label={v === "mobile" ? "Mobile" : "Desktop"}
                       onClick={() => setViewport(v)}
                       className={cn(
-                        "inline-flex h-7 items-center gap-1.5 rounded-md px-2 text-[12px] font-medium transition-colors duration-150 outline-none focus-visible:ring-3 focus-visible:ring-ring/50 sm:px-2.5",
+                        "inline-flex h-7 items-center gap-1.5 rounded-md px-2 text-[12px] font-medium transition-colors duration-150 outline-none focus-visible:ring-2 focus-visible:ring-ring sm:px-2.5 touch:h-11 touch:min-w-11 touch:justify-center touch:px-3",
                         current === v ? "bg-white text-black" : "text-white/70 hover:text-white",
                       )}
                     >
@@ -308,7 +323,7 @@ function PageViewer({ page, onClose }: { page: ProfilePage | null; onClose: () =
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Open the source page"
-              className="inline-flex size-8 shrink-0 items-center justify-center rounded-lg text-white/70 outline-none hover:bg-white/10 hover:text-white focus-visible:ring-3 focus-visible:ring-ring/50"
+              className="inline-flex size-8 shrink-0 items-center justify-center rounded-lg text-white/70 outline-none hover:bg-white/10 hover:text-white focus-visible:ring-2 focus-visible:ring-ring touch:size-11"
             >
               <ExternalLink className="size-4" />
             </a>
@@ -323,7 +338,8 @@ function PageViewer({ page, onClose }: { page: ProfilePage | null; onClose: () =
                   <Link
                     key={b.id}
                     href={`/?open=${encodeURIComponent(b.id)}`}
-                    className="group relative block outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+                    onClick={() => markReturn(b.id)}
+                    className="group relative block outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     style={{ aspectRatio: `${b.w} / ${b.h}`, background: b.bg }}
                     aria-label={`${labelFor(b.typeHint)} block, open its detail`}
                   >

@@ -3,6 +3,17 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
+ * Phones and anything driven by a finger: 44px tap targets (SEC-22). Narrow
+ * screens as well as coarse pointers, so a phone-width desktop window shows
+ * the phone layout, and an iPad at full width still gets finger-sized controls.
+ */
+@custom-variant touch {
+  @media (max-width: 767.98px), (pointer: coarse) {
+    @slot;
+  }
+}
+
+/*
  * Sectionary runs on Next Level's design language (DESIGN.md in the NL repo):
  * warm near-neutral grays, one orange accent for actions, focus and selection,
  * Bricolage Grotesque for titles, Inter for the UI, Geist Mono for ids.
@@ -16,6 +27,7 @@
   --font-mono: var(--font-geist-mono);
   --font-heading: var(--font-bricolage);
   --color-ring: var(--ring);
+  --color-link: var(--link);
   --color-input: var(--input);
   --color-border: var(--border);
   --color-destructive: var(--destructive);
@@ -56,7 +68,11 @@
   --destructive: oklch(0.577 0.215 27);
   --border: oklch(0.92 0.006 70);
   --input: oklch(0.92 0.006 70);
-  --ring: #faa038;
+  /* The accent is 2:1 on white, too faint for a focus ring or for text.
+     These are the same orange taken darker: 3.7:1 for the ring, which is
+     graphics, and 5:1 for link text. Dark theme keeps the accent itself. */
+  --ring: #c96a0a;
+  --link: #b45309;
   --radius: 0.5rem;
 }
 
@@ -80,11 +96,12 @@
   --border: oklch(0.94 0.005 75 / 9%);
   --input: oklch(0.94 0.005 75 / 13%);
   --ring: #faa038;
+  --link: #faa038;
 }
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border outline-ring;
   }
   html {
     @apply font-sans;

@@ -40,7 +40,7 @@ export type SiteView = {
 };
 
 /** Home first, then the way a shopper walks a store. */
-const PAGE_ORDER = ["home", "collection", "product", "cart", "page", "blog", "article", "other"];
+const PAGE_ORDER = ["home", "collection", "product", "cart", "checkout", "page", "blog", "article", "other"];
 
 function byPageOrder(a: { type: string; url: string }, b: { type: string; url: string }): number {
   const rank = (t: string) => {
@@ -82,7 +82,7 @@ function brandFrom(blocks: Block[], host: string): string {
  * A Store for a host the validated list does not have, from what its blocks
  * carry. Only what the blocks actually say: no industry, country or rank.
  */
-function storeFromBlocks(host: string, blocks: Block[]): Store {
+export function storeFromBlocks(host: string, blocks: Block[]): Store {
   return {
     n: 0,
     host,
@@ -106,14 +106,8 @@ function storeFromBlocks(host: string, blocks: Block[]): Store {
   };
 }
 
-/** The profile from the loaded blocks, or null when the host is unknown to both lists. */
-export function profileFromIndex(index: BlockIndex, host: string): SiteView | null {
-  // Only real captures: a mock block wears this store's name over another
-  // store's screenshot (see mock-blocks.ts).
-  const blocks = index.blocks.filter((b) => b.host === host && !isMock(b));
-  const listed = index.storeByHost.get(host);
-  if (!listed && blocks.length === 0) return null;
-
+/** One store's blocks as its pages, each with its blocks in page order, home first. */
+export function pagesFromBlocks(blocks: Block[]): ProfilePage[] {
   const pages = new Map<string, Block[]>();
   for (const block of blocks) {
     const key = pageKeyOf(block);
@@ -139,8 +133,18 @@ export function profileFromIndex(index: BlockIndex, host: string): SiteView | nu
       mobileBlocks: inOrder.filter((b) => b.viewport === "mobile"),
     };
   });
-  profilePages.sort(byPageOrder);
+  return profilePages.sort(byPageOrder);
+}
 
+/** The profile from the loaded blocks, or null when the host is unknown to both lists. */
+export function profileFromIndex(index: BlockIndex, host: string): SiteView | null {
+  // Only real captures: a mock block wears this store's name over another
+  // store's screenshot (see mock-blocks.ts).
+  const blocks = index.blocks.filter((b) => b.host === host && !isMock(b));
+  const listed = index.storeByHost.get(host);
+  if (!listed && blocks.length === 0) return null;
+
+  const profilePages = pagesFromBlocks(blocks);
   return {
     store: listed ?? storeFromBlocks(host, blocks),
     listed: Boolean(listed),
