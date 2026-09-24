@@ -2,12 +2,13 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, ExternalLink, Monitor, Smartphone, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, ExternalLink, Monitor, Route, Smartphone, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StoreIcon } from "@/components/store-icon";
 import { cn } from "@/lib/utils";
 import { assetUrl } from "@/lib/data-source";
 import { loadSiteView } from "@/lib/load-blocks";
+import { flowOf } from "@/lib/flows";
 import { labelFor, PAGE_TYPE_LABEL, type Block } from "@/lib/blocks";
 import { industryLabel, platformLabel, rankLabel } from "@/lib/stores";
 import type { ProfilePage, SiteView } from "@/lib/site-profile";
@@ -64,6 +65,7 @@ export function SiteProfileView({ host }: { host: string }) {
 
   const { store, listed, pages, captures } = state.view;
   const blockTotal = pages.reduce((n, p) => n + p.blockCount, 0);
+  const hasFlow = flowOf(pages).captured > 0;
 
   return (
     <div className="flex flex-col gap-5">
@@ -88,12 +90,22 @@ export function SiteProfileView({ host }: { host: string }) {
             </a>
           </div>
           {blockTotal > 0 && (
-            <Link
-              href={`/?host=${encodeURIComponent(store.host)}`}
-              className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-primary px-2.5 text-[13px] font-medium text-primary-foreground transition-colors duration-150 outline-none hover:bg-primary/80 focus-visible:ring-2 focus-visible:ring-ring sm:ml-auto touch:h-11 touch:px-3.5"
-            >
-              See all {blockTotal.toLocaleString("en-US")} blocks <ArrowRight className="size-3.5" />
-            </Link>
+            <div className="flex flex-wrap items-center gap-2 sm:ml-auto">
+              {hasFlow && (
+                <Link
+                  href={`/sites/${encodeURIComponent(store.host)}/flow`}
+                  className="inline-flex h-8 items-center gap-1.5 rounded-lg border bg-background px-2.5 text-[13px] font-medium transition-colors duration-150 outline-none hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring dark:border-input dark:bg-input/30 dark:hover:bg-input/50 touch:h-11 touch:px-3.5"
+                >
+                  <Route className="size-3.5" /> View flow
+                </Link>
+              )}
+              <Link
+                href={`/?host=${encodeURIComponent(store.host)}`}
+                className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-primary px-2.5 text-[13px] font-medium text-primary-foreground transition-colors duration-150 outline-none hover:bg-primary/80 focus-visible:ring-2 focus-visible:ring-ring touch:h-11 touch:px-3.5"
+              >
+                See all {blockTotal.toLocaleString("en-US")} blocks <ArrowRight className="size-3.5" />
+              </Link>
+            </div>
           )}
         </div>
       </header>
@@ -324,7 +336,7 @@ function PageViewer({ page, onClose }: { page: ProfilePage | null; onClose: () =
                 blocks.map((b) => (
                   <Link
                     key={b.id}
-                    href={`/?open=${encodeURIComponent(b.id)}`}
+                    href={`/?open=${encodeURIComponent(b.id)}&back=1`}
                     className="group relative block outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     style={{ aspectRatio: `${b.w} / ${b.h}`, background: b.bg }}
                     aria-label={`${labelFor(b.typeHint)} block, open its detail`}

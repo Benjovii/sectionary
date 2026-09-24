@@ -33,6 +33,12 @@ const LOADING_STRIP = 420;
 const BLOCK_KEY = "open";
 
 /**
+ * Set by links that open a block from another page (a flow, a site's page
+ * viewer): closing the detail then goes back there instead of to the wall.
+ */
+const BACK_KEY = "back";
+
+/**
  * Everything above the blocks plus the blocks, as placeholders. The route's
  * loading.tsx and the page's Suspense fallback both use this, so the first
  * paint has the same geometry as the real thing and nothing jumps when the
@@ -225,7 +231,10 @@ export function Wall() {
     (id: string | null) => {
       const next = new URLSearchParams(params.toString());
       if (id) next.set(BLOCK_KEY, id);
-      else next.delete(BLOCK_KEY);
+      else {
+        next.delete(BLOCK_KEY);
+        next.delete(BACK_KEY);
+      }
       return next.size ? `${pathname}?${next}` : pathname;
     },
     [params, pathname],
@@ -243,13 +252,14 @@ export function Wall() {
 
   const onCloseBlock = useCallback(() => {
     if (!openId) return;
-    if (pushed.current) {
+    // history.length guards a pasted link opened in a fresh tab: nothing to go back to.
+    if (pushed.current || (params.get(BACK_KEY) && window.history.length > 1)) {
       pushed.current = false;
       router.back();
     } else {
       router.replace(withBlock(null), { scroll: false });
     }
-  }, [openId, router, withBlock]);
+  }, [openId, params, router, withBlock]);
 
   // Opened by a pasted link, then closed by Back: nothing of ours to pop.
   useEffect(() => {
