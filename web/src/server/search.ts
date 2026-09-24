@@ -1,0 +1,200 @@
+import type { Block } from "@/contracts/block";
+import { database } from "@/server/db";
+import { blockColumns, blockJoins, blockWhere, toBlock, type BlockFilters, type TechFacet } from "@/server/blocks";
+
+type Sql = ReturnType<typeof database>;
+type Facet = { value: string; count: number };
+
+// Search (SEC-17): full text and semantic, fused.
+//
+// 1. Typo tolerance. Each query word the corpus has never seen gets its closest
+//    word in search_terms (trigram similarity), so "subscripton savngs"
+//    searches for "subscription savings"; known words pick up close forms.
+// 2. Full text over headline (A), AI description, type and tags (B) and copy
+//    (C), any word matching, ranked by how many of the query's words a block
+//    has, then by where they sit.
+// 3. Semantic: the query embedded by Voyage, nearest AI descriptions by cosine
+//    distance (HNSW). Skipped, not failed, without VOYAGE_API_KEY or when
+//    Voyage is slow: search degrades to full text.
+// 4. Reciprocal rank fusion: score = sum of 1 / (60 + rank) over both lists.
+//    Rank-based, so the two scores never need calibrating against each other.
+//
+// Tuning, all optional: SEARCH_MIN_SIMILARITY (default 0.3) drops semantic
+// neighbours less similar than that; VOYAGE_MODEL must match `npm run embed`.
+
+const CANDIDATES = 200; // from each list
+const RRF_K = 60;
+const MODEL = process.env.VOYAGE_MODEL || "voyage-3.5";
+/** VOYAGE_BASE_URL is for a proxy or a local stand-in; unset, it is Voyage itself. */
+const ENDPOINT = `${process.env.VOYAGE_BASE_URL?.replace(/\/$/, "") ?? "https://api.voyageai.com"}/v1/embeddings`;
+const MIN_SIMILARITY = Number(process.env.SEARCH_MIN_SIMILARITY ?? 0.3);
+const EMBED_TIMEOUT_MS = 2500;
+
+/** Lowercase words, no punctuation. Numbers stay: "3 month plan" is a real query. */
+export function queryWords(q: string): string[] {
+  return [...new Set(q.toLowerCase().normalize("NFKD").replace(/\p{M}/gu, "").match(/[a-z0-9]+(?:'[a-z]+)?/g) ?? [])].slice(0, 12);
+}
+
+/**
+ * One group per query word: the word, plus what the corpus vocabulary adds.
+ * - A word the corpus has never seen gets its closest word ("savngs" -> "savings").
+ * - A word it knows gets up to three close forms sharing its first four letters
+ *   ("subscription" -> "subscribe", "subscriptions"), because the English stemmer
+ *   keeps "subscript" and "subscrib" apart and people mean both.
+ * Stop words are left alone; they match nothing anyway.
+ */
+async function expand(sql: Sql, words: string[]): Promise<{ groups: string[][]; corrected: Record<string, string> }> {
+  const extra = new Map<string, string[]>();
+  const corrected: Record<string, string> = {};
+  const candidates = words.filter((w) => w.length >= 4 && /^[a-z]/.test(w));
+  if (candidates.length) {
+    try {
+      const rows = await sql`
+        SELECT w, known, array(
+          SELECT term FROM search_terms
+          WHERE term % w AND term <> w AND (NOT known OR (left(term, 4) = left(w, 4) AND similarity(term, w) >= 0.5))
+          ORDER BY similarity(term, w) DESC, docs DESC LIMIT CASE WHEN known THEN 3 ELSE 1 END
+        ) AS near
+        FROM unnest(${sql.array(candidates)}::text[]) AS w,
+          LATERAL (SELECT EXISTS (SELECT 1 FROM search_terms WHERE term = w) AS known) k
+        WHERE to_tsvector('english', w) <> ''::tsvector`;
+      for (const r of rows) {
+        const near = r.near as string[];
+        if (!near.length) continue;
+        extra.set(r.w as string, near);
+        if (!r.known) corrected[r.w as string] = near[0];
+      }
+    } catch (error) {
+      // Before migration 0004 there is no vocabulary: search the words as typed.
+      if ((error as { code?: string }).code !== "42P01") throw error;
+    }
+  }
+  return { groups: words.map((w) => [w, ...(extra.get(w) ?? [])]), corrected };
+}
+
+// A few hundred searches repeat all day (the same chips, the same demo query).
+const embedCache = new Map<string, number[]>();
+
+async function embedQuery(q: string): Promise<number[] | null> {
+  const key = process.env.VOYAGE_API_KEY;
+  if (!key) return null;
+  const cacheKey = `${MODEL}\n${q.toLowerCase()}`;
+  const hit = embedCache.get(cacheKey);
+  if (hit) return hit;
+  try {
+    const res = await fetch(ENDPOINT, {
+      method: "POST",
+      headers: { authorization: `Bearer ${key}`, "content-type": "application/json" },
+      body: JSON.stringify({ input: [q], model: MODEL, input_type: "query", output_dimension: 1024 }),
+      signal: AbortSignal.timeout(EMBED_TIMEOUT_MS),
+    });
+    if (!res.ok) throw new Error(`Voyage ${res.status}: ${(await res.text()).slice(0, 200)}`);
+    const vector = ((await res.json()) as { data: { embedding: number[] }[] }).data[0].embedding;
+    if (embedCache.size > 500) embedCache.delete(embedCache.keys().next().value!);
+    embedCache.set(cacheKey, vector);
+    return vector;
+  } catch (error) {
+    console.error("Semantic search skipped:", error);
+    return null;
+  }
+}
+
+type Candidate = { id: string; score: number; platform: string | null; theme: string | null; apps: string[] };
+
+/**
+ * Both lists, fused. Filters apply inside each list, so every candidate is a real result.
+ *
+ * The full-text list ranks by how many of the query's words a block has (each
+ * word group counts once, however often it repeats), then by where they are:
+ * ts_rank weighs headline and description above copy. Without the first key a
+ * header that says "Subscriptions" twice beats a block that says "subscribe
+ * and save 20%".
+ */
+async function candidates(sql: Sql, f: BlockFilters, groups: string[][], vector: string | null, skipTech: boolean): Promise<Candidate[]> {
+  const where = blockWhere(sql, f, skipTech ? ["platform", "theme", "app"] : []);
+  // websearch syntax with "or" between terms: nothing to escape, stop words drop out.
+  const any = groups.flat().join(" or ");
+  const each = groups.map((g) => g.join(" or "));
+  return sql.begin(async (tx) => {
+    // A stop word ("with") makes an empty query; Postgres says so as a NOTICE on every row.
+    await tx`SET LOCAL client_min_messages = warning`;
+    // Enough of the graph explored that a filtered scan still finds CANDIDATES rows.
+    if (vector) await tx`SET LOCAL hnsw.ef_search = ${sql.unsafe(String(CANDIDATES))}`;
+    const rows = await tx`
+      WITH words AS (
+        SELECT q FROM unnest(${sql.array(each)}::text[]) AS t, websearch_to_tsquery('english', t) AS q WHERE numnode(q) > 0
+      ), fts AS (
+        SELECT id, row_number() OVER (ORDER BY coverage DESC, weight DESC, id) AS r FROM (
+          SELECT b.id,
+            (SELECT count(*) FROM words WHERE b.search_tsv @@ words.q) AS coverage,
+            ts_rank(b.search_tsv, query, 1) AS weight
+          FROM ${blockJoins(sql)}, websearch_to_tsquery('english', ${any}) AS query
+          WHERE ${where} AND b.search_tsv @@ query
+        ) matched
+        ORDER BY r LIMIT ${CANDIDATES}
+      ), sem AS (
+        SELECT id, row_number() OVER (ORDER BY d, id) AS r FROM (
+          SELECT b.id, b.embedding <=> ${vector}::vector AS d
+          FROM ${blockJoins(sql)}
+          WHERE ${vector}::text IS NOT NULL AND b.embedding IS NOT NULL AND ${where}
+          ORDER BY d LIMIT ${CANDIDATES}
+        ) nearest WHERE d <= ${1 - MIN_SIMILARITY}
+      ), fused AS (
+        SELECT id, sum(1.0 / (${RRF_K} + r)) AS score FROM (SELECT * FROM fts UNION ALL SELECT * FROM sem) lists GROUP BY id
+      )
+      SELECT fused.id, fused.score::float8 AS score, s.platform, s.theme_name, s.apps
+      FROM fused JOIN blocks b ON b.id = fused.id JOIN captures c ON c.id = b.capture_id JOIN pages p ON p.id = c.page_id JOIN sites s ON s.id = p.site_id
+      ORDER BY fused.score DESC, fused.id`;
+    return rows.map((r) => ({ id: r.id, score: r.score, platform: r.platform, theme: r.theme_name, apps: r.apps ?? [] }));
+  });
+}
+
+const valuesOf = (c: Candidate, key: TechFacet) => (key === "app" ? c.apps : key === "platform" ? (c.platform ? [c.platform] : []) : c.theme ? [c.theme] : []);
+const passes = (c: Candidate, f: BlockFilters, key: TechFacet) => !f[key] || valuesOf(c, key).some((v) => f[key]!.includes(v));
+
+/** Facet counts over the result set, each ignoring its own selection, as /api/blocks does without a query. */
+function facetsOf(all: Candidate[], f: BlockFilters): Record<TechFacet, Facet[]> {
+  const out = {} as Record<TechFacet, Facet[]>;
+  for (const key of ["platform", "theme", "app"] as TechFacet[]) {
+    const counts = new Map<string, number>();
+    for (const c of all) {
+      if (!(["platform", "theme", "app"] as TechFacet[]).every((k) => k === key || passes(c, f, k))) continue;
+      for (const v of valuesOf(c, key)) counts.set(v, (counts.get(v) ?? 0) + 1);
+    }
+    out[key] = [...counts].map(([value, count]) => ({ value, count })).sort((a, b) => b.count - a.count || a.value.localeCompare(b.value)).slice(0, key === "platform" ? 50 : 100);
+  }
+  return out;
+}
+
+export type SearchResult = {
+  items: Block[];
+  total: number;
+  nextCursor: string | null;
+  facets: Record<TechFacet, Facet[]>;
+  /** How the query was read, for the UI and for debugging relevance. */
+  search: { terms: string[]; corrected: Record<string, string>; semantic: boolean };
+};
+
+export async function searchBlocks(q: string, f: BlockFilters, limit: number, offset: number): Promise<SearchResult> {
+  const sql = database();
+  const words = queryWords(q);
+  const [{ groups, corrected }, embedding] = await Promise.all([expand(sql, words), embedQuery(q.trim())]);
+  const vector = embedding ? `[${embedding.join(",")}]` : null;
+  if (!groups.length && !vector) return { items: [], total: 0, nextCursor: null, facets: { platform: [], theme: [], app: [] }, search: { terms: [], corrected, semantic: false } };
+
+  const [ranked, facetPool] = await Promise.all([
+    candidates(sql, f, groups, vector, false),
+    f.platform || f.theme || f.app ? candidates(sql, f, groups, vector, true) : null,
+  ]);
+  const page = ranked.slice(offset, offset + limit);
+  const rows = page.length ? await sql`SELECT ${blockColumns(sql)} FROM ${blockJoins(sql)} WHERE b.id = ANY(${sql.array(page.map((c) => c.id))}::uuid[])` : [];
+  const byId = new Map(rows.map((r) => [r.id as string, toBlock(r)]));
+
+  return {
+    items: page.map((c) => byId.get(c.id)).filter((b): b is Block => Boolean(b)),
+    total: ranked.length,
+    nextCursor: offset + page.length < ranked.length ? String(offset + page.length) : null,
+    facets: facetsOf(facetPool ?? ranked, f),
+    search: { terms: groups.flat(), corrected, semantic: Boolean(vector) },
+  };
+}

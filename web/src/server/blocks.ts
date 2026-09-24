@@ -23,7 +23,40 @@ export function toBlock(r: Record<string, unknown>): Block {
   };
 }
 
-export const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+export type TechFacet = "platform" | "theme" | "app";
+export type BlockFilters = Partial<Record<"page" | "block" | "vp" | TechFacet | "industry" | "country" | "host", string[]>>;
+
+/** BlocksQuery filters from a URL. Multi-value filters are comma-separated (see the contract); a block matches any of them. */
+export function readFilters(url: URL): BlockFilters {
+  const f: BlockFilters = {};
+  for (const key of ["page", "block", "vp", "platform", "theme", "app", "industry", "country", "host"] as const) {
+    const values = (url.searchParams.get(key) ?? "").split(",").map((v) => v.trim()).filter(Boolean);
+    if (values.length) f[key] = values;
+  }
+  return f;
+}
+
+/**
+ * The WHERE clause for a BlocksQuery over blockJoins: the latest capture of
+ * each page, then every filter given. `skip` leaves filters out, which is how
+ * a facet counts what its other values would add.
+ */
+export function blockWhere(sql: Sql, f: BlockFilters, skip: TechFacet[] = []) {
+  const list = (values: string[] | undefined) => (values ? sql.array(values) : null);
+  const tech = (key: TechFacet) => list(skip.includes(key) ? undefined : f[key]);
+  return sql`c.id=(SELECT c2.id FROM captures c2 WHERE c2.page_id=p.id ORDER BY c2.captured_at DESC LIMIT 1)
+    AND (${list(f.page)}::text[] IS NULL OR p.type=ANY(${list(f.page)}::text[]))
+    AND (${list(f.block)}::text[] IS NULL OR coalesce(b.block_type,b.type_hint)=ANY(${list(f.block)}::text[]))
+    AND (${list(f.vp)}::text[] IS NULL OR b.viewport=ANY(${list(f.vp)}::text[]))
+    AND (${tech("platform")}::text[] IS NULL OR s.platform=ANY(${tech("platform")}::text[]))
+    AND (${tech("theme")}::text[] IS NULL OR s.theme_name=ANY(${tech("theme")}::text[]))
+    AND (${tech("app")}::text[] IS NULL OR s.apps && ${tech("app")}::text[])
+    AND (${list(f.industry)}::text[] IS NULL OR s.industry=ANY(${list(f.industry)}::text[]))
+    AND (${list(f.country)}::text[] IS NULL OR s.country=ANY(${list(f.country)}::text[]))
+    AND (${list(f.host)}::text[] IS NULL OR s.host=ANY(${list(f.host)}::text[]))`;
+}
+
+export const UUID =/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 export const hasDatabase = () => Boolean(process.env.DATABASE_URL);
 
 /**

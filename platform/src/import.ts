@@ -1,6 +1,6 @@
 import { readdir, readFile } from "node:fs/promises";
 import { dirname, relative, resolve, sep } from "node:path";
-import { eq, and } from "drizzle-orm";
+import { and, desc, eq, lt } from "drizzle-orm";
 import { sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
@@ -170,10 +170,11 @@ try {
         ogImage: manifest.page.ogImage ?? null, lang: manifest.page.lang ?? null, h1: manifest.page.h1 ?? null, updatedAt: new Date(),
       }}).returning({ id: pages.id });
 
-      // Get previous capture for diff detection
-      const prevCapture = await tx.select({ id: captures.id, blocks: blocks }).from(captures)
-        .where(eq(captures.pageId, page.id))
-        .orderBy(captures.capturedAt).limit(1);
+      // The capture just before this one, for diff detection. Strictly earlier,
+      // so replaying the same manifest never diffs a capture against itself.
+      const prevCapture = await tx.select({ id: captures.id }).from(captures)
+        .where(and(eq(captures.pageId, page.id), lt(captures.capturedAt, new Date(manifest.page.capturedAt))))
+        .orderBy(desc(captures.capturedAt)).limit(1);
 
       const [capture] = await tx.insert(captures).values({
         pageId: page.id, capturedAt: new Date(manifest.page.capturedAt),
@@ -270,4 +271,10 @@ try {
     console.log(`imported ${manifest.site.host} ${manifest.page.slug} (${manifest.blocks.length} blocks)`);
   }
   console.log(`Done: ${imported} manifests, ${blockCount} blocks, ${recaptureCount} recaptures with diffs`);
+  // Typo tolerance corrects query words against the corpus vocabulary, so keep it current.
+  // Skipped before migration 0004 (no view yet); new blocks still need `npm run embed`.
+  await client`REFRESH MATERIALIZED VIEW CONCURRENTLY search_terms`.then(
+    () => console.log("Refreshed search_terms. Run `npm run embed` for semantic search."),
+    (e: { code?: string }) => { if (e.code !== "42P01") throw e; },
+  );
 } finally { await client.end(); }

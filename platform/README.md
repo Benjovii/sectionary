@@ -39,6 +39,38 @@ with shared code in `web/src/server/`; the shapes and fixtures are listed in
 `docs/CONTRACTS.md`. Set `ANTHROPIC_API_KEY` in the web app's environment for
 briefs written by Claude.
 
+## Search (SEC-17)
+
+`GET /api/blocks?q=…` ranks by relevance; without `q` it stays newest first.
+Code: `web/src/server/search.ts`. Migration `0004_search.sql` adds:
+
+- `blocks.search_tsv`, a generated tsvector: headline (A), AI description,
+  block type and tags (B), copy (C).
+- `search_terms`, the corpus vocabulary, for typo tolerance: an unknown query
+  word is swapped for its closest word, a known one picks up close forms
+  ("subscription" also finds "subscriptions").
+- `blocks.embedding vector(1024)` for Voyage, with `embedding_model` and
+  `embedding_hash` so only new or changed blocks are embedded again.
+
+Full text ranks by how many query words a block has, then by where they sit.
+Semantic search takes the nearest embeddings. Reciprocal rank fusion merges
+the two lists. Without `VOYAGE_API_KEY`, or when Voyage is slow, search uses
+full text only.
+
+After an import or a tagging run:
+
+```bash
+npm run embed            # embeds new/changed blocks, refreshes search_terms
+npm run search:eval      # acceptance queries against http://localhost:3000
+```
+
+Set `VOYAGE_API_KEY` in `platform/.env` for `embed` and in the web app's
+environment for queries. `VOYAGE_MODEL` defaults to `voyage-3.5` and must
+match on both sides. Blocks are embedded from their AI description. Until the
+tagger writes descriptions (its batch run is still a stub), blocks are
+embedded from type, headline and copy. They are embedded again automatically
+once a description lands.
+
 ## Suggested first week (M1)
 
 1. Supabase project for Sectionary, separate from Next Level (SEC-34, with

@@ -1,34 +1,38 @@
 import { apiError, database } from "@/server/db";
-import { blockColumns, blockJoins, toBlock } from "@/server/blocks";
+import { blockColumns, blockJoins, blockWhere, readFilters, toBlock, type TechFacet } from "@/server/blocks";
+import { searchBlocks } from "@/server/search";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const value = (url: URL, key: string) => url.searchParams.get(key)?.trim() || null;
-
-type TechFacet = "platform" | "theme" | "app";
-
+/**
+ * GET /api/blocks · BlocksQuery in, BlocksResponse out.
+ * Without `q`, newest captures first. With `q`, ranked by relevance: full text,
+ * typo tolerance and semantic search fused (see server/search.ts).
+ */
 export async function GET(request: Request) {
   try {
     const url = new URL(request.url);
-    const page = value(url, "page"), block = value(url, "block"), vp = value(url, "vp");
-    const platform = value(url, "platform"), theme = value(url, "theme"), app = value(url, "app");
-    const industry = value(url, "industry"), country = value(url, "country"), host = value(url, "host"), q = value(url, "q");
+    const f = readFilters(url);
+    const q = url.searchParams.get("q")?.trim() || null;
     const limit = Math.min(200, Math.max(1, Number(url.searchParams.get("limit")) || 60));
     const offset = Math.max(0, Number(url.searchParams.get("cursor")) || 0);
+
+    if (q) {
+      const { items, total, nextCursor, facets, search } = await searchBlocks(q, f, limit, offset);
+      // How the query was read goes in headers, so the body stays exactly BlocksResponse.
+      const headers = {
+        "x-search-terms": search.terms.join(" "),
+        "x-search-corrected": Object.entries(search.corrected).map(([from, to]) => `${from}>${to}`).join(" "),
+        "x-search-semantic": String(search.semantic),
+      };
+      return Response.json({ items, blocks: items, generatedAt: new Date().toISOString(), nextCursor, total, facets }, { headers });
+    }
+
     const sql = database();
     // Latest capture of each page only. A facet skips its own filter, so picking
     // one app still shows how many blocks every other app would give.
-    const where = (skip?: TechFacet) => sql`
-      c.id=(SELECT c2.id FROM captures c2 WHERE c2.page_id=p.id ORDER BY c2.captured_at DESC LIMIT 1)
-        AND (${page}::text IS NULL OR p.type=${page}) AND (${block}::text IS NULL OR coalesce(b.block_type,b.type_hint)=${block})
-        AND (${vp}::text IS NULL OR b.viewport=${vp})
-        AND (${skip === "platform" ? null : platform}::text IS NULL OR s.platform=${platform})
-        AND (${skip === "theme" ? null : theme}::text IS NULL OR s.theme_name=${theme})
-        AND (${skip === "app" ? null : app}::text IS NULL OR ${app}=ANY(s.apps))
-        AND (${industry}::text IS NULL OR s.industry=${industry}) AND (${country}::text IS NULL OR s.country=${country})
-        AND (${host}::text IS NULL OR s.host=${host})
-        AND (${q}::text IS NULL OR to_tsvector('english',coalesce(b.headline,'')||' '||b.text||' '||b.type_hint) @@ websearch_to_tsquery('english',${q}))`;
+    const where = (skip?: TechFacet) => blockWhere(sql, f, skip ? [skip] : []);
     const [rows, [{ count }], platforms, themes, apps] = await Promise.all([
       sql`SELECT ${blockColumns(sql)} FROM ${blockJoins(sql)} WHERE ${where()} ORDER BY c.captured_at DESC, b.id LIMIT ${limit} OFFSET ${offset}`,
       sql`SELECT count(*)::int AS count FROM ${blockJoins(sql)} WHERE ${where()}`,

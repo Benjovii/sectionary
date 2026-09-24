@@ -1,7 +1,7 @@
 import { boolean, customType, index, integer, jsonb, pgTable, real, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 
 const vector = customType<{ data: number[] | null; driverData: string | null }>({
-  dataType: () => "vector(1536)",
+  dataType: () => "vector(1024)",
 });
 const timestamps = {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
@@ -37,7 +37,9 @@ export const blocks = pgTable("blocks", {
   text: text("text").notNull(), textLength: integer("text_length").notNull(), headline: text("headline"), buttons: integer("buttons").notNull(),
   images: integer("images").notNull(), videos: integer("videos").notNull(), background: text("background").notNull(), imageKey: text("image_key"),
   thumbnailKey: text("thumbnail_key"), blurhash: text("blurhash"), imageWidth: integer("image_width"), imageHeight: integer("image_height"),
-  aiDescription: text("ai_description"), aiResponse: jsonb("ai_response"), embedding: vector("embedding"), ...timestamps,
+  aiDescription: text("ai_description"), aiResponse: jsonb("ai_response"), embedding: vector("embedding"),
+  // search_tsv (generated, migration 0004) is left out: Drizzle never writes it and the API reads it in SQL.
+  embeddingModel: text("embedding_model"), embeddingHash: text("embedding_hash"), embeddedAt: timestamp("embedded_at", { withTimezone: true }), ...timestamps,
 }, (t) => [uniqueIndex("blocks_capture_vp_index_uidx").on(t.captureId, t.viewport, t.blockIndex), index("blocks_capture_idx").on(t.captureId), index("blocks_viewport_idx").on(t.viewport), index("blocks_type_hint_idx").on(t.typeHint), index("blocks_block_type_idx").on(t.blockType), index("blocks_tags_gin_idx").using("gin", t.tags)]);
 
 export const taxonomy = pgTable("taxonomy", {

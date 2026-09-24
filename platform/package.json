@@ -8,6 +8,8 @@
     "db:migrate": "tsx src/migrate.ts",
     "import": "tsx src/import.ts",
     "tag-blocks": "tsx src/tagger.ts",
+    "embed": "tsx src/embed.ts",
+    "search:eval": "tsx src/search-eval.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
