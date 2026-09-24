@@ -9,6 +9,7 @@ import { FilterBar, FilterBarSkeleton } from "@/components/filter-bar";
 import { TechFilters } from "@/components/tech-filters";
 import { techFromFacets } from "@/lib/tech";
 import { loadBlockIndex } from "@/lib/load-blocks";
+import { clearReturn, returnsFor } from "@/lib/return-to";
 import { queryBlocks, type BlockIndex, type WallQuery } from "@/lib/block-source";
 import { detailIndex } from "@/lib/block-detail";
 import { layOut, visible, GAP, type Layout } from "@/lib/wall-layout";
@@ -222,6 +223,8 @@ export function Wall() {
   const detail = useMemo(() => (index ? detailIndex(index) : null), [index]);
   const open = openId && detail ? (detail.byId.get(openId) ?? null) : null;
   const pushed = useRef(false);
+  // Opened from a flow or a site's page viewer, in this tab: closing goes back there.
+  const [returnOnClose] = useState(() => returnsFor(openId));
 
   const withBlock = useCallback(
     (id: string | null) => {
@@ -245,17 +248,20 @@ export function Wall() {
 
   const onCloseBlock = useCallback(() => {
     if (!openId) return;
-    if (pushed.current) {
+    if (pushed.current || returnOnClose) {
       pushed.current = false;
+      clearReturn();
       router.back();
     } else {
       router.replace(withBlock(null), { scroll: false });
     }
-  }, [openId, router, withBlock]);
+  }, [openId, returnOnClose, router, withBlock]);
 
   // Opened by a pasted link, then closed by Back: nothing of ours to pop.
   useEffect(() => {
-    if (!openId) pushed.current = false;
+    if (openId) return;
+    pushed.current = false;
+    clearReturn();
   }, [openId]);
 
   const onStep = useMemo(() => {

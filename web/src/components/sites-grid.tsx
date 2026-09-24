@@ -150,7 +150,7 @@ export function SitesGrid() {
                 aria-pressed={sort === s.key}
                 onClick={() => set("sort", s.key === "captured" ? "" : s.key)}
                 className={cn(
-                  "-mb-px shrink-0 border-b-2 py-3 text-[13px] font-medium whitespace-nowrap transition-colors duration-150 outline-none focus-visible:text-foreground",
+                  "-mb-px shrink-0 border-b-2 py-3 text-[13px] font-medium whitespace-nowrap transition-colors duration-150 outline-none focus-visible:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset touch:min-h-11 touch:min-w-11",
                   sort === s.key ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground",
                 )}
               >
@@ -182,14 +182,14 @@ export function SitesGrid() {
                 aria-label="Search stores"
                 defaultValue={q}
                 onChange={(e) => set("q", e.target.value)}
-                className="h-8 w-full rounded-lg border bg-background pr-2.5 pl-8 text-[13px] outline-none placeholder:text-muted-foreground focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30"
+                className="h-8 w-full rounded-lg border bg-background pr-2.5 pl-8 text-[13px] outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring dark:bg-input/30 touch:h-11"
               />
             </label>
             <select
               aria-label="Country"
               value={country}
               onChange={(e) => set("country", e.target.value)}
-              className="h-8 rounded-lg border bg-background px-2 text-[13px] outline-none focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30"
+              className="h-8 rounded-lg border bg-background px-2 text-[13px] outline-none focus-visible:ring-2 focus-visible:ring-ring dark:bg-input/30 touch:h-11"
             >
               <option value="">All countries</option>
               {countries.map((c) => (
@@ -274,9 +274,9 @@ function Directory({
   onPick: (key: string, value: string, selected: string) => void;
 }) {
   const link =
-    "group inline-flex items-baseline gap-1.5 whitespace-nowrap outline-none transition-colors duration-150 focus-visible:text-primary " +
+    "group inline-flex items-baseline gap-1.5 whitespace-nowrap rounded-md outline-none transition-colors duration-150 focus-visible:text-link focus-visible:ring-2 focus-visible:ring-ring touch:min-h-11 touch:items-center " +
     // Phones: chips. From md: big directory type.
-    "max-md:h-8 max-md:items-center max-md:rounded-full max-md:border max-md:px-3 max-md:text-[13px] " +
+    "max-md:rounded-full max-md:border max-md:px-3 max-md:text-[13px] " +
     "md:font-heading md:text-[18px] md:leading-[1.35] md:font-semibold md:tracking-[-0.01em]";
   const count = "font-mono text-[11px] font-normal tabular-nums text-muted-foreground max-md:hidden";
 
@@ -285,7 +285,7 @@ function Directory({
       {groups.map((group) => (
         <section key={group.title} className="min-w-0">
           <h2 className="mb-2 text-[12px] text-muted-foreground">{group.title}</h2>
-          <ul className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] md:grid md:grid-flow-col md:grid-rows-5 md:gap-x-10 md:gap-y-0 md:overflow-visible md:pb-0">
+          <ul className="-m-1 flex gap-2 overflow-x-auto p-1 [scrollbar-width:none] md:m-0 md:grid md:grid-flow-col md:grid-rows-5 md:gap-x-10 md:gap-y-0 md:overflow-visible md:p-0">
             {group.options.map((o) => {
               const on = group.selected === o.value;
               return (
@@ -294,7 +294,7 @@ function Directory({
                     type="button"
                     aria-pressed={on}
                     onClick={() => onPick(group.key, o.value, group.selected)}
-                    className={cn(link, on ? "text-primary max-md:border-primary" : "text-foreground hover:text-primary")}
+                    className={cn(link, on ? "text-link max-md:border-primary" : "text-foreground hover:text-link")}
                   >
                     {o.label}
                     <span className={count}>{o.count.toLocaleString("en-US")}</span>
@@ -308,10 +308,10 @@ function Directory({
       {blocks.length > 0 && (
         <section className="min-w-0">
           <h2 className="mb-2 text-[12px] text-muted-foreground">Blocks</h2>
-          <ul className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] md:grid md:grid-flow-col md:grid-rows-5 md:gap-x-10 md:gap-y-0 md:overflow-visible md:pb-0">
+          <ul className="-m-1 flex gap-2 overflow-x-auto p-1 [scrollbar-width:none] md:m-0 md:grid md:grid-flow-col md:grid-rows-5 md:gap-x-10 md:gap-y-0 md:overflow-visible md:p-0">
             {blocks.map((b) => (
               <li key={b.value} className="shrink-0">
-                <Link href={`/?block=${encodeURIComponent(b.value)}`} className={cn(link, "text-foreground hover:text-primary")}>
+                <Link href={`/?block=${encodeURIComponent(b.value)}`} className={cn(link, "text-foreground hover:text-link")}>
                   {labelFor(b.value)}
                   <span className={count}>{b.count.toLocaleString("en-US")}</span>
                 </Link>
@@ -328,17 +328,20 @@ function Directory({
 function SiteCardView({ card }: { card: SiteCard }) {
   const { store, cover } = card;
   const facts = [platformLabel(store.platform), card.listed ? industryLabel(store.industry) : null].filter(Boolean).join(" · ");
+  const status = cover ? `${card.blockCount.toLocaleString("en-US")} blocks` : "Not captured yet";
+  // Named by its own text, no aria-label, so what a screen reader says and what
+  // a voice-control user reads off the card are the same words. The status is
+  // drawn over the cover but read last: "My ZOO Box, Shopify, 84 blocks".
   return (
     <Link
       href={`/sites/${encodeURIComponent(store.host)}`}
-      className="group block rounded-2xl outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-      aria-label={`${store.brand}, ${facts}`}
+      className="group block rounded-2xl outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
       <div className="relative overflow-hidden rounded-2xl border bg-card p-[8%] transition-colors duration-150 group-hover:border-primary/60">
         {cover ? (
           <>
-            <span className="absolute top-3 left-3 z-10 rounded-full bg-background/80 px-2 py-0.5 font-mono text-[10px] font-medium text-foreground tabular-nums backdrop-blur">
-              {card.blockCount.toLocaleString("en-US")} blocks
+            <span aria-hidden className="absolute top-3 left-3 z-10 rounded-full bg-background/80 px-2 py-0.5 font-mono text-[10px] font-medium text-foreground tabular-nums backdrop-blur">
+              {status}
             </span>
             <div
               className="relative overflow-hidden rounded-md shadow-[0_8px_30px_-8px_rgb(0_0_0/0.5)] transition-transform duration-300 ease-out group-hover:-translate-y-0.5"
@@ -359,15 +362,20 @@ function SiteCardView({ card }: { card: SiteCard }) {
           // Nothing captured: the store's mark, quietly, in the same frame.
           <div className="flex flex-col items-center justify-center gap-2" style={{ aspectRatio: `1 / ${COVER_RATIO}` }}>
             <StoreIcon host={store.host} brand={store.brand} size={48} className="rounded-xl" />
-            <span className="text-[11px] text-muted-foreground">Not captured yet</span>
+            <span aria-hidden className="text-[11px] text-muted-foreground">
+              {status}
+            </span>
           </div>
         )}
       </div>
       <div className="mt-3 flex items-center gap-3 px-0.5">
         <StoreIcon host={store.host} brand={store.brand} size={36} className="rounded-[10px]" />
         <div className="min-w-0">
-          <p className="truncate text-[14px] font-semibold group-hover:text-primary">{store.brand}</p>
-          <p className="truncate text-[12px] text-muted-foreground">{facts || store.host}</p>
+          <p className="truncate text-[14px] font-semibold group-hover:text-link">{store.brand}</p>
+          <p className="truncate text-[12px] text-muted-foreground">
+            {facts || store.host}
+            <span className="sr-only">, {status}</span>
+          </p>
         </div>
       </div>
     </Link>

@@ -223,7 +223,7 @@ function Detail({
                 aria-controls={`panel-${t}`}
                 onClick={() => setTab(t)}
                 className={cn(
-                  "rounded-md px-2 py-1 text-[12px] text-muted-foreground outline-none transition-colors duration-150 hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50",
+                  "rounded-md px-2 py-1 text-[12px] text-muted-foreground outline-none transition-colors duration-150 hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring touch:min-h-11",
                   tab === t && "bg-muted text-foreground",
                 )}
               >
@@ -248,7 +248,7 @@ function Detail({
                 <dd className="min-w-0">
                   <Link
                     href={`/sites/${encodeURIComponent(focus.host)}`}
-                    className="block truncate underline-offset-4 hover:text-primary hover:underline"
+                    className="block truncate rounded-sm underline-offset-4 outline-none hover:text-link hover:underline focus-visible:ring-2 focus-visible:ring-ring touch:-my-3 touch:py-3"
                     title={`${focus.host}: tech stack and every captured page`}
                   >
                     {focus.host}
@@ -335,7 +335,7 @@ function Toolbar({
               disabled={!available}
               onClick={() => setView(option.value)}
               className={cn(
-                "inline-flex h-7 items-center gap-1.5 rounded-md px-2.5 text-[12px] font-medium transition-colors duration-150 outline-none focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-40",
+                "inline-flex h-7 items-center gap-1.5 rounded-md px-2.5 text-[12px] font-medium transition-colors duration-150 outline-none focus-visible:ring-2 focus-visible:ring-ring touch:h-11 disabled:opacity-40",
                 option.wideOnly && "hidden min-[900px]:inline-flex",
                 view === option.value ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground",
               )}
@@ -428,7 +428,7 @@ function Shot({
         <button
           type="button"
           onClick={() => onExpand(block)}
-          className="relative block w-full cursor-zoom-in outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+          className="relative block w-full cursor-zoom-in outline-none focus-visible:ring-2 focus-visible:ring-ring"
           style={{ background: block.bg, aspectRatio: `${block.w} / ${block.h}` }}
           aria-label={`Expand the ${block.viewport} screenshot`}
         >
@@ -525,7 +525,7 @@ function Expanded({
                   aria-checked={viewport === v}
                   onClick={() => setViewport(v)}
                   className={cn(
-                    "inline-flex h-7 items-center gap-1.5 rounded-md px-2.5 text-[12px] font-medium transition-colors duration-150 outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
+                    "inline-flex h-7 items-center gap-1.5 rounded-md px-2.5 text-[12px] font-medium transition-colors duration-150 outline-none focus-visible:ring-2 focus-visible:ring-ring touch:h-11",
                     viewport === v ? "bg-white text-black" : "text-white/70 hover:text-white",
                   )}
                 >
@@ -597,7 +597,7 @@ function Actions({ block }: { block: Block }) {
         href={block.pageUrl}
         target="_blank"
         rel="noopener noreferrer"
-        className="inline-flex h-7 items-center gap-1.5 rounded-lg px-2.5 text-[12px] font-medium text-muted-foreground transition-colors duration-150 outline-none hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
+        className="inline-flex h-7 items-center gap-1.5 rounded-lg px-2.5 text-[12px] font-medium text-muted-foreground transition-colors duration-150 outline-none hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring touch:h-11"
       >
         Source page <ExternalLink className="size-3.5" />
       </a>
@@ -699,7 +699,7 @@ function TechStack({ block, counts, onFilter }: { block: Block; counts: TechCoun
                   type="button"
                   onClick={() => onFilter(key, value)}
                   aria-label={`Show ${n ?? "all"} blocks with ${label}`}
-                  className={cn(cls, "outline-none transition-colors duration-150 hover:border-primary/60 hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50")}
+                  className={cn(cls, "outline-none transition-colors duration-150 hover:border-primary/60 hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring touch:min-h-11")}
                 >
                   {inner}
                 </button>
@@ -727,7 +727,7 @@ function Similar({ blocks, onOpen, className }: { blocks: Block[]; onOpen: (b: B
             <button
               type="button"
               onClick={() => onOpen(b)}
-              className="group block w-full overflow-hidden rounded-lg border bg-card text-left transition-colors duration-150 outline-none hover:border-primary/60 focus-visible:ring-3 focus-visible:ring-ring/50"
+              className="group block w-full overflow-hidden rounded-lg border bg-card text-left transition-colors duration-150 outline-none hover:border-primary/60 focus-visible:ring-2 focus-visible:ring-ring"
               aria-label={`${labelFor(b.typeHint)} block from ${b.host}`}
             >
               <div className="overflow-hidden" style={{ aspectRatio: mobile ? "9 / 14" : "16 / 10", background: b.bg }}>

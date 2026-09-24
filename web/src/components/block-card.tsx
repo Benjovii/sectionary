@@ -24,15 +24,18 @@ export function BlockCard({ block, onOpen, height }: { block: Block; onOpen: (b:
   return (
     <figure
       className={cn(
-        "group overflow-hidden rounded-lg border bg-card transition-colors duration-150 hover:border-primary/60",
+        "group relative overflow-hidden rounded-lg border bg-card transition-colors duration-150 hover:border-primary/60",
         fixed ? "flex h-full flex-col" : mobile && "mx-auto max-w-[300px]",
       )}
     >
+      {/* The button's ::after stretches over the whole card, caption included,
+          so a 26px-tall header block is still a full-size tap target. The
+          focus ring is drawn on that layer too, round the whole card. */}
       <button
         type="button"
         onClick={() => onOpen(block)}
         className={cn(
-          "block w-full cursor-zoom-in outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
+          "block w-full cursor-zoom-in outline-none after:absolute after:inset-0 after:z-10 after:rounded-lg focus-visible:after:ring-2 focus-visible:after:ring-ring focus-visible:after:ring-inset",
           fixed && "min-h-0 flex-1",
         )}
         aria-label={`${labelFor(block.typeHint)} block from ${block.host}, ${block.viewport}`}
@@ -73,7 +76,7 @@ export function BlockCard({ block, onOpen, height }: { block: Block; onOpen: (b:
       </button>
       <figcaption
         className={cn(
-          "flex items-center gap-1.5 px-2.5 text-[11px] text-muted-foreground",
+          "flex cursor-zoom-in items-center gap-1.5 px-2.5 text-[11px] text-muted-foreground",
           fixed ? "h-8 shrink-0" : "py-2",
         )}
       >
