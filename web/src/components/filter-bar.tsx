@@ -28,7 +28,9 @@ const SEARCH =
  *
  * A row of chips with one panel beneath, rather than a popover per chip: at
  * 375px a panel anchored to a chip has nowhere to go, and this way the open
- * list always gets the full width. One panel is open at a time.
+ * list always gets the full width. One panel is open at a time. The panel
+ * floats over the wall rather than pushing it down, so opening a filter
+ * never moves the blocks.
  *
  * Every count comes from the facets, which are computed ignoring their own
  * dimension, so ticking one platform still shows what the others would add.
@@ -97,7 +99,7 @@ export function FilterBar({
   const activeCount = countSelected(selected) + (search.trim() ? 1 : 0);
 
   return (
-    <div ref={root} className="flex flex-col gap-2">
+    <div ref={root} className="relative flex flex-col gap-2">
       <div className={ROW}>
         <div className={CHIPS}>
           {FILTERS.map((filter) => {
@@ -160,7 +162,7 @@ export function FilterBar({
       </div>
 
       {spec && (
-        <div id="filter-panel" role="group" aria-label={spec.label} className="rounded-lg border bg-popover p-1 text-popover-foreground">
+        <div id="filter-panel" role="group" aria-label={spec.label} className="absolute inset-x-0 top-full z-10 mt-2 rounded-lg border bg-popover p-1 text-popover-foreground shadow-[0_12px_32px_-8px_rgb(0_0_0/0.35)]">
           {spec.searchable && (facets[spec.key] ?? []).length > 8 && (
             <input
               type="search"
