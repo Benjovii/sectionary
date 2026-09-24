@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { ArrowLeft, ChevronLeft, ChevronRight, Monitor, Smartphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -20,6 +20,19 @@ const WIDE = "(min-width: 900px)";
 /** On phones a step shows this much of its page (height over width) until opened. */
 const PREVIEW_RATIO = 1.5;
 
+/** Whether the steps sit side by side. False on the server, where nothing is drawn yet anyway. */
+function useWide(): boolean {
+  return useSyncExternalStore(
+    (onChange) => {
+      const query = window.matchMedia(WIDE);
+      query.addEventListener("change", onChange);
+      return () => query.removeEventListener("change", onChange);
+    },
+    () => window.matchMedia(WIDE).matches,
+    () => false,
+  );
+}
+
 /**
  * A store's flow (SEC-20): home, collection, product, cart and checkout, each
  * a full page. Side by side from 900px, each column scrolling on its own so
@@ -31,6 +44,7 @@ export function FlowView({ host }: { host: string }) {
   // Null until the person picks: then the default follows the screen.
   const [picked, setPicked] = useState<Viewport | null>(null);
   const [markers, setMarkers] = useState(true);
+  const wide = useWide();
 
   useEffect(() => {
     let alive = true;
@@ -58,8 +72,7 @@ export function FlowView({ host }: { host: string }) {
     );
   }
 
-  // Read only once the data is here, which is only ever on the client.
-  const viewport: Viewport = picked ?? (window.matchMedia(WIDE).matches ? "desktop" : "mobile");
+  const viewport: Viewport = picked ?? (wide ? "desktop" : "mobile");
   const { store } = state.view;
 
   return (
@@ -122,7 +135,7 @@ export function FlowView({ host }: { host: string }) {
         >
           {flow.steps.map((step, i) => (
             <li key={step.type} className="flex min-w-0 flex-col gap-2 min-[900px]:w-[340px] min-[900px]:shrink-0">
-              <StepColumn step={step} number={i + 1} viewport={viewport} markers={markers} />
+              <StepColumn step={step} number={i + 1} viewport={viewport} markers={markers} wide={wide} />
             </li>
           ))}
         </ol>
@@ -134,7 +147,19 @@ export function FlowView({ host }: { host: string }) {
 /** Frame shared by pages and gaps: capped on phones, a column-high scroller from 900px. */
 const FRAME = "relative overflow-hidden rounded-lg border bg-muted/40 min-[900px]:h-[calc(100dvh-15rem)] min-[900px]:min-h-80";
 
-function StepColumn({ step, number, viewport, markers }: { step: FlowStep; number: number; viewport: Viewport; markers: boolean }) {
+function StepColumn({
+  step,
+  number,
+  viewport,
+  markers,
+  wide,
+}: {
+  step: FlowStep;
+  number: number;
+  viewport: Viewport;
+  markers: boolean;
+  wide: boolean;
+}) {
   const [at, setAt] = useState(0);
   const [open, setOpen] = useState(false);
   const label = PAGE_TYPE_LABEL[step.type] ?? step.type;
@@ -142,6 +167,8 @@ function StepColumn({ step, number, viewport, markers }: { step: FlowStep; numbe
   const path = page ? page.url.replace(/^https?:\/\/[^/]+/, "") || "/" : null;
   const shown = page ? pageBlocks(page, viewport) : null;
   const tall = shown ? shown.ratio > PREVIEW_RATIO : false;
+  // Side by side, each column scrolls the whole page; stacked, it is cut until opened.
+  const cap = tall && !open && !wide ? PREVIEW_RATIO : null;
 
   return (
     <>
@@ -184,7 +211,7 @@ function StepColumn({ step, number, viewport, markers }: { step: FlowStep; numbe
       ) : (
         <>
           <div
-            className={cn(FRAME, "min-[900px]:overflow-y-auto", open || !tall ? "" : "max-h-[150vw]")}
+            className={cn(FRAME, "min-[900px]:overflow-y-auto")}
             // The column scrolls on its own from 900px; a label lets a keyboard or screen reader find it.
             role="region"
             aria-label={`${label} page, ${shown.viewport}`}
@@ -192,8 +219,8 @@ function StepColumn({ step, number, viewport, markers }: { step: FlowStep; numbe
             {shown.note && (
               <p className="border-b bg-card px-2.5 py-1.5 text-[11px] text-muted-foreground">{shown.note}</p>
             )}
-            <PageBody page={page} shown={shown} markers={markers} />
-            {tall && !open && (
+            <PageBody page={page} shown={shown} markers={markers} cap={cap} />
+            {cap && (
               <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-background to-transparent min-[900px]:hidden" />
             )}
           </div>
@@ -233,34 +260,59 @@ function pageBlocks(page: ProfilePage, want: Viewport): Shown | null {
   return null;
 }
 
-/** The page, top to bottom. With blocks, each is a link to its detail view and carries a numbered marker. */
-function PageBody({ page, shown, markers }: { page: ProfilePage; shown: Shown; markers: boolean }) {
+/**
+ * The page, top to bottom. With blocks, each is a link to its detail view and
+ * carries a numbered marker. With a cap (height over width), the page stops
+ * there: blocks below it are not drawn at all, and the one that crosses it is
+ * cut to fit, so no link reaches past the frame into the next step.
+ */
+function PageBody({ page, shown, markers, cap }: { page: ProfilePage; shown: Shown; markers: boolean; cap: number | null }) {
   if (shown.full) {
-    // eslint-disable-next-line @next/next/no-img-element
-    return <img src={assetUrl(shown.full)} alt={`${page.title ?? PAGE_TYPE_LABEL[page.type] ?? page.type}, ${shown.viewport}`} loading="lazy" className="block w-full" />;
+    const alt = `${page.title ?? PAGE_TYPE_LABEL[page.type] ?? page.type}, ${shown.viewport}`;
+    return (
+      <div className="overflow-hidden" style={cap ? { aspectRatio: `1 / ${cap}` } : undefined}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={assetUrl(shown.full)} alt={alt} loading="lazy" className="block w-full" />
+      </div>
+    );
   }
+
+  let used = 0;
+  const drawn: { block: Block; ratio: number; cut: number | null }[] = [];
+  for (const block of shown.blocks) {
+    const ratio = block.h / block.w;
+    if (cap !== null && used >= cap) break;
+    const cut = cap !== null && used + ratio > cap ? cap - used : null;
+    drawn.push({ block, ratio, cut });
+    used += ratio;
+  }
+
   return (
     <div className="bg-card">
-      {shown.blocks.map((b, i) => {
+      {drawn.map(({ block: b, ratio, cut }, i) => {
         const name = labelFor(b.typeHint);
         return (
           <Link
             key={b.id}
             href={`/?open=${encodeURIComponent(b.id)}&back=1`}
-            className="group relative block border-t border-black/10 outline-none first:border-t-0"
-            style={{ aspectRatio: `${b.w} / ${b.h}`, background: b.bg }}
-            aria-label={`${i + 1}, ${name} block. Open its detail`}
+            className="group relative block overflow-hidden border-t border-black/10 outline-none first:border-t-0"
+            style={{ aspectRatio: `1 / ${cut ?? ratio}`, background: b.bg }}
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={assetUrl(b.src)} alt="" loading="lazy" decoding="async" className="block h-full w-full" />
+            <span className="block" style={{ aspectRatio: `${b.w} / ${b.h}` }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={assetUrl(b.src)} alt="" loading="lazy" decoding="async" className="block h-full w-full" />
+            </span>
             {/* Where the block starts and ends, on hover or focus. */}
             <span className="pointer-events-none absolute inset-0 ring-2 ring-primary ring-inset opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-visible:opacity-100" />
-            {markers && (
-              <span
-                aria-hidden
-                className="pointer-events-none absolute top-1 left-1 max-w-[calc(100%-0.5rem)] truncate rounded-full bg-black/75 px-1.5 py-px text-[10px] font-medium text-white tabular-nums group-hover:bg-primary group-hover:text-primary-foreground group-focus-visible:bg-primary group-focus-visible:text-primary-foreground"
-              >
+            {/* The marker names the link, so what is read out is what is shown. */}
+            {markers ? (
+              <span className="pointer-events-none absolute top-1 left-1 max-w-[calc(100%-0.5rem)] truncate rounded-full bg-black/75 px-1.5 py-px text-[10px] font-medium text-white tabular-nums group-hover:bg-primary group-hover:text-primary-foreground group-focus-visible:bg-primary group-focus-visible:text-primary-foreground">
                 {i + 1} · {name}
+                <span className="sr-only"> block, open its detail</span>
+              </span>
+            ) : (
+              <span className="sr-only">
+                {i + 1} · {name} block, open its detail
               </span>
             )}
           </Link>

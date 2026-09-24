@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs";
 import { buildIndex } from "../src/lib/block-source.ts";
 import { flowCounts, flowOf, flowSummaries, FLOW_STEPS } from "../src/lib/flows.ts";
 import { pagesFromBlocks } from "../src/lib/site-profile.ts";
+import { expandBlocks } from "../src/lib/mock-blocks.ts";
 import type { Block } from "../src/contracts/block.ts";
 import type { Store } from "../src/contracts/store.ts";
 
@@ -75,6 +76,20 @@ const real = flowSummaries(buildIndex(sample, stores));
 const zoo = real.find((s) => s.store.host === "myzoobox.com");
 check("sample: myzoobox has a complete flow with cart", Boolean(zoo?.flow.complete && zoo.flow.steps[3].pages.length === 1));
 check("sample: collections and products are two each", zoo?.flow.steps[1].pages.length === 2 && zoo.flow.steps[2].pages.length === 2);
+
+// 4. Capture scale. The mock's blocks, stripped of their mock flag, stand in
+// for a full run: 30,000 blocks over the 1,005 listed stores. This proves the
+// count and the one-pass grouping hold up at the size SEC-20 is judged at,
+// not that 200 stores are captured (the mock never reaches the app's flows).
+const scaled = [...sample, ...expandBlocks(sample, stores, 30_000 - sample.length)].map(({ ...b }) => {
+  delete (b as Block & { mock?: boolean }).mock;
+  return b as Block;
+});
+const started = performance.now();
+const atScale = flowSummaries(buildIndex(scaled, stores));
+const ms = performance.now() - started;
+const scaleCounts = flowCounts(atScale);
+check(`scale: ${scaleCounts.complete} of ${scaleCounts.captured} stores complete in ${Math.round(ms)} ms`, scaleCounts.complete >= 200 && ms < 1500);
 
 console.log(bad ? `\n${bad} failed` : "\nall passed");
 process.exit(bad ? 1 : 0);
