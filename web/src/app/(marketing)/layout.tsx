@@ -49,7 +49,7 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
           </div>
         </div>
       </header>
-      <main id="main" tabIndex={-1} className="flex-1 outline-none">
+      <main id="main" tabIndex={-1} data-landing className="flex-1 outline-none">
         {children}
       </main>
       <footer className="border-t">

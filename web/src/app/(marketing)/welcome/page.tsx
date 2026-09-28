@@ -8,6 +8,7 @@ import type { Store } from "@/lib/stores";
 import { platformLabel } from "@/lib/stores";
 import { assetUrl } from "@/lib/data-source";
 import { WaitlistForm } from "@/components/waitlist-form";
+import { Reveal } from "@/components/reveal";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
@@ -65,6 +66,9 @@ async function sample() {
   };
 }
 
+/** Delay for the hero's load-in (see .hero-rise in globals.css). */
+const rise = (ms: number) => ({ "--rise-delay": `${ms}ms` }) as React.CSSProperties;
+
 const fmt = (n: number) => n.toLocaleString("en-US");
 
 // The names people actually search for, which "hero, features, footer"
@@ -114,18 +118,19 @@ export default async function Welcome() {
 
   return (
     <>
+      <Reveal />
       {/* ─── Hero ─────────────────────────────────────────────────────────── */}
       <section className="relative overflow-hidden">
         <div className="mx-auto grid max-w-[1200px] items-center gap-12 px-4 pt-14 pb-16 sm:px-6 md:pt-20 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:gap-10 lg:pb-24">
           <div className="max-w-[560px]">
-            <h1 className="font-heading text-[44px] leading-[0.98] font-semibold tracking-[-0.025em] text-balance sm:text-[64px] lg:text-[72px]">
+            <h1 className="hero-rise font-heading text-[44px] leading-[0.98] font-semibold tracking-[-0.025em] text-balance sm:text-[64px] lg:text-[72px]">
               Every storefront, cut into blocks.
             </h1>
-            <p className="mt-6 max-w-[34em] text-[17px] leading-relaxed text-muted-foreground text-pretty">
+            <p className="hero-rise mt-6 max-w-[34em] text-[17px] leading-relaxed text-muted-foreground text-pretty" style={rise(90)}>
               Real online stores, sliced into the parts you design: hero, buy box, reviews, cart. Desktop and phone side
               by side, with the platform, theme and apps behind every one.
             </p>
-            <div id="join" className="mt-8 max-w-[480px] scroll-mt-24">
+            <div id="join" className="hero-rise mt-8 max-w-[480px] scroll-mt-24" style={rise(180)}>
               <WaitlistForm source="hero" />
               <p className="mt-3 text-[13px] text-muted-foreground">Free during the beta. One email, when your invite is ready.</p>
             </div>
@@ -136,7 +141,7 @@ export default async function Welcome() {
 
       {/* ─── The library so far ───────────────────────────────────────────── */}
       <section className="border-y bg-card/60">
-        <div className="mx-auto flex max-w-[1200px] flex-col gap-2 px-4 py-5 font-mono text-[12px] leading-relaxed text-muted-foreground sm:flex-row sm:items-baseline sm:gap-8 sm:px-6 sm:text-[13px]">
+        <div data-reveal className="mx-auto flex max-w-[1200px] flex-col gap-2 px-4 py-5 font-mono text-[12px] leading-relaxed text-muted-foreground sm:flex-row sm:items-baseline sm:gap-8 sm:px-6 sm:text-[13px]">
           <h2 className="shrink-0 text-foreground">The library so far</h2>
           <ul className="flex flex-wrap gap-x-6 gap-y-1">
             <Stat n={stats.stores}>stores lined up for capture</Stat>
@@ -150,7 +155,7 @@ export default async function Welcome() {
 
       {/* ─── The wedge, in one screen ─────────────────────────────────────── */}
       <section aria-labelledby="wedge" className="mx-auto max-w-[1200px] px-4 py-20 sm:px-6 md:py-28">
-        <div className="max-w-[640px]">
+        <div data-reveal className="max-w-[640px]">
           <h2 id="wedge" className="font-heading text-[34px] leading-[1.05] font-semibold tracking-[-0.02em] text-balance sm:text-[44px]">
             One block, and everything behind it.
           </h2>
@@ -160,7 +165,7 @@ export default async function Welcome() {
           </p>
         </div>
         <Anatomy desktop={data.buyBox.desktop} mobile={data.buyBox.mobile} captured={captured} />
-        <ol className="mt-16 grid gap-x-10 gap-y-8 border-t pt-10 sm:grid-cols-2 lg:grid-cols-4">
+        <ol data-reveal-stagger className="mt-16 grid gap-x-10 gap-y-8 border-t pt-10 sm:grid-cols-2 lg:grid-cols-4">
           {[
             ["Named like a store", "Buy box, variant picker, cart drawer, upsell. The blocks commerce is built from, not just hero and footer."],
             ["Tech stack on every block", `Platform, theme and version, page builder, and ${stats.apps} apps and pixels, detected when the page is captured.`],
@@ -179,7 +184,7 @@ export default async function Welcome() {
       {/* ─── Find a pattern ───────────────────────────────────────────────── */}
       <section aria-labelledby="find" className="border-t bg-card/40">
         <div className="mx-auto grid max-w-[1200px] gap-12 px-4 py-20 sm:px-6 md:py-28 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-16">
-          <div>
+          <div data-reveal>
             <h2 id="find" className="font-heading text-[34px] leading-[1.05] font-semibold tracking-[-0.02em] text-balance sm:text-[44px]">
               Ask for the exact pattern.
             </h2>
@@ -194,7 +199,7 @@ export default async function Welcome() {
               Browse the preview library <ArrowRight className="size-4" />
             </Link>
           </div>
-          <div className="space-y-8">
+          <div data-reveal-stagger className="space-y-8">
             <figure className="rounded-xl border bg-background p-4 sm:p-5">
               <figcaption className="text-[15px] leading-snug">
                 <span className="text-muted-foreground">&ldquo;</span>Product pages on the Impact theme that run Skio, on
@@ -225,7 +230,7 @@ export default async function Welcome() {
       {/* ─── Flows ────────────────────────────────────────────────────────── */}
       <section aria-labelledby="flows" className="border-t">
         <div className="mx-auto max-w-[1200px] px-4 py-20 sm:px-6 md:py-28">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div data-reveal className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div className="max-w-[620px]">
               <h2 id="flows" className="font-heading text-[34px] leading-[1.05] font-semibold tracking-[-0.02em] text-balance sm:text-[44px]">
                 Follow the whole path to checkout.
@@ -242,7 +247,7 @@ export default async function Welcome() {
               Open the flows <ArrowRight className="size-4" />
             </Link>
           </div>
-          <ol className="-mx-4 mt-12 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 sm:mx-0 sm:grid sm:grid-cols-4 sm:overflow-visible sm:px-0 sm:pb-0">
+          <ol data-reveal-stagger className="-mx-4 mt-12 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 sm:mx-0 sm:grid sm:grid-cols-4 sm:overflow-visible sm:px-0 sm:pb-0">
             {data.flow.map(({ step, block }, i) => (
               <li key={step} className="w-[70%] shrink-0 snap-start sm:w-auto">
                 <div className="flex items-center gap-2 pb-2.5">
@@ -261,10 +266,10 @@ export default async function Welcome() {
       {/* ─── Who it's for ─────────────────────────────────────────────────── */}
       <section aria-labelledby="for" className="border-t">
         <div className="mx-auto max-w-[1200px] px-4 py-20 sm:px-6 md:py-24">
-          <h2 id="for" className="font-heading text-[28px] leading-tight font-semibold tracking-[-0.02em] sm:text-[34px]">
+          <h2 id="for" data-reveal className="font-heading text-[28px] leading-tight font-semibold tracking-[-0.02em] sm:text-[34px]">
             Built for people who ship stores.
           </h2>
-          <dl className="mt-10 divide-y border-y">
+          <dl data-reveal-stagger className="mt-10 divide-y border-y">
             {AUDIENCE.map((a) => (
               <div key={a.who} className="grid gap-1 py-6 md:grid-cols-[minmax(0,4fr)_minmax(0,8fr)] md:gap-10">
                 <dt className="font-heading text-[19px] font-semibold">{a.who}</dt>
@@ -277,7 +282,7 @@ export default async function Welcome() {
 
       {/* ─── Closing call ─────────────────────────────────────────────────── */}
       <section aria-labelledby="cta" className="bg-primary text-primary-foreground">
-        <div className="mx-auto grid max-w-[1200px] items-end gap-10 px-4 py-20 sm:px-6 md:py-24 lg:grid-cols-2">
+        <div data-reveal-stagger className="mx-auto grid max-w-[1200px] items-end gap-10 px-4 py-20 sm:px-6 md:py-24 lg:grid-cols-2">
           <div>
             <h2 id="cta" className="font-heading text-[40px] leading-[1] font-semibold tracking-[-0.025em] text-balance sm:text-[56px]">
               Get in before the library opens.
@@ -380,7 +385,7 @@ function Anatomy({ desktop, mobile, captured }: { desktop: Block; mobile: Block;
     ["Captured", captured],
   ];
   return (
-    <div className="mt-12 grid items-start gap-8 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-12">
+    <div data-reveal-stagger className="mt-12 grid items-start gap-8 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-12">
       <div className="relative pb-10 sm:pb-0">
         <Shot block={desktop} alt="A buy box on desktop" ratio="1400 / 695" className="rounded-lg border" />
         {/* Bottom left, over the product photo, so the buy box itself stays readable. */}
