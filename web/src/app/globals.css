@@ -197,6 +197,26 @@
     background-size: 200% 100%;
     animation: shimmer 1.6s linear infinite;
   }
+  /* Landing hero (SEC-25): each block slides out of the page it was cut
+     from, then its label arrives. Transform and opacity only; ease-out-quint. */
+  .cut-in {
+    animation: cut-in 900ms cubic-bezier(0.22, 1, 0.36, 1) var(--cut-delay, 0ms) both;
+  }
+  .cut-in .cut-label {
+    animation: cut-label 500ms cubic-bezier(0.22, 1, 0.36, 1) calc(var(--cut-delay, 0ms) + 450ms) both;
+  }
+  @keyframes cut-in {
+    from {
+      opacity: 0;
+      transform: translateY(var(--cut-from, 0px));
+    }
+  }
+  @keyframes cut-label {
+    from {
+      opacity: 0;
+      transform: translateX(-4px);
+    }
+  }
   @keyframes shimmer {
     from {
       background-position: 200% 0;
