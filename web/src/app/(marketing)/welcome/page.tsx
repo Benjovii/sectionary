@@ -126,11 +126,11 @@ export default async function Welcome() {
             <h1 className="hero-rise font-heading text-[44px] leading-[0.98] font-semibold tracking-[-0.025em] text-balance sm:text-[64px] lg:text-[72px]">
               Every storefront, cut into blocks.
             </h1>
-            <p className="hero-rise mt-6 max-w-[34em] text-[17px] leading-relaxed text-muted-foreground text-pretty" style={rise(90)}>
+            <p className="hero-rise mt-6 max-w-[34em] text-[17px] leading-relaxed text-muted-foreground text-pretty" style={rise(150)}>
               Real online stores, sliced into the parts you design: hero, buy box, reviews, cart. Desktop and phone side
               by side, with the platform, theme and apps behind every one.
             </p>
-            <div id="join" className="hero-rise mt-8 max-w-[480px] scroll-mt-24" style={rise(180)}>
+            <div id="join" className="hero-rise mt-8 max-w-[480px] scroll-mt-24" style={rise(300)}>
               <WaitlistForm source="hero" />
               <p className="mt-3 text-[13px] text-muted-foreground">Free during the beta. One email, when your invite is ready.</p>
             </div>
@@ -338,7 +338,7 @@ function HeroCut({ page, phone }: { page: { block: Block; label: string; crop?: 
           <div
             key={block.id}
             className="cut-in relative"
-            style={{ "--cut-from": `${-(i * 10 + 4)}px`, "--cut-delay": `${120 + i * 90}ms` } as React.CSSProperties}
+            style={{ "--cut-from": `${-(i * 10 + 4)}px`, "--cut-delay": `${200 + i * 150}ms` } as React.CSSProperties}
           >
             <Shot
               block={block}
@@ -355,7 +355,7 @@ function HeroCut({ page, phone }: { page: { block: Block; label: string; crop?: 
       </div>
       <div
         className="cut-in absolute right-0 -bottom-6 w-[26%] min-w-[92px] rounded-[18px] border-[5px] border-[#2a2622] bg-[#2a2622] shadow-2xl ring-1 ring-white/10 sm:-bottom-8"
-        style={{ "--cut-from": "24px", "--cut-delay": "560ms" } as React.CSSProperties}
+        style={{ "--cut-from": "24px", "--cut-delay": "900ms" } as React.CSSProperties}
       >
         <Shot block={phone} eager alt="The same hero on a phone" ratio="390 / 620" className="rounded-[13px]" />
       </div>

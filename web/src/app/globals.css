@@ -200,14 +200,14 @@
   /* Landing hero (SEC-25): each block slides out of the page it was cut
      from, then its label arrives. Transform and opacity only; ease-out-quint. */
   .cut-in {
-    animation: cut-in 900ms cubic-bezier(0.22, 1, 0.36, 1) var(--cut-delay, 0ms) both;
+    animation: cut-in 1400ms cubic-bezier(0.22, 1, 0.36, 1) var(--cut-delay, 0ms) both;
   }
   .cut-in .cut-label {
-    animation: cut-label 500ms cubic-bezier(0.22, 1, 0.36, 1) calc(var(--cut-delay, 0ms) + 450ms) both;
+    animation: cut-label 800ms cubic-bezier(0.22, 1, 0.36, 1) calc(var(--cut-delay, 0ms) + 700ms) both;
   }
   /* Landing hero text: a short rise on first paint, one line after another. */
   .hero-rise {
-    animation: rise 800ms cubic-bezier(0.22, 1, 0.36, 1) var(--rise-delay, 0ms) both;
+    animation: rise 1200ms cubic-bezier(0.22, 1, 0.36, 1) var(--rise-delay, 0ms) both;
   }
   @keyframes rise {
     from {
@@ -220,11 +220,11 @@
   [data-reveal],
   [data-reveal-stagger] > * {
     transition:
-      opacity 700ms cubic-bezier(0.22, 1, 0.36, 1),
-      transform 900ms cubic-bezier(0.22, 1, 0.36, 1);
+      opacity 1100ms cubic-bezier(0.22, 1, 0.36, 1),
+      transform 1400ms cubic-bezier(0.22, 1, 0.36, 1);
   }
   [data-reveal-stagger] > * {
-    transition-delay: calc(var(--i, 0) * 90ms);
+    transition-delay: calc(var(--i, 0) * 150ms);
   }
   [data-reveal][data-state="pending"],
   [data-reveal-stagger][data-state="pending"] > * {
