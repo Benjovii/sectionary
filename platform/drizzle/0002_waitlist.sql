@@ -7,3 +7,8 @@ CREATE TABLE waitlist (
 );
 CREATE UNIQUE INDEX waitlist_email_uidx ON waitlist(lower(email));
 CREATE INDEX waitlist_created_idx ON waitlist(created_at);
+-- Email addresses: RLS on, as on every table in 0001, and no policies, so
+-- Supabase's public Data API (anon and authenticated keys) can neither read
+-- nor write them. The server action connects as the table owner, which RLS
+-- does not apply to.
+ALTER TABLE waitlist ENABLE ROW LEVEL SECURITY;
