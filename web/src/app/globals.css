@@ -231,6 +231,56 @@
     opacity: 0;
     transform: translateY(28px);
   }
+  /* Legal pages (SEC-29): running text in the landing page's voice. */
+  .legal :where(p, ul, pre) + :where(p, ul, pre) {
+    margin-top: 1rem;
+  }
+  .legal :where(p, li) {
+    font-size: 16px;
+    line-height: 1.7;
+    color: color-mix(in oklch, var(--foreground) 82%, var(--muted-foreground));
+    text-wrap: pretty;
+  }
+  .legal :where(ul) {
+    padding-left: 1.1rem;
+    list-style: none;
+  }
+  .legal :where(ul > li) {
+    position: relative;
+  }
+  .legal :where(ul > li + li) {
+    margin-top: 0.45rem;
+  }
+  .legal :where(ul > li)::before {
+    content: "";
+    position: absolute;
+    left: -1.1rem;
+    top: 0.72em;
+    width: 6px;
+    height: 6px;
+    border-radius: 1.5px;
+    background: var(--primary);
+  }
+  .legal :where(strong) {
+    color: var(--foreground);
+    font-weight: 600;
+  }
+  .legal :where(p, li) a {
+    color: var(--link);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
+  }
+  .legal :where(p, li) a:hover {
+    text-decoration-thickness: 2px;
+  }
+  .legal :where(p, li) :where(code) {
+    font-family: var(--font-mono);
+    font-size: 0.88em;
+    padding: 0.1em 0.35em;
+    border-radius: var(--radius-sm);
+    background: var(--muted);
+  }
   /* "Join the waitlist" in the landing header glides down to the form. */
   @media (prefers-reduced-motion: no-preference) {
     html:has([data-landing]) {
