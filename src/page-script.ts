@@ -72,7 +72,9 @@ export function collectBlocks(opts: { minHeight: number; maxBlocks: number }): C
     const inner = own ? null : el.querySelector('[data-section-type]');
     const dst = (inner && inner.getAttribute('data-section-type')) || el.getAttribute('data-section-type');
     if (dst) return dst.toLowerCase();
-    const id = el.id || '';
+    // getAttribute, not el.id: on a <form> holding <input name="id"> (Shopify's
+    // product form) el.id is that input, and id.match threw on a product page.
+    const id = el.getAttribute('id') || '';
     // Shopify ids: shopify-section-template--123__hero_banner_kCjXcf | shopify-section-sections--123__header
     const m = id.match(/^shopify-section-(?:template--\d+__|sections--\d+__)?(.+)$/);
     if (m) {
@@ -240,7 +242,7 @@ export function collectBlocks(opts: { minHeight: number; maxBlocks: number }): C
     let parent = parentHint.get(el) || null;
     for (let up = el.parentElement, n = 0; !parent && up && up !== document.body && n < 6; up = up.parentElement, n++) {
       const tag = up.tagName.toLowerCase();
-      if (tag === 'header' || tag === 'footer' || tag === 'nav' || up.hasAttribute('data-section-type') || /^shopify-section-/.test(up.id)) parent = typeHintFor(up, true);
+      if (tag === 'header' || tag === 'footer' || tag === 'nav' || up.hasAttribute('data-section-type') || /^shopify-section-/.test(up.getAttribute('id') || '')) parent = typeHintFor(up, true);
     }
     if (parent === 'unknown') parent = null;
     const typeHint = own !== 'unknown' ? own : parent ? parent + '-part' : own;
@@ -258,7 +260,7 @@ export function collectBlocks(opts: { minHeight: number; maxBlocks: number }): C
       typeHint,
       parentType: parent,
       tag: el.tagName.toLowerCase(),
-      id: el.id || null,
+      id: el.getAttribute('id') || null,
       classes: typeof el.className === 'string' && el.className.trim() ? el.className.trim().slice(0, 200) : null,
       // A pinned element sits where the screen is, wherever the page has scrolled to.
       top: Math.round(cs.position === 'fixed' ? r.top : r.top + window.scrollY),
