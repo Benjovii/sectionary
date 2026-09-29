@@ -7,6 +7,7 @@ export const PAGE_TYPE_LABEL: Record<string, string> = {
   collection: "Collection",
   product: "Product",
   cart: "Cart",
+  checkout: "Checkout",
   page: "Page",
   blog: "Blog",
   article: "Article",

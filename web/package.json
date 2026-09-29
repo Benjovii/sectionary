@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
-    "mock": "node scripts/mock-blocks.mjs"
+    "mock": "node scripts/mock-blocks.mjs",
+    "flow-check": "node scripts/flow-check.mts"
   },
   "dependencies": {
     "next": "16.3.5",
