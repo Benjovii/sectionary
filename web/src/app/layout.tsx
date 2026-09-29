@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Bricolage_Grotesque, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "next-themes";
-import { AppShell } from "@/components/app-shell";
 import "./globals.css";
 
 // Same three faces as Next Level: Inter carries the UI, Bricolage Grotesque
@@ -11,6 +10,9 @@ const bricolage = Bricolage_Grotesque({ variable: "--font-bricolage", subsets: [
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 
 export const metadata: Metadata = {
+  // Absolute URLs for the OG images. Set NEXT_PUBLIC_SITE_URL to the chosen
+  // domain (SEC-33) when it exists; until then, the Vercel URL.
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://sectionary-pink.vercel.app"),
   title: { default: "Sectionary", template: "%s · Sectionary" },
   description: "Real online stores, cut into blocks. Browse hero, buy box, reviews, FAQ and cart patterns at desktop and phone width.",
   applicationName: "Sectionary",
@@ -30,7 +32,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     <html lang="en" suppressHydrationWarning className={`${inter.variable} ${bricolage.variable} ${geistMono.variable}`}>
       <body className="min-h-dvh">
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} disableTransitionOnChange>
-          <AppShell>{children}</AppShell>
+          {children}
         </ThemeProvider>
       </body>
     </html>
