@@ -112,7 +112,9 @@ What it is built to survive:
 Stopping: Ctrl+C once (the pages in flight finish, the stores go back to the
 queue), or `npm run crawl -- --stop` from another terminal. `--retry-failed`
 puts failed and partial stores back in line; `--hosts a.com,b.com --recapture`
-starts the named stores over, every page afresh. Every page is logged to
+starts the named stores over, every page afresh, and moves their old captures
+to `data-archive/` (outside `data/`, because the importer reads every
+manifest under the folder it is given). Every page is logged to
 `data/crawl-log.jsonl`, and each run ends by writing `data/crawl-report.md`.
 
 Store states: `pending`, `running`, `done` (every page captured), `partial`

@@ -22,7 +22,7 @@
 // then every running store is handed back to the queue). A lock file stops two
 // crawls running at once, which is what gets an IP throttled.
 import { chromium, type Browser } from 'playwright';
-import { appendFile, mkdir, readFile, readdir, rm, stat, writeFile } from 'node:fs/promises';
+import { appendFile, mkdir, readFile, readdir, rename, rm, stat, writeFile } from 'node:fs/promises';
 import { existsSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { Queue, type SeedRow, type StoreRow, type StoreStatus } from './queue.js';
@@ -87,6 +87,26 @@ function parseArgs(argv: string[]): Options {
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
 // ---- One crawl at a time ------------------------------------------------------
+/** Old captures live beside the output folder, never inside it: the importer reads every manifest under it. */
+function archiveRoot(out: string): string {
+  const abs = path.resolve(out);
+  return path.join(path.dirname(abs), `${path.basename(abs)}-archive`);
+}
+
+async function setAside(out: string, hosts: string[]): Promise<number> {
+  const dest = path.join(archiveRoot(out), `replaced-${new Date().toISOString().slice(0, 10)}`);
+  let moved = 0;
+  for (const host of hosts) {
+    const from = path.join(out, host);
+    if (!existsSync(from)) continue;
+    await mkdir(dest, { recursive: true });
+    const to = path.join(dest, host);
+    await rename(from, existsSync(to) ? `${to}-${Date.now()}` : to);
+    moved++;
+  }
+  return moved;
+}
+
 function takeLock(file: string, force: boolean): void {
   if (existsSync(file)) {
     let held: { pid: number; startedAt: string } | null = null;
@@ -382,6 +402,13 @@ async function main(): Promise<void> {
 
   takeLock(lock, opts.force);
   dropLock(stopFile); // a stop request left over from an earlier run
+  // A store started over keeps nothing of its last capture in the output: its
+  // page plan can differ this time, and leftover page folders would be imported
+  // beside the new ones. They move to <out>-archive/, nothing is deleted.
+  if (opts.recapture) {
+    const moved = await setAside(opts.out, seeds.map((s) => s.host));
+    if (moved) console.log(`Moved the old captures of ${moved} store(s) to ${archiveRoot(opts.out)}.`);
+  }
   // Chromium's scratch profile goes next to the captures, not on the system
   // drive. A killed run leaves one behind, so the folder is cleared first.
   const tmp = path.resolve(opts.out, '.tmp');
