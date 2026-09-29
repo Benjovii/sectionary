@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Logo } from "@/components/logo";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { LEGAL_PAGES } from "@/lib/site";
 
 const NAV = [
   { href: "/", label: "Blocks" },
@@ -10,7 +11,8 @@ const NAV = [
 
 /**
  * The landing page's frame (SEC-25): the app bar's wordmark and hairline, a
- * little taller, with the waitlist as the one orange action.
+ * little taller, with the waitlist as the one orange action. The legal pages
+ * (SEC-29) share it.
  */
 export default function MarketingLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -40,12 +42,13 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
           </nav>
           <div className="ml-auto flex items-center gap-1.5">
             <ThemeToggle />
-            <a
-              href="#join"
+            {/* Also used by /terms, /privacy and /bot, so it names the page. */}
+            <Link
+              href="/welcome#join"
               className="inline-flex h-8 items-center rounded-lg bg-primary px-3 text-[13px] font-semibold text-primary-foreground outline-none transition-colors duration-150 hover:bg-primary/85 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background touch:h-11"
             >
               Join the waitlist
-            </a>
+            </Link>
           </div>
         </div>
       </header>
@@ -68,6 +71,16 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
             <ul className="space-y-2">
               <li className="font-mono text-[11px] uppercase tracking-wider text-muted-foreground">Library</li>
               {NAV.map((n) => (
+                <li key={n.href}>
+                  <Link href={n.href} className="rounded-sm outline-none hover:text-link focus-visible:ring-2 focus-visible:ring-ring">
+                    {n.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+            <ul className="space-y-2">
+              <li className="font-mono text-[11px] uppercase tracking-wider text-muted-foreground">Legal</li>
+              {LEGAL_PAGES.map((n) => (
                 <li key={n.href}>
                   <Link href={n.href} className="rounded-sm outline-none hover:text-link focus-visible:ring-2 focus-visible:ring-ring">
                     {n.label}
