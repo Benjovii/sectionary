@@ -15,6 +15,12 @@ const cases: [string, string, string | null][] = [
   ['Geo-block (stance.eu.com)', '<h1>Restricted Access</h1><p>Sorry,you cannot visit our store from your current location.</p>', 'geo-block'],
   ['Geo-block variant', '<p>We are sorry, this site is not available in your country.</p>', 'geo-block'],
   ['px-captcha element only', '<div id="px-captcha"></div><p>One moment</p>', 'human-check'],
+  ['Application error page (mytheresa.com)', '<h1>MYTHERESA</h1><h2>Something went wrong</h2><p>Please try again in a moment. Report the issue by clicking the button below.</p><input placeholder="your@email.com"><button>REPORT ISSUE</button><p>Reference: 3CE:1e4a1202.1790123456</p>', 'error-page'],
+  ['Location gate (canyon.com)', '<h1>CANYON</h1><h2>Choose your location and language</h2><p>Suggestion based on your current location</p><ul><li>United States, English</li><li>Canada, English, Francais</li><li>Mexico, Espanol</li></ul>', 'location-gate'],
+  ['NEGATIVE long store page with "something went wrong" in help text', `<h1>Help</h1><p>If something went wrong with your order, contact us.</p>${filler}`, null],
+  ['NEGATIVE store with a country selector in the footer', `<h1>Timeless bags</h1><p>Handmade in Italy. Choose your country in the footer to see local prices.</p>${filler}`, null],
+  ['NEGATIVE short home page with a hidden reCAPTCHA frame (newsletter form)', '<h1>FERIA OUTLET</h1><p>UP TO 60% OFF. 3 cuotas sin interes.</p><form><input placeholder="email"><button>Suscribirme</button></form><iframe src="https://www.google.com/recaptcha/api2/bframe?hl=es" style="width:0;height:0;visibility:hidden;position:absolute"></iframe>', null],
+  ['reCAPTCHA challenge shown at full size', '<p>One more step</p><iframe src="https://www.google.com/recaptcha/api2/bframe?hl=en" style="width:400px;height:580px;display:block"></iframe>', 'human-check'],
   ['NEGATIVE normal long store page mentioning the phrase', `<h1>Help</h1><p>If you see access denied, clear your cookies.</p>${filler}`, null],
   ['NEGATIVE empty cart', '<h1>Your cart is empty</h1><a href="/collections/all">Continue shopping</a>', null],
   ['NEGATIVE short landing page', '<h1>Timelessly beautiful</h1><p>Discover the original edit.</p><a>Shop now</a>', null],
@@ -29,7 +35,7 @@ async function main(): Promise<void> {
   const page = await ctx.newPage();
   let bad = 0;
   for (const [name, html, want] of cases) {
-    await page.setContent(`<!doctype html><html><head></head><body>${html}</body></html>`);
+    await page.setContent(`<!doctype html><html><head></head><body>${html}</body></html>`, { waitUntil: 'domcontentloaded' });
     const got = await page.evaluate(detectWall);
     const kind = got ? got.kind : null;
     const ok = kind === want;

@@ -1,0 +1,52 @@
+# Hosts in seeds/stores.validated.csv that passed the validator but are not
+# online stores. One per line: host, then the reason. Judged by eye on
+# 22 Sep 2026 (SEC-51). Remove a line to let the host back in; `npm run
+# prune-seeds` applies this file and writes seeds/stores.heldback.csv.
+#
+# The validator looked for shop words in the HTML, and publishers, agencies
+# and software vendors that run a shop plugin have those words too.
+
+# Publishers and media
+labusinessjournal.com        publisher (business journal)
+modernretail.co              publisher (retail news)
+influencermarketinghub.com   publisher (marketing content)
+oceanographicmagazine.com    publisher (magazine)
+forbesbulgaria.com           publisher (Forbes Bulgaria)
+1stwebdesigner.com           publisher (web design articles)
+sitebuilderreport.com        publisher (website builder reviews)
+elmastudio.de                personal blog
+draxe.com                    content site; the shop lives at store.draxe.com
+
+# Software, platforms and vendors
+qodeinteractive.com          WordPress theme vendor
+alhena.ai                    SaaS (AI customer service)
+centra.com                   e-commerce platform vendor
+chargeflow.io                SaaS (chargebacks)
+feedonomics.com              SaaS (product feeds)
+bigcommerce.co.uk            e-commerce platform vendor
+shopify.co.uk                e-commerce platform vendor
+shopifyacademy.com           education site
+gearlaunch.com               print-on-demand platform
+tickera.com                  WordPress plugin vendor
+dtcetc.com                   brand directory
+authenticjobs.com            jobs board
+
+# Agencies, services, non-profits
+c-istudios.com               creative agency
+allt.sk                      creative agency
+communedesign.com            design studio (services)
+cocogonserphotography.com    photographer (services)
+giellygreen.co.uk            hair salon
+beaconrelief.com             non-profit
+carbonbeauty.com             domain now belongs to a growth agency
+aircompany.com               energy technology company
+
+# Institutions (their shops live on other hosts)
+vam.ac.uk                    museum site
+pem.org                      museum site
+
+# Hijacked, not launched, or no store at all
+aidaeats.com                 hijacked domain (gambling spam)
+bonjourmoncoussin.com        hijacked domain (news spam)
+crete.co                     not launched ("Opening Soon")
+abyme.net                    type foundry and publisher, no store evidence

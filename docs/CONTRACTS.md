@@ -35,7 +35,7 @@ Lane A writes `data/<host>/<page-slug>/manifest.json` next to the images:
 ```
 data/myzoobox.com/home/
   manifest.json
-  desktop.jpg            full page at 1440px
+  desktop.jpg            full page at 1440px, 2x (2880 pixels wide)
   mobile.jpg             full page at 390px, 2x
   blocks/d-02-hero.jpg   d = desktop, m = mobile; index; type hint
 ```
