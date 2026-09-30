@@ -25,6 +25,9 @@ async function manifestsAt(input: string): Promise<string[]> {
   return found.sort();
 }
 
+// Page text can carry NUL characters, which Postgres rejects in text and jsonb ("invalid byte sequence ... 0x00").
+const withoutNul = (_key: string, value: unknown) => typeof value === "string" ? value.replaceAll("\u0000", "") : value;
+
 function themeFields(theme: Record<string, unknown> | null | undefined) {
   const string = (key: string) => typeof theme?.[key] === "string" ? theme[key] as string : null;
   return { themeName: string("name") ?? string("schema_name"), themeVersion: string("schema_version") };
@@ -140,10 +143,11 @@ const db = drizzle(client);
 let imported = 0;
 let blockCount = 0;
 let recaptureCount = 0;
+const failed: string[] = [];
 
 try {
-  for (const manifestPath of manifestPaths) {
-    const manifest = JSON.parse(await readFile(manifestPath, "utf8")) as Manifest;
+  for (const manifestPath of manifestPaths) try {
+    const manifest = JSON.parse(await readFile(manifestPath, "utf8"), withoutNul) as Manifest;
     await db.transaction(async (tx) => {
       const tf = themeFields(manifest.site.theme);
       const [site] = await tx.insert(sites).values({
@@ -269,8 +273,13 @@ try {
     imported++;
     blockCount += manifest.blocks.length;
     console.log(`imported ${manifest.site.host} ${manifest.page.slug} (${manifest.blocks.length} blocks)`);
+  } catch (e) {
+    // Each manifest is its own transaction, so one bad store doesn't stop the other 967.
+    failed.push(manifestPath);
+    console.error(`FAILED ${relative(root, manifestPath)}: ${(e as { cause?: Error }).cause?.message ?? (e as Error).message}`);
   }
-  console.log(`Done: ${imported} manifests, ${blockCount} blocks, ${recaptureCount} recaptures with diffs`);
+  console.log(`Done: ${imported} manifests, ${blockCount} blocks, ${recaptureCount} recaptures with diffs${failed.length ? `, ${failed.length} failed` : ""}`);
+  if (failed.length) process.exitCode = 1;
   // Typo tolerance corrects query words against the corpus vocabulary, so keep it current.
   // Skipped before migration 0004 (no view yet); new blocks still need `npm run embed`.
   await client`REFRESH MATERIALIZED VIEW CONCURRENTLY search_terms`.then(
