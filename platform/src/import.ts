@@ -1,10 +1,13 @@
 import { readdir, readFile } from "node:fs/promises";
 import { dirname, relative, resolve, sep } from "node:path";
+import { and, desc, eq, lt } from "drizzle-orm";
 import { sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
+import sharp from "sharp";
+import { encode as blurhashEncode } from "blurhash";
 import type { Manifest, ManifestBlock } from "../../web/src/contracts/manifest.js";
-import { blocks, captures, pages, sites, siteTech } from "./schema.js";
+import { blocks, captures, pages, sites, siteTech, captureDiffs } from "./schema.js";
 
 try { process.loadEnvFile(resolve(import.meta.dirname, "../.env")); } catch {}
 const url = process.env.DATABASE_URL;
@@ -30,22 +33,105 @@ function themeFields(theme: Record<string, unknown> | null | undefined) {
   return { themeName: string("name") ?? string("schema_name"), themeVersion: string("schema_version") };
 }
 
+// Generate blurhash from JPEG buffer
+async function generateBlurhash(buffer: Buffer): Promise<string> {
+  const metadata = await sharp(buffer).metadata();
+  const width = metadata.width ?? 100;
+  const height = metadata.height ?? 100;
+
+  const resized = await sharp(buffer)
+    .resize(100, 100, { fit: "fill" })
+    .ensureAlpha()
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+
+  return blurhashEncode(new Uint8ClampedArray(resized.data), resized.info.width, resized.info.height, 4, 3);
+}
+
+// Get image dimensions and blurhash from JPEG
+async function getImageMetadata(jpegPath: string): Promise<{ width: number; height: number; blurhash: string } | null> {
+  try {
+    const buffer = await readFile(jpegPath).catch(() => null);
+    if (!buffer) return null;
+
+    const metadata = await sharp(buffer).metadata();
+    const blurhash = await generateBlurhash(buffer);
+    return {
+      width: metadata.width ?? 0,
+      height: metadata.height ?? 0,
+      blurhash,
+    };
+  } catch {
+    return null;
+  }
+}
+
 function imageKey(manifestPath: string, root: string, file: string | null): string | null {
   if (!file) return null;
-  const local = relative(root, resolve(dirname(manifestPath), file)).split(sep).join("/");
+  const local = relative(root, resolve(dirname(manifestPath), file))
+    .split(sep)
+    .join("/")
+    .replace(/\.(jpg|jpeg)$/i, ".webp");
   const base = process.env.S3_PUBLIC_BASE_URL?.replace(/\/$/, "");
   return base ? `${base}/${local}` : `/${local}`;
 }
 
-function blockRow(captureId: string, block: ManifestBlock, manifestPath: string, root: string) {
+function thumbnailKey(imageKey: string | null): string | null {
+  if (!imageKey) return null;
+  return imageKey.replace(/\.webp$/, "_thumb.webp");
+}
+
+async function blockRow(captureId: string, block: ManifestBlock, manifestPath: string, root: string) {
+  let imageWidth: number | null = null;
+  let imageHeight: number | null = null;
+  let blurhash: string | null = null;
+
+  if (block.file) {
+    const jpegPath = resolve(dirname(manifestPath), block.file);
+    const meta = await getImageMetadata(jpegPath);
+    if (meta) {
+      imageWidth = meta.width;
+      imageHeight = meta.height;
+      blurhash = meta.blurhash;
+    }
+  }
+
+  const iKey = imageKey(manifestPath, root, block.file);
+  const tKey = thumbnailKey(iKey);
+
   return {
     captureId, ref: block.ref, blockIndex: block.index, viewport: block.viewport, typeHint: block.typeHint,
     parentType: block.parentType, tag: block.tag, elementId: block.id, classes: block.classes,
     top: Math.round(block.top), height: Math.round(block.height), width: Math.round(block.width),
     text: block.text, textLength: block.textLength, headline: block.headline || null,
     buttons: block.buttons, images: block.images, videos: block.videos, background: block.bg,
-    imageKey: imageKey(manifestPath, root, block.file), updatedAt: new Date(),
+    imageKey: iKey, thumbnailKey: tKey, blurhash, imageWidth, imageHeight, updatedAt: new Date(),
   };
+}
+
+// Detect changes between two sets of blocks
+function detectBlockChanges(oldBlocks: ManifestBlock[], newBlocks: ManifestBlock[]): { added: number[]; removed: number[]; changed: number[] } {
+  const oldMap = new Map(oldBlocks.map((b) => [b.index, b]));
+  const newMap = new Map(newBlocks.map((b) => [b.index, b]));
+
+  const added = Array.from(newMap.keys()).filter((idx) => !oldMap.has(idx));
+  const removed = Array.from(oldMap.keys()).filter((idx) => !newMap.has(idx));
+  const changed = Array.from(newMap.keys())
+    .filter((idx) => oldMap.has(idx))
+    .filter((idx) => {
+      const old = oldMap.get(idx)!;
+      const neu = newMap.get(idx)!;
+      return (
+        old.text !== neu.text ||
+        old.typeHint !== neu.typeHint ||
+        old.height !== neu.height ||
+        old.top !== neu.top ||
+        old.images !== neu.images ||
+        old.videos !== neu.videos
+      );
+    });
+
+  return { added, removed, changed };
 }
 
 const input = resolve(process.argv[2] ?? "fixtures/manifests");
@@ -56,6 +142,7 @@ const client = postgres(url, { max: 1, prepare: false });
 const db = drizzle(client);
 let imported = 0;
 let blockCount = 0;
+let recaptureCount = 0;
 const failed: string[] = [];
 
 try {
@@ -87,6 +174,12 @@ try {
         ogImage: manifest.page.ogImage ?? null, lang: manifest.page.lang ?? null, h1: manifest.page.h1 ?? null, updatedAt: new Date(),
       }}).returning({ id: pages.id });
 
+      // The capture just before this one, for diff detection. Strictly earlier,
+      // so replaying the same manifest never diffs a capture against itself.
+      const prevCapture = await tx.select({ id: captures.id }).from(captures)
+        .where(and(eq(captures.pageId, page.id), lt(captures.capturedAt, new Date(manifest.page.capturedAt))))
+        .orderBy(desc(captures.capturedAt)).limit(1);
+
       const [capture] = await tx.insert(captures).values({
         pageId: page.id, capturedAt: new Date(manifest.page.capturedAt),
         desktop: manifest.viewports.desktop ?? null, mobile: manifest.viewports.mobile ?? null,
@@ -94,11 +187,77 @@ try {
         desktop: manifest.viewports.desktop ?? null, mobile: manifest.viewports.mobile ?? null, updatedAt: new Date(),
       }}).returning({ id: captures.id });
 
+      // Insert/update blocks
       for (const block of manifest.blocks) {
-        const row = blockRow(capture.id, block, manifestPath, root);
+        const row = await blockRow(capture.id, block, manifestPath, root);
         await tx.insert(blocks).values(row).onConflictDoUpdate({
           target: [blocks.captureId, blocks.viewport, blocks.blockIndex], set: row,
         });
+      }
+
+      // Detect recapture and create diff
+      if (prevCapture.length > 0) {
+        const oldBlocksDesktop = await tx.select().from(blocks)
+          .where(and(eq(blocks.captureId, prevCapture[0].id), eq(blocks.viewport, "desktop")));
+        const oldBlocksMobile = await tx.select().from(blocks)
+          .where(and(eq(blocks.captureId, prevCapture[0].id), eq(blocks.viewport, "mobile")));
+
+        const newBlocksDesktop = manifest.blocks.filter((b) => b.viewport === "desktop");
+        const newBlocksMobile = manifest.blocks.filter((b) => b.viewport === "mobile");
+
+        const diffDt = detectBlockChanges(oldBlocksDesktop.map((b) => ({
+          index: b.blockIndex,
+          text: b.text,
+          typeHint: b.typeHint,
+          height: b.height,
+          top: b.top,
+          images: b.images,
+          videos: b.videos,
+        } as any)), newBlocksDesktop.map((b) => ({
+          index: b.index,
+          text: b.text,
+          typeHint: b.typeHint,
+          height: b.height,
+          top: b.top,
+          images: b.images,
+          videos: b.videos,
+        } as any)));
+
+        const diffMb = detectBlockChanges(oldBlocksMobile.map((b) => ({
+          index: b.blockIndex,
+          text: b.text,
+          typeHint: b.typeHint,
+          height: b.height,
+          top: b.top,
+          images: b.images,
+          videos: b.videos,
+        } as any)), newBlocksMobile.map((b) => ({
+          index: b.index,
+          text: b.text,
+          typeHint: b.typeHint,
+          height: b.height,
+          top: b.top,
+          images: b.images,
+          videos: b.videos,
+        } as any)));
+
+        const addedCount = new Set([...diffDt.added, ...diffMb.added]).size;
+        const removedCount = new Set([...diffDt.removed, ...diffMb.removed]).size;
+        const changedCount = new Set([...diffDt.changed, ...diffMb.changed]).size;
+
+        if (addedCount > 0 || removedCount > 0 || changedCount > 0) {
+          await tx.insert(captureDiffs).values({
+            pageId: page.id,
+            fromCaptureId: prevCapture[0].id,
+            toCaptureId: capture.id,
+            addedBlockCount: addedCount,
+            removedBlockCount: removedCount,
+            changedBlockCount: changedCount,
+            summary: { desktop: diffDt, mobile: diffMb },
+          });
+          recaptureCount++;
+          console.log(`  recapture diff: +${addedCount} -${removedCount} ~${changedCount}`);
+        }
       }
 
       const tech = [
@@ -119,6 +278,12 @@ try {
     failed.push(manifestPath);
     console.error(`FAILED ${relative(root, manifestPath)}: ${(e as { cause?: Error }).cause?.message ?? (e as Error).message}`);
   }
-  console.log(`Done: ${imported} manifests, ${blockCount} blocks${failed.length ? `, ${failed.length} failed` : ""}`);
+  console.log(`Done: ${imported} manifests, ${blockCount} blocks, ${recaptureCount} recaptures with diffs${failed.length ? `, ${failed.length} failed` : ""}`);
   if (failed.length) process.exitCode = 1;
+  // Typo tolerance corrects query words against the corpus vocabulary, so keep it current.
+  // Skipped before migration 0004 (no view yet); new blocks still need `npm run embed`.
+  await client`REFRESH MATERIALIZED VIEW CONCURRENTLY search_terms`.then(
+    () => console.log("Refreshed search_terms. Run `npm run embed` for semantic search."),
+    (e: { code?: string }) => { if (e.code !== "42P01") throw e; },
+  );
 } finally { await client.end(); }

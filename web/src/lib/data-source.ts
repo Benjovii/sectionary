@@ -13,6 +13,13 @@ export const BLOCKS_SRC = process.env.NEXT_PUBLIC_BLOCKS_SRC ?? "/sample/blocks.
 export const STORES_SRC = process.env.NEXT_PUBLIC_STORES_SRC ?? "/sample/stores.json";
 
 /**
+ * True when blocks come from the platform's API (and so have database ids).
+ * Boards and the time machine then use the API too; with the sample JSON,
+ * boards live in this browser and their share link carries the whole board.
+ */
+export const API_MODE = BLOCKS_SRC.startsWith("/api/");
+
+/**
  * Site profiles (SEC-19). Set NEXT_PUBLIC_SITES_SRC=/api/sites to read
  * /api/sites/[host]; unset, a profile is assembled from the loaded blocks.
  */

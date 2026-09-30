@@ -1,0 +1,18 @@
+#!/bin/sh
+# Blocks a commit that contains a secret (passwords, API keys, DATABASE_URL with
+# a password). Turn it on once per clone:  git config core.hooksPath .githooks
+# Rules: .gitleaks.toml. Needs gitleaks: https://github.com/gitleaks/gitleaks
+
+if ! command -v gitleaks >/dev/null 2>&1; then
+  echo "pre-commit: gitleaks is not installed, so this commit was not scanned for secrets."
+  echo "Install it (Windows: winget install gitleaks, macOS: brew install gitleaks) and commit again."
+  exit 1
+fi
+
+# --redact keeps the secret itself out of the terminal output.
+if ! gitleaks git --pre-commit --staged --redact --no-banner --config .gitleaks.toml .; then
+  echo ""
+  echo "pre-commit: a secret was found in the staged changes, so nothing was committed."
+  echo "Move it to a git-ignored .env file, unstage the change, and commit again."
+  exit 1
+fi

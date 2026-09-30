@@ -1,8 +1,8 @@
 import { sql } from "drizzle-orm";
-import { customType, index, integer, jsonb, pgTable, real, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
+import { boolean, customType, index, integer, jsonb, pgTable, real, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 
 const vector = customType<{ data: number[] | null; driverData: string | null }>({
-  dataType: () => "vector(1536)",
+  dataType: () => "vector(1024)",
 });
 const timestamps = {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
@@ -37,7 +37,10 @@ export const blocks = pgTable("blocks", {
   elementId: text("element_id"), classes: text("classes"), top: integer("top").notNull(), height: integer("height").notNull(), width: integer("width").notNull(),
   text: text("text").notNull(), textLength: integer("text_length").notNull(), headline: text("headline"), buttons: integer("buttons").notNull(),
   images: integer("images").notNull(), videos: integer("videos").notNull(), background: text("background").notNull(), imageKey: text("image_key"),
-  aiDescription: text("ai_description"), embedding: vector("embedding"), ...timestamps,
+  thumbnailKey: text("thumbnail_key"), blurhash: text("blurhash"), imageWidth: integer("image_width"), imageHeight: integer("image_height"),
+  aiDescription: text("ai_description"), aiResponse: jsonb("ai_response"), embedding: vector("embedding"),
+  // search_tsv (generated, migration 0004) is left out: Drizzle never writes it and the API reads it in SQL.
+  embeddingModel: text("embedding_model"), embeddingHash: text("embedding_hash"), embeddedAt: timestamp("embedded_at", { withTimezone: true }), ...timestamps,
 }, (t) => [uniqueIndex("blocks_capture_vp_index_uidx").on(t.captureId, t.viewport, t.blockIndex), index("blocks_capture_idx").on(t.captureId), index("blocks_viewport_idx").on(t.viewport), index("blocks_type_hint_idx").on(t.typeHint), index("blocks_block_type_idx").on(t.blockType), index("blocks_tags_gin_idx").using("gin", t.tags)]);
 
 export const taxonomy = pgTable("taxonomy", {
@@ -51,7 +54,19 @@ export const siteTech = pgTable("site_tech", {
 
 export const users = pgTable("users", { id: uuid("id").primaryKey(), email: text("email"), name: text("name"), avatarUrl: text("avatar_url"), ...timestamps });
 export const orgs = pgTable("orgs", { id: uuid("id").primaryKey().defaultRandom(), ownerId: uuid("owner_id").notNull().references(() => users.id), name: text("name").notNull(), slug: text("slug").notNull(), ...timestamps }, (t) => [uniqueIndex("orgs_slug_uidx").on(t.slug), index("orgs_owner_idx").on(t.ownerId)]);
-export const boards = pgTable("boards", { id: uuid("id").primaryKey().defaultRandom(), orgId: uuid("org_id").notNull().references(() => orgs.id, { onDelete: "cascade" }), createdBy: uuid("created_by").notNull().references(() => users.id), name: text("name").notNull(), description: text("description"), ...timestamps }, (t) => [index("boards_org_idx").on(t.orgId), index("boards_created_by_idx").on(t.createdBy)]);
-export const boardItems = pgTable("board_items", { id: uuid("id").primaryKey().defaultRandom(), boardId: uuid("board_id").notNull().references(() => boards.id, { onDelete: "cascade" }), blockId: uuid("block_id").notNull().references(() => blocks.id, { onDelete: "cascade" }), addedBy: uuid("added_by").notNull().references(() => users.id), note: text("note"), position: integer("position").notNull().default(0), ...timestamps }, (t) => [uniqueIndex("board_items_board_block_uidx").on(t.boardId, t.blockId), index("board_items_board_position_idx").on(t.boardId, t.position), index("board_items_block_idx").on(t.blockId), index("board_items_added_by_idx").on(t.addedBy)]);
+// Until auth (SEC-27) a board is owned by whoever holds its edit token (only the SHA-256 is stored); share_slug is the public read-only link, live while `shared`.
+export const boards = pgTable("boards", { id: uuid("id").primaryKey().defaultRandom(), orgId: uuid("org_id").references(() => orgs.id, { onDelete: "cascade" }), createdBy: uuid("created_by").references(() => users.id), name: text("name").notNull(), description: text("description"), shareSlug: text("share_slug").notNull(), shared: boolean("shared").notNull().default(false), editTokenHash: text("edit_token_hash"), ...timestamps }, (t) => [index("boards_org_idx").on(t.orgId), index("boards_created_by_idx").on(t.createdBy), uniqueIndex("boards_share_slug_uidx").on(t.shareSlug)]);
+export const boardItems = pgTable("board_items", { id: uuid("id").primaryKey().defaultRandom(), boardId: uuid("board_id").notNull().references(() => boards.id, { onDelete: "cascade" }), blockId: uuid("block_id").notNull().references(() => blocks.id, { onDelete: "cascade" }), addedBy: uuid("added_by").references(() => users.id), note: text("note"), position: integer("position").notNull().default(0), ...timestamps }, (t) => [uniqueIndex("board_items_board_block_uidx").on(t.boardId, t.blockId), index("board_items_board_position_idx").on(t.boardId, t.position), index("board_items_block_idx").on(t.blockId), index("board_items_added_by_idx").on(t.addedBy)]);
 export const takedownRequests = pgTable("takedown_requests", { id: uuid("id").primaryKey().defaultRandom(), requesterUserId: uuid("requester_user_id").references(() => users.id), email: text("email").notNull(), host: text("host").notNull(), reason: text("reason").notNull(), status: text("status").notNull().default("pending"), resolvedAt: timestamp("resolved_at", { withTimezone: true }), ...timestamps }, (t) => [index("takedown_user_idx").on(t.requesterUserId), index("takedown_host_idx").on(t.host), index("takedown_status_idx").on(t.status)]);
 export const waitlist = pgTable("waitlist", { id: uuid("id").primaryKey().defaultRandom(), email: text("email").notNull(), source: text("source").notNull().default("landing"), referrer: text("referrer"), userAgent: text("user_agent"), createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow() }, (t) => [uniqueIndex("waitlist_email_uidx").on(sql`lower(${t.email})`), index("waitlist_created_idx").on(t.createdAt)]);
+
+export const captureDiffs = pgTable("capture_diffs", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  pageId: uuid("page_id").notNull().references(() => pages.id, { onDelete: "cascade" }),
+  fromCaptureId: uuid("from_capture_id").notNull().references(() => captures.id, { onDelete: "cascade" }),
+  toCaptureId: uuid("to_capture_id").notNull().references(() => captures.id, { onDelete: "cascade" }),
+  addedBlockCount: integer("added_block_count").notNull().default(0),
+  removedBlockCount: integer("removed_block_count").notNull().default(0),
+  changedBlockCount: integer("changed_block_count").notNull().default(0),
+  summary: jsonb("summary").notNull().default({}), ...timestamps,
+}, (t) => [index("capture_diffs_page_idx").on(t.pageId), index("capture_diffs_from_idx").on(t.fromCaptureId), index("capture_diffs_to_idx").on(t.toCaptureId)]);

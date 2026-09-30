@@ -6,6 +6,7 @@
   "type": "module",
   "scripts": {
     "capture": "node scripts/with-dns-pool.mjs src/capture.ts",
+    "image-process": "tsx src/image-pipeline.ts",
     "index": "tsx src/build-index.ts",
     "typecheck": "tsc --noEmit",
     "viewer": "node scripts/serve.js",
@@ -21,10 +22,14 @@
     "prune-seeds": "tsx src/prune-seeds.ts"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.679.0",
+    "@aws-sdk/lib-storage": "^3.679.0",
+    "blurhash": "^2.0.5",
     "cheerio": "^1.2.0",
     "fflate": "^0.8.3",
     "playwright": "1.58.0",
     "robots-parser": "^3.0.1",
+    "sharp": "^0.33.5",
     "undici": "^7.29.1"
   },
   "devDependencies": {

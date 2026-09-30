@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { BlockCard, BlockCardSkeleton } from "@/components/block-card";
 import { BlockDialog } from "@/components/block-dialog";
 import { FilterBar, FilterBarSkeleton } from "@/components/filter-bar";
+import { TechFilters } from "@/components/tech-filters";
+import { techFromFacets } from "@/lib/tech";
 import { loadBlockIndex } from "@/lib/load-blocks";
 import { clearReturn, returnsFor } from "@/lib/return-to";
 import { queryBlocks, type BlockIndex, type WallQuery } from "@/lib/block-source";
@@ -271,6 +273,20 @@ export function Wall() {
     };
   }, [open, items, onShow]);
 
+  // The detail view's tech chips count the whole library, not the filtered wall.
+  const libraryCounts = useMemo(() => (index ? techFromFacets(queryBlocks(index, { limit: 1 }).facets) : null), [index]);
+
+  // A tech chip in the detail view: close it and show only that platform, theme or app.
+  const onFilterTech = useCallback(
+    (key: FilterKey, value: string) => {
+      pushed.current = false;
+      const next = writeSelected(params, key, [value]);
+      next.delete(BLOCK_KEY);
+      replace(next);
+    },
+    [params, replace],
+  );
+
   const anyFilter = countSelected(selected) > 0 || Boolean(search.trim());
 
   // When nothing matches, name the one filter actually responsible rather than
@@ -305,6 +321,8 @@ export function Wall() {
         onClearAll={onClearAll}
         onSearch={onSearch}
       />
+
+      {index && <TechFilters facets={facets} selected={selected} onToggle={onToggle} />}
 
       {error ? (
         <div className="rounded-lg border border-dashed p-8 text-center text-muted-foreground">
@@ -387,6 +405,8 @@ export function Wall() {
         onClose={onCloseBlock}
         onOpen={onShow}
         onStep={onStep}
+        counts={libraryCounts}
+        onFilter={onFilterTech}
       />
     </div>
   );

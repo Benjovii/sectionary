@@ -15,14 +15,32 @@ import {
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { BriefPanel } from "@/components/brief-panel";
+import { SaveToBoard } from "@/components/save-to-board";
+import { TimeMachineControls, TimeMachineStage, useTimeMachine } from "@/components/time-machine";
 import { cn } from "@/lib/utils";
 import { assetUrl } from "@/lib/data-source";
 import { labelFor, PAGE_TYPE_LABEL, type Block } from "@/lib/blocks";
 import { platformLabel } from "@/lib/stores";
 import { bucketFor, COLOUR_LABEL } from "@/lib/colour";
+import { countOf, type TechCounts, type TechKey } from "@/lib/tech";
 import { capturedAtOf, capturesOf, counterpartOf, similarTo, type DetailIndex } from "@/lib/block-detail";
 
 type View = "both" | "desktop" | "mobile";
+
+type Tab = "details" | "brief" | "history";
+const TABS: [Tab, string][] = [
+  ["details", "Details"],
+  ["brief", "Copy as brief"],
+  ["history", "Time machine"],
+];
+
+type TechProps = {
+  /** Library-wide block counts per platform, theme and app, shown on the tech-stack chips. */
+  counts?: TechCounts | null;
+  /** When given, a tech-stack chip filters the wall to that platform, theme or app. */
+  onFilter?: (key: TechKey, value: string) => void;
+};
 
 /** From here up the panel is centred and both viewports sit side by side. */
 const WIDE = "(min-width: 900px)";
@@ -41,6 +59,8 @@ export function BlockDialog({
   onClose,
   onOpen,
   onStep,
+  counts = null,
+  onFilter,
 }: {
   block: Block | null;
   /** The URL names a block the loaded set does not have. */
@@ -51,7 +71,7 @@ export function BlockDialog({
   onOpen: (block: Block) => void;
   /** Previous and next on the wall; absent when this block is not on it. */
   onStep: { prev?: () => void; next?: () => void };
-}) {
+} & TechProps) {
   const ref = useRef<HTMLDialogElement>(null);
   const show = Boolean(block || missing);
 
@@ -93,7 +113,7 @@ export function BlockDialog({
       className="m-0 h-dvh max-h-dvh w-screen max-w-none bg-transparent p-0 backdrop:bg-black/70 open:flex open:items-stretch open:justify-center min-[900px]:open:items-center min-[900px]:p-6"
     >
       {block && detail ? (
-        <Detail key={block.id} block={block} detail={detail} onClose={onClose} onOpen={onOpen} onStep={onStep} />
+        <Detail key={block.id} block={block} detail={detail} onClose={onClose} onOpen={onOpen} onStep={onStep} counts={counts} onFilter={onFilter} />
       ) : missing ? (
         <div className="m-auto flex max-w-sm flex-col items-center gap-3 rounded-xl border bg-card p-8 text-center text-card-foreground">
           <p className="text-foreground">This block is not in the loaded set.</p>
@@ -113,13 +133,17 @@ function Detail({
   onClose,
   onOpen,
   onStep,
+  counts,
+  onFilter,
 }: {
   block: Block;
   detail: DetailIndex;
   onClose: () => void;
   onOpen: (block: Block) => void;
   onStep: { prev?: () => void; next?: () => void };
-}) {
+} & TechProps) {
+  const [tab, setTab] = useState<Tab>("details");
+  const tm = useTimeMachine(block);
   const pair = useMemo(() => counterpartOf(detail, block), [detail, block]);
   const similar = useMemo(() => similarTo(detail, block), [detail, block]);
   const captures = useMemo(() => capturesOf(detail, block), [detail, block]);
@@ -175,71 +199,99 @@ function Detail({
 
       <div ref={scroller} className="min-h-0 flex-1 overflow-auto min-[900px]:flex min-[900px]:overflow-hidden">
         <div className="flex min-w-0 flex-col min-[900px]:flex-1 min-[900px]:overflow-auto">
-          <Toolbar view={view} setView={setView} onExpand={() => setExpanded(focus)} hasPair={Boolean(pair)} shown={shown} />
-          <Stage view={view} onExpand={setExpanded} desktop={desktop} mobile={mobile} opened={shown} />
-          <Similar blocks={similar} onOpen={onOpen} className="hidden min-[900px]:block" />
+          {tab === "history" ? (
+            <TimeMachineStage tm={tm} />
+          ) : (
+            <>
+              <Toolbar view={view} setView={setView} onExpand={() => setExpanded(focus)} hasPair={Boolean(pair)} shown={shown} />
+              <Stage view={view} onExpand={setExpanded} desktop={desktop} mobile={mobile} opened={shown} />
+              <Similar blocks={similar} onOpen={onOpen} className="hidden min-[900px]:block" />
+            </>
+          )}
         </div>
 
-        <aside className="flex flex-col border-t min-[900px]:w-[320px] min-[900px]:shrink-0 min-[900px]:overflow-auto min-[900px]:border-t-0 min-[900px]:border-l">
+        <aside className="flex flex-col border-t min-[900px]:w-[340px] min-[900px]:shrink-0 min-[900px]:overflow-auto min-[900px]:border-t-0 min-[900px]:border-l">
           <Actions block={focus} />
-          <dl className="grid grid-cols-[88px_1fr] gap-x-3 gap-y-2.5 px-4 py-4 text-[13px]">
-            <dt className="text-muted-foreground">Site</dt>
-            <dd className="min-w-0">
-              <Link
-                href={`/sites/${encodeURIComponent(focus.host)}`}
-                className="block truncate rounded-sm underline-offset-4 outline-none hover:text-link hover:underline focus-visible:ring-2 focus-visible:ring-ring touch:-my-3 touch:py-3"
-                title={`${focus.host}: tech stack and every captured page`}
+          <div role="tablist" aria-label="Block tools" className="flex gap-1 border-b px-3 py-1.5">
+            {TABS.map(([t, l]) => (
+              <button
+                key={t}
+                role="tab"
+                type="button"
+                id={`tab-${t}`}
+                aria-selected={tab === t}
+                aria-controls={`panel-${t}`}
+                onClick={() => setTab(t)}
+                className={cn(
+                  "rounded-md px-2 py-1 text-[12px] text-muted-foreground outline-none transition-colors duration-150 hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring touch:min-h-11",
+                  tab === t && "bg-muted text-foreground",
+                )}
               >
-                {focus.host}
-              </Link>
-            </dd>
-            <dt className="text-muted-foreground">Page</dt>
-            <dd className="min-w-0">
-              {pageLabel}
-              {focus.pageTitle && <span className="block truncate text-[12px] text-muted-foreground">{focus.pageTitle}</span>}
-            </dd>
-            <dt className="text-muted-foreground">Block</dt>
-            <dd>{labelFor(focus.typeHint)}</dd>
-            <dt className="text-muted-foreground">Style</dt>
-            <dd>
-              {platformLabel(focus.platform)}
-              {focus.theme ? <span className="text-muted-foreground"> · {focus.theme}</span> : null}
-            </dd>
-            <dt className="text-muted-foreground">Colours</dt>
-            <dd className="flex items-center gap-2">
-              <span aria-hidden className="size-4 shrink-0 rounded-full border" style={{ background: focus.bg }} />
-              <span>{bucket ? COLOUR_LABEL[bucket] : "Unknown"}</span>
-              <span className="truncate font-mono text-[11px] text-muted-foreground">{focus.bg}</span>
-            </dd>
-            {focus.apps.length > 0 && (
-              <>
-                <dt className="text-muted-foreground">Apps</dt>
-                <dd className="flex flex-wrap gap-1">
-                  {focus.apps.map((a) => (
-                    <span key={a} className="rounded-full bg-muted px-2 py-0.5 text-[11px]">
-                      {a}
-                    </span>
-                  ))}
+                {l}
+              </button>
+            ))}
+          </div>
+          {tab === "brief" && (
+            <div role="tabpanel" id="panel-brief" aria-labelledby="tab-brief" className="flex min-h-0 flex-1 flex-col">
+              <BriefPanel block={focus} />
+            </div>
+          )}
+          {tab === "history" && (
+            <div role="tabpanel" id="panel-history" aria-labelledby="tab-history" className="flex min-h-0 flex-1 flex-col">
+              <TimeMachineControls tm={tm} />
+            </div>
+          )}
+          {tab === "details" && (
+            <div role="tabpanel" id="panel-details" aria-labelledby="tab-details">
+              <dl className="grid grid-cols-[88px_1fr] gap-x-3 gap-y-2.5 px-4 py-4 text-[13px]">
+                <dt className="text-muted-foreground">Site</dt>
+                <dd className="min-w-0">
+                  <Link
+                    href={`/sites/${encodeURIComponent(focus.host)}`}
+                    className="block truncate rounded-sm underline-offset-4 outline-none hover:text-link hover:underline focus-visible:ring-2 focus-visible:ring-ring touch:-my-3 touch:py-3"
+                    title={`${focus.host}: tech stack and every captured page`}
+                  >
+                    {focus.host}
+                  </Link>
                 </dd>
-              </>
-            )}
-            {focus.headline && (
-              <>
-                <dt className="text-muted-foreground">Headline</dt>
-                <dd>{focus.headline}</dd>
-              </>
-            )}
-            <dt className="text-muted-foreground">Contains</dt>
-            <dd className="text-muted-foreground">
-              {focus.buttons} buttons · {focus.images} images · {focus.videos} videos
-            </dd>
-            <dt className="text-muted-foreground">Size</dt>
-            <dd className="font-mono text-[12px] tabular-nums">
-              {focus.w} × {focus.h}
-            </dd>
-          </dl>
-          <Captures captures={captures} at={captureAt} onAt={setCaptureAt} />
-          <Similar blocks={similar} onOpen={onOpen} className="min-[900px]:hidden" />
+                <dt className="text-muted-foreground">Page</dt>
+                <dd className="min-w-0">
+                  {pageLabel}
+                  {focus.pageTitle && <span className="block truncate text-[12px] text-muted-foreground">{focus.pageTitle}</span>}
+                </dd>
+                <dt className="text-muted-foreground">Block</dt>
+                <dd>{labelFor(focus.typeHint)}</dd>
+                <dt className="text-muted-foreground">Style</dt>
+                <dd>
+                  {platformLabel(focus.platform)}
+                  {focus.theme ? <span className="text-muted-foreground"> · {focus.theme}</span> : null}
+                </dd>
+                <dt className="text-muted-foreground">Colours</dt>
+                <dd className="flex items-center gap-2">
+                  <span aria-hidden className="size-4 shrink-0 rounded-full border" style={{ background: focus.bg }} />
+                  <span>{bucket ? COLOUR_LABEL[bucket] : "Unknown"}</span>
+                  <span className="truncate font-mono text-[11px] text-muted-foreground">{focus.bg}</span>
+                </dd>
+                {focus.headline && (
+                  <>
+                    <dt className="text-muted-foreground">Headline</dt>
+                    <dd>{focus.headline}</dd>
+                  </>
+                )}
+                <dt className="text-muted-foreground">Contains</dt>
+                <dd className="text-muted-foreground">
+                  {focus.buttons} buttons · {focus.images} images · {focus.videos} videos
+                </dd>
+                <dt className="text-muted-foreground">Size</dt>
+                <dd className="font-mono text-[12px] tabular-nums">
+                  {focus.w} × {focus.h}
+                </dd>
+              </dl>
+              <TechStack block={focus} counts={counts ?? null} onFilter={onFilter} />
+              <Captures captures={captures} at={captureAt} onAt={setCaptureAt} />
+              <Similar blocks={similar} onOpen={onOpen} className="min-[900px]:hidden" />
+            </div>
+          )}
         </aside>
       </div>
       {expanded && <Expanded start={expanded} desktop={desktop} mobile={mobile} onClose={collapse} />}
@@ -540,6 +592,7 @@ function Actions({ block }: { block: Block }) {
         {status?.key === "link" && status.ok ? <Check /> : <Link2 />}
         {label("link", "Copy link")}
       </Button>
+      <SaveToBoard block={block} />
       <a
         href={block.pageUrl}
         target="_blank"
@@ -610,6 +663,53 @@ function Captures({ captures, at, onAt }: { captures: Block[]; at: number; onAt:
           see how the block changed.
         </p>
       )}
+    </section>
+  );
+}
+
+/** Platform, theme and apps as chips with library-wide counts; a chip filters the wall to it. */
+function TechStack({ block, counts, onFilter }: { block: Block; counts: TechCounts | null; onFilter?: (key: TechKey, value: string) => void }) {
+  const chips: [TechKey, string, string][] = [
+    ...(block.platform ? [["platform", block.platform, platformLabel(block.platform)] as [TechKey, string, string]] : []),
+    ...(block.theme ? [["theme", block.theme, block.theme] as [TechKey, string, string]] : []),
+    ...block.apps.map((a) => ["app", a, a] as [TechKey, string, string]),
+  ];
+  if (chips.length === 0) return null;
+  return (
+    <section aria-labelledby="tech-heading" className="border-t px-4 py-3">
+      <h3 id="tech-heading" className="mb-2 text-[12px] font-medium">
+        Tech stack
+        {onFilter && <span className="font-normal text-muted-foreground"> · tap to see every block built with it</span>}
+      </h3>
+      <ul className="flex flex-wrap gap-1.5">
+        {chips.map(([key, value, label]) => {
+          const n = countOf(counts, key, value);
+          const inner = (
+            <>
+              <span className="text-muted-foreground">{key === "app" ? "" : key === "platform" ? "Platform " : "Theme "}</span>
+              {label}
+              {n !== null && <span className="font-mono text-[10px] tabular-nums text-muted-foreground">{n.toLocaleString("en-US")}</span>}
+            </>
+          );
+          const cls = "inline-flex items-center gap-1 rounded-full border bg-muted/50 px-2 py-0.5 text-[12px]";
+          return (
+            <li key={`${key}:${value}`}>
+              {onFilter ? (
+                <button
+                  type="button"
+                  onClick={() => onFilter(key, value)}
+                  aria-label={`Show ${n ?? "all"} blocks with ${label}`}
+                  className={cn(cls, "outline-none transition-colors duration-150 hover:border-primary/60 hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring touch:min-h-11")}
+                >
+                  {inner}
+                </button>
+              ) : (
+                <span className={cls}>{inner}</span>
+              )}
+            </li>
+          );
+        })}
+      </ul>
     </section>
   );
 }

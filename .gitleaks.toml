@@ -1,0 +1,22 @@
+# Secret scanning. Used by the pre-commit hook (.githooks/pre-commit) and CI.
+# The default gitleaks rules cover API keys (Anthropic, AWS/S3, GitHub, ...);
+# the extra rule below catches database URLs with a password in them, which
+# the defaults miss.
+
+[extend]
+useDefault = true
+
+[[rules]]
+id = "database-url-with-password"
+description = "Postgres connection string with an inline password (e.g. the Supabase DATABASE_URL)"
+regex = '''postgres(?:ql)?://[^:/\s"'@]+:([^@\s"']{4,})@[^\s"']+'''
+secretGroup = 1
+keywords = ["postgres://", "postgresql://"]
+
+[allowlist]
+description = "Placeholders in docs and examples"
+regexTarget = "match"
+regexes = [
+  '''\[YOUR-PASSWORD\]''',
+  '''://[^:]+:(?:password|PASSWORD|pass|secret|<[^>]+>|\$\{?[A-Z_]+\}?)@''',
+]

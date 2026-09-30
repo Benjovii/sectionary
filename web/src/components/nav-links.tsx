@@ -7,9 +7,10 @@ const NAV = [
   { href: "/", label: "Blocks" },
   { href: "/flows", label: "Flows" },
   { href: "/sites", label: "Sites" },
+  { href: "/boards", label: "Boards" },
 ];
 
-/** The three sections. A client component only to mark the current one, which
+/** The four sections. A client component only to mark the current one, which
  *  screen readers announce ("current page") and the style picks up. */
 export function NavLinks() {
   const pathname = usePathname();
