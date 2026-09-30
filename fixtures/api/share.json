@@ -1,0 +1,106 @@
+{
+  "name": "Kids subscription: homepage references",
+  "description": "Three blocks from My ZOO Box for the homepage refresh. Notes under each one.",
+  "updatedAt": "2026-09-22T09:08:28.637Z",
+  "items": [
+    {
+      "note": "Reference 1: what to look at here",
+      "block": {
+        "id": "1078cd0f-b112-468d-b45d-755da59086de",
+        "host": "myzoobox.com",
+        "pageType": "home",
+        "pageUrl": "https://myzoobox.com/",
+        "pageTitle": "My ZOO Box",
+        "viewport": "desktop",
+        "typeHint": "faq",
+        "headline": "Questions parents ask us",
+        "bg": "rgb(254, 246, 228)",
+        "w": 1440,
+        "h": 1025,
+        "src": "/sample/myzoobox.com/home/blocks/d-11-faq.jpg",
+        "platform": "shopify",
+        "theme": "MZB Playful (new)",
+        "apps": [
+          "Klaviyo",
+          "Microsoft Clarity",
+          "Google Analytics",
+          "Meta Pixel",
+          "Intelligems",
+          "Shop Pay",
+          "PayPal",
+          "ActiveCampaign"
+        ],
+        "buttons": 1,
+        "images": 1,
+        "videos": 0,
+        "text": "Good to know Questions parents ask us The four we get asked most. Which club is right for my child? If your child is not reading yet or is still working on letters, start with Cub Club, built for ages 3 to 5. If they are reading, Zoologist Club goes deeper into science and anatomy for ages 5 to 12. Newer reader in that range? Add the Easy Reader to any Zoologist plan. How do I cancel or pause? Wha"
+      }
+    },
+    {
+      "note": "Reference 2: what to look at here",
+      "block": {
+        "id": "130833d9-457a-4998-b5f2-1746bc7fdb2e",
+        "host": "myzoobox.com",
+        "pageType": "home",
+        "pageUrl": "https://myzoobox.com/",
+        "pageTitle": "My ZOO Box",
+        "viewport": "desktop",
+        "typeHint": "zoo-home-part",
+        "headline": "Which explorer are you shopping for?",
+        "bg": "rgb(255, 255, 255)",
+        "w": 1440,
+        "h": 1050,
+        "src": "/sample/myzoobox.com/home/blocks/d-03-zoo-home-part.jpg",
+        "platform": "shopify",
+        "theme": "MZB Playful (new)",
+        "apps": [
+          "Klaviyo",
+          "Microsoft Clarity",
+          "Google Analytics",
+          "Meta Pixel",
+          "Intelligems",
+          "Shop Pay",
+          "PayPal",
+          "ActiveCampaign"
+        ],
+        "buttons": 2,
+        "images": 4,
+        "videos": 0,
+        "text": "Start here Which explorer are you shopping for? Two clubs, built around how children actually learn at each age. Both arrive monthly with a new animal to fall in love with. Ages 3 to 5 Play-based animal adventures for little explorers, built to do together. Guided crafts made for preschool attention spans Builds fine motor, early math, and early literacy Open and go, almost no prep for grown-ups F"
+      }
+    },
+    {
+      "note": "Reference 3: what to look at here",
+      "block": {
+        "id": "17d8180e-1d9d-463a-8cd2-018e51229b17",
+        "host": "myzoobox.com",
+        "pageType": "home",
+        "pageUrl": "https://myzoobox.com/",
+        "pageTitle": "My ZOO Box",
+        "viewport": "desktop",
+        "typeHint": "header",
+        "headline": "",
+        "bg": "rgb(255, 255, 255)",
+        "w": 1440,
+        "h": 115,
+        "src": "/sample/myzoobox.com/home/blocks/d-01-header.jpg",
+        "platform": "shopify",
+        "theme": "MZB Playful (new)",
+        "apps": [
+          "Klaviyo",
+          "Microsoft Clarity",
+          "Google Analytics",
+          "Meta Pixel",
+          "Intelligems",
+          "Shop Pay",
+          "PayPal",
+          "ActiveCampaign"
+        ],
+        "buttons": 8,
+        "images": 8,
+        "videos": 0,
+        "text": "🎁 Get Your First Box for Free with code FREEBOX View Details × Subscriptions Gifting School Orders The ZOO Store Start Now Member Area × OUR CLUBS Cub Club Ages 3 – 5 Zoologist Club Ages 5 – 12 POPULAR SEARCHES 🐬 Dolphin 🦈 Shark 🦁 Lion 🐧 Penguin 🐘 Elephant 🌊 Ocean 🦕 Dinosaur 💬 Support × Start Exploring → Subscriptions Gifting School Orders The ZOO Store Member Area"
+      }
+    }
+  ]
+}

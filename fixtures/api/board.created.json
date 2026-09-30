@@ -1,0 +1,13 @@
+{
+  "board": {
+    "id": "b856c561-2c73-4db7-bd87-d2ee9a13eaa5",
+    "name": "Kids subscription: homepage references",
+    "description": "Three blocks from My ZOO Box for the homepage refresh. Notes under each one.",
+    "shareSlug": "UcZ3Z3cczIE",
+    "shared": false,
+    "createdAt": "2026-09-22T09:08:22.478Z",
+    "updatedAt": "2026-09-22T09:08:22.478Z",
+    "items": []
+  },
+  "token": "(returned once; store it)"
+}
