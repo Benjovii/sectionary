@@ -1,0 +1,93 @@
+{
+  "blockId": "1078cd0f-b112-468d-b45d-755da59086de",
+  "page": {
+    "host": "myzoobox.com",
+    "url": "https://myzoobox.com/",
+    "type": "home",
+    "title": "My ZOO Box"
+  },
+  "captures": [
+    {
+      "capturedAt": "2026-09-16T20:56:01.000Z",
+      "fullPage": {
+        "src": "/sample/myzoobox.com/home/desktop.webp",
+        "w": 1440,
+        "h": 9000
+      },
+      "block": {
+        "id": "1078cd0f-b112-468d-b45d-755da59086de",
+        "host": "myzoobox.com",
+        "pageType": "home",
+        "pageUrl": "https://myzoobox.com/",
+        "pageTitle": "My ZOO Box",
+        "viewport": "desktop",
+        "typeHint": "faq",
+        "headline": "Questions parents ask us",
+        "bg": "rgb(254, 246, 228)",
+        "w": 1440,
+        "h": 1025,
+        "src": "/sample/myzoobox.com/home/blocks/d-11-faq.jpg",
+        "platform": "shopify",
+        "theme": "MZB Playful (new)",
+        "apps": [
+          "Klaviyo",
+          "Microsoft Clarity",
+          "Google Analytics",
+          "Meta Pixel",
+          "Intelligems",
+          "Shop Pay",
+          "PayPal",
+          "ActiveCampaign"
+        ],
+        "buttons": 1,
+        "images": 1,
+        "videos": 0,
+        "text": "Good to know Questions parents ask us The four we get asked most. Which club is right for my child? If your child is not reading yet or is still working on letters, start with Cub Club, built for ages 3 to 5. If they are reading, Zoologist Club goes deeper into science and anatomy for ages 5 to 12. Newer reader in that range? Add the Easy Reader to any Zoologist plan. How do I cancel or pause? Wha"
+      },
+      "diff": {
+        "added": 1,
+        "removed": 0,
+        "changed": 1
+      }
+    },
+    {
+      "capturedAt": "2026-06-10T09:00:00.000Z",
+      "fullPage": {
+        "src": "/sample/myzoobox.com/home/desktop.webp",
+        "w": 1440,
+        "h": 9000
+      },
+      "block": {
+        "id": "37a4750a-9230-43da-921f-4de92abeb309",
+        "host": "myzoobox.com",
+        "pageType": "home",
+        "pageUrl": "https://myzoobox.com/",
+        "pageTitle": "My ZOO Box",
+        "viewport": "desktop",
+        "typeHint": "faq",
+        "headline": "Questions parents ask us",
+        "bg": "rgb(254, 246, 228)",
+        "w": 1440,
+        "h": 1025,
+        "src": "/sample/myzoobox.com/home/blocks/d-11-faq.jpg",
+        "platform": "shopify",
+        "theme": "MZB Playful (new)",
+        "apps": [
+          "Klaviyo",
+          "Microsoft Clarity",
+          "Google Analytics",
+          "Meta Pixel",
+          "Intelligems",
+          "Shop Pay",
+          "PayPal",
+          "ActiveCampaign"
+        ],
+        "buttons": 1,
+        "images": 1,
+        "videos": 0,
+        "text": "Good to know Questions parents ask us The four we get asked most. Which club is right for my child? If your child is not reading yet or is still working on letters, start with Cub Club, built for ages 3 to 5. If they are reading, Zoologist Club goes deeper into science and anatomy for ages 5 to 12. Newer reader in that range? Add the Easy Reader to any Zoologist plan. How do I cancel or pause? Wha"
+      },
+      "diff": null
+    }
+  ]
+}
