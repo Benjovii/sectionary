@@ -17,16 +17,19 @@ import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { Upload } from "@aws-sdk/lib-storage";
 import type { Manifest } from "../web/src/contracts/manifest.js";
 
-const R2_ACCESS_KEY = process.env.R2_ACCESS_KEY_ID;
-const R2_SECRET_KEY = process.env.R2_SECRET_ACCESS_KEY;
-const R2_BUCKET = process.env.R2_BUCKET ?? "sectionary-blocks";
-const R2_ENDPOINT = process.env.R2_ENDPOINT ?? "https://YOUR-ACCOUNT.r2.googleapis.com";
-const R2_PUBLIC_URL = process.env.R2_PUBLIC_URL ?? "https://blocks.sectionary.design";
-
-if (!R2_ACCESS_KEY || !R2_SECRET_KEY) {
-  console.error("R2_ACCESS_KEY_ID and R2_SECRET_ACCESS_KEY env vars required");
+// Same S3_* names as platform/.env, so the importer's S3_PUBLIC_BASE_URL matches what was uploaded.
+try { process.loadEnvFile(resolve(import.meta.dirname, "../.env")); } catch {}
+const STORAGE_VARS = ["S3_ENDPOINT", "S3_BUCKET", "S3_ACCESS_KEY_ID", "S3_SECRET_ACCESS_KEY", "S3_PUBLIC_BASE_URL"] as const;
+const missing = STORAGE_VARS.filter((name) => !process.env[name]);
+if (missing.length) {
+  console.error(`Missing ${missing.join(", ")}. Set them in .env (see .env.example); there are no defaults.`);
   process.exit(1);
 }
+const R2_ACCESS_KEY = process.env.S3_ACCESS_KEY_ID!;
+const R2_SECRET_KEY = process.env.S3_SECRET_ACCESS_KEY!;
+const R2_BUCKET = process.env.S3_BUCKET!;
+const R2_ENDPOINT = process.env.S3_ENDPOINT!;
+const R2_PUBLIC_URL = process.env.S3_PUBLIC_BASE_URL!.replace(/\/$/, "");
 
 interface ProcessedImage {
   key: string; // stable R2 key: site/page/filename

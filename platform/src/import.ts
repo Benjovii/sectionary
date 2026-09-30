@@ -69,7 +69,7 @@ function imageKey(manifestPath: string, root: string, file: string | null): stri
     .split(sep)
     .join("/")
     .replace(/\.(jpg|jpeg)$/i, ".webp");
-  const base = process.env.R2_PUBLIC_URL?.replace(/\/$/, "") ?? process.env.S3_PUBLIC_BASE_URL?.replace(/\/$/, "");
+  const base = process.env.S3_PUBLIC_BASE_URL?.replace(/\/$/, "");
   return base ? `${base}/${local}` : `/${local}`;
 }
 
