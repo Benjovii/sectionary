@@ -47,8 +47,11 @@ export const FETCH_TIMEOUT_MS = 12_000;
 
 export const DESKTOP_BASE_UA =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36';
+// Android Chrome rather than iPhone Safari: we really are Chromium, and a site
+// that sees Safari serves Apple's HEVC video, which Chromium cannot decode
+// (nike.com's mobile hero came out as an error message).
 export const MOBILE_BASE_UA =
-  'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1';
+  'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Mobile Safari/537.36';
 
 export function botUserAgent(base: string): string {
   return `${base} ${BOT_TOKEN}`;

@@ -13,7 +13,7 @@ export type ViewportName = 'desktop' | 'mobile';
 
 // The real browser UA plus our bot token, so site owners can see who we are.
 export const VIEWPORTS: Record<ViewportName, { width: number; height: number; deviceScaleFactor: number; isMobile: boolean; hasTouch: boolean; userAgent: string }> = {
-  desktop: { width: 1440, height: 900, deviceScaleFactor: 1, isMobile: false, hasTouch: false, userAgent: botUserAgent(DESKTOP_BASE_UA) },
+  desktop: { width: 1440, height: 900, deviceScaleFactor: 2, isMobile: false, hasTouch: false, userAgent: botUserAgent(DESKTOP_BASE_UA) },
   mobile: { width: 390, height: 844, deviceScaleFactor: 2, isMobile: true, hasTouch: true, userAgent: botUserAgent(MOBILE_BASE_UA) },
 };
 
@@ -240,6 +240,25 @@ async function captureViewportInner(context: BrowserContext, url: string, vp: Vi
     await autoScroll(page);
     await page.waitForTimeout(600);
     await dismissOverlays(page);
+    // A video the browser cannot decode shows an error message where the hero
+    // should be. Show its poster picture instead, or nothing.
+    await page
+      .evaluate(() => {
+        for (const v of Array.from(document.querySelectorAll('video'))) {
+          if (!v.error) continue;
+          if (v.poster) {
+            const img = document.createElement('img');
+            img.src = v.poster;
+            img.alt = '';
+            const cs = getComputedStyle(v);
+            img.style.cssText = `display:block;width:${cs.width};height:${cs.height};object-fit:cover;object-position:${cs.objectPosition || 'center'}`;
+            v.replaceWith(img);
+          } else {
+            v.style.setProperty('visibility', 'hidden', 'important');
+          }
+        }
+      })
+      .catch(() => {});
     await page.evaluate(() => window.scrollTo(0, 0));
     await page.waitForTimeout(500);
 

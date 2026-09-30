@@ -10,6 +10,9 @@ const bricolage = Bricolage_Grotesque({ variable: "--font-bricolage", subsets: [
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 
 export const metadata: Metadata = {
+  // Absolute URLs for the OG images. Set NEXT_PUBLIC_SITE_URL to the chosen
+  // domain (SEC-33) when it exists; until then, the Vercel URL.
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://sectionary-pink.vercel.app"),
   title: { default: "Sectionary", template: "%s · Sectionary" },
   description: "Real online stores, cut into blocks. Browse hero, buy box, reviews, FAQ and cart patterns at desktop and phone width.",
   applicationName: "Sectionary",

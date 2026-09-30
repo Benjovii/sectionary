@@ -72,7 +72,9 @@ export function collectBlocks(opts: { minHeight: number; maxBlocks: number }): C
     const inner = own ? null : el.querySelector('[data-section-type]');
     const dst = (inner && inner.getAttribute('data-section-type')) || el.getAttribute('data-section-type');
     if (dst) return dst.toLowerCase();
-    const id = el.id || '';
+    // getAttribute, not el.id: on a <form> holding <input name="id"> (Shopify's
+    // product form) el.id is that input, and id.match threw on a product page.
+    const id = el.getAttribute('id') || '';
     // Shopify ids: shopify-section-template--123__hero_banner_kCjXcf | shopify-section-sections--123__header
     const m = id.match(/^shopify-section-(?:template--\d+__|sections--\d+__)?(.+)$/);
     if (m) {
@@ -240,7 +242,7 @@ export function collectBlocks(opts: { minHeight: number; maxBlocks: number }): C
     let parent = parentHint.get(el) || null;
     for (let up = el.parentElement, n = 0; !parent && up && up !== document.body && n < 6; up = up.parentElement, n++) {
       const tag = up.tagName.toLowerCase();
-      if (tag === 'header' || tag === 'footer' || tag === 'nav' || up.hasAttribute('data-section-type') || /^shopify-section-/.test(up.id)) parent = typeHintFor(up, true);
+      if (tag === 'header' || tag === 'footer' || tag === 'nav' || up.hasAttribute('data-section-type') || /^shopify-section-/.test(up.getAttribute('id') || '')) parent = typeHintFor(up, true);
     }
     if (parent === 'unknown') parent = null;
     const typeHint = own !== 'unknown' ? own : parent ? parent + '-part' : own;
@@ -258,7 +260,7 @@ export function collectBlocks(opts: { minHeight: number; maxBlocks: number }): C
       typeHint,
       parentType: parent,
       tag: el.tagName.toLowerCase(),
-      id: el.id || null,
+      id: el.getAttribute('id') || null,
       classes: typeof el.className === 'string' && el.className.trim() ? el.className.trim().slice(0, 200) : null,
       // A pinned element sits where the screen is, wherever the page has scrolled to.
       top: Math.round(cs.position === 'fixed' ? r.top : r.top + window.scrollY),
@@ -451,10 +453,23 @@ export function detectWall(): { kind: string; text: string } | null {
     ['human-check', /verify (that )?you('| a)?re (a |not a )?(human|robot)|press (&|and) hold|are you a robot|complete the security check|checking (if the site connection is secure|your browser)|just a moment|needs to review the security of your connection/i],
     ['access-denied', /access (to this page has been |is )?denied|you don.?t have permission to access|request unsuccessful|pardon our interruption|unusual traffic|has been blocked|sorry, you have been blocked/i],
     ['geo-block', /restricted access|(not available|unavailable|cannot visit|can.?t visit|not accessible|do not ship|don.?t ship).{0,60}(your (current )?(location|country|region))/i],
+    // The site fell over (mytheresa.com: "Something went wrong", a "report issue" button and nothing else).
+    ['error-page', /something went wrong|an (unexpected )?error (has )?occurred|internal server error|service (is )?(temporarily )?unavailable|we.?re sorry, (something|an error|this page)/i],
+    // A country chooser instead of the store (canyon.com: "Choose your location and language").
+    ['location-gate', /(choose|select|pick) your (location|country|region|shipping destination|delivery country)|where (do you want|would you like) (us )?to (ship|deliver)/i],
   ];
   for (const [kind, re] of tests) if (re.test(hay)) return { kind, text: text.slice(0, 120) };
-  if (document.querySelector('#px-captcha, #challenge-form, #challenge-stage, .cf-browser-verification, iframe[src*="captcha-delivery"], iframe[src*="hcaptcha.com"], iframe[src*="recaptcha/api2/bframe"]')) {
+  // Elements that exist only on a challenge page.
+  if (document.querySelector('#px-captcha, #challenge-form, #challenge-stage, .cf-browser-verification, iframe[src*="captcha-delivery"]')) {
     return { kind: 'human-check', text: text.slice(0, 120) };
+  }
+  // A reCAPTCHA or hCaptcha frame also sits, hidden and empty, on any page with
+  // a protected form (stores with a newsletter box were failed as walls). Only
+  // a frame that is actually shown, at challenge size, counts.
+  for (const f of Array.from(document.querySelectorAll<HTMLIFrameElement>('iframe[src*="hcaptcha.com"], iframe[src*="recaptcha/api2/bframe"]'))) {
+    const r = f.getBoundingClientRect();
+    const cs = getComputedStyle(f);
+    if (r.width >= 200 && r.height >= 200 && cs.visibility !== 'hidden' && cs.display !== 'none' && Number(cs.opacity) > 0) return { kind: 'human-check', text: text.slice(0, 120) };
   }
   return null;
 }

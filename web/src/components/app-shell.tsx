@@ -17,7 +17,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </a>
       <header className="sticky top-0 z-20 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
         <div className="mx-auto flex h-12 max-w-[1800px] items-center gap-2 px-3 sm:gap-4 sm:px-4">
-          <Link href="/" className="flex items-center gap-2 rounded-md outline-none touch:h-11 focus-visible:ring-2 focus-visible:ring-ring">
+          <Link href="/welcome" aria-label="Sectionary home" className="flex items-center gap-2 rounded-md outline-none touch:h-11 focus-visible:ring-2 focus-visible:ring-ring">
             <Logo />
             <span className="font-heading text-[15px] font-semibold tracking-[0.01em]">Sectionary</span>
           </Link>

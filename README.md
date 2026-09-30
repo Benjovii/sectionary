@@ -26,6 +26,7 @@ Leke).
 ```
 src/crawl.ts          the crawl worker: works through the queue unattended (npm run crawl)
 src/sample-seeds.ts   picks a varied set of stores for a pilot run
+src/prune-seeds.ts    holds back the validated rows that are not stores (npm run prune-seeds)
 src/review-sheets.ts  contact sheets for reviewing a crawl by eye
 src/queue.ts          the crawl queue, one SQLite file: data/queue.sqlite
 src/capture-page.ts   captures one page: both viewports, screenshots, manifest
@@ -39,8 +40,8 @@ src/build-index.ts    folds manifests into data/index.js for the local viewer
 scripts/serve.js      local viewer server (npm run viewer -> http://localhost:4321)
 scripts/export-sample.mjs  exports captured blocks into web/public/sample
 viewer/index.html     local viewer for what was captured
-config/               blocklist.txt (opt-outs), own-sites.txt (our stores), list-pages.txt
-seeds/                stores.csv (chosen), candidates.csv (everything found)
+config/               blocklist.txt (opt-outs), own-sites.txt (our stores), not-stores.txt (judged by eye), list-pages.txt
+seeds/                stores.validated.csv (the list we capture), stores.heldback.csv (not stores, with reasons), candidates.csv (everything found)
 docs/bot-page.md      copy for the /bot page
 web/                  the Next.js app (Vercel: https://sectionary-pink.vercel.app)
 data/                 capture output, Tranco list (git-ignored)
@@ -71,6 +72,7 @@ in `%LOCALAPPDATA%\ms-playwright`. Secrets go in `.env` (git-ignored):
 | `npm run crawl` | Carries on with whatever is still queued (after a stop, a crash or a reboot). |
 | `npm run crawl -- --report` | Progress, failure reasons, disk use and time left. Safe while a crawl is running. |
 | `npm run crawl -- --stop` | Asks a running crawl to finish its pages and stop cleanly. |
+| `npm run prune-seeds` | Holds back the rows of `seeds/stores.validated.csv` that are not stores (see "Seed quality" below) and writes them to `seeds/stores.heldback.csv` with the reason. `-- --dry` previews. Follow with `npm run export-stores`. |
 | `npm run sample-seeds -- --n 50` | Picks a varied set of stores for a pilot run into `seeds/pilot-50.csv`: Shopify capped at half, every other platform represented, industries rotated, clear store evidence first. Same input, same output. |
 | `npm run review-sheets` | Contact sheets of a crawl in `data/_review/`: the top of each store's home, product and collection page, desktop and mobile. The fast way to spot consent dialogs, popups, bot walls and geo-blocks. |
 | `npm run viewer` | Serves the local viewer at http://localhost:4321. |
@@ -110,7 +112,9 @@ What it is built to survive:
 Stopping: Ctrl+C once (the pages in flight finish, the stores go back to the
 queue), or `npm run crawl -- --stop` from another terminal. `--retry-failed`
 puts failed and partial stores back in line; `--hosts a.com,b.com --recapture`
-starts the named stores over, every page afresh. Every page is logged to
+starts the named stores over, every page afresh, and moves their old captures
+to `data-archive/` (outside `data/`, because the importer reads every
+manifest under the folder it is given). Every page is logged to
 `data/crawl-log.jsonl`, and each run ends by writing `data/crawl-report.md`.
 
 Store states: `pending`, `running`, `done` (every page captured), `partial`
@@ -192,6 +196,11 @@ Before a block is photographed the capture waits up to three seconds for the
 pictures inside it, because lazy images only start loading once the block is
 on screen.
 
+Both widths are captured at 2x sharpness (desktop 2,880 pixels wide, phone
+780), JPEG quality 88. The manifest's sizes stay in CSS pixels (1440 and 390).
+A very tall page is cut off at the JPEG limit of 65,535 pixels, which at 2x is
+32,500 CSS pixels.
+
 To judge the result by eye: `npm run review-sheets -- --blocks` shows every
 block a page was cut into, in order (`--type product`, `--viewport mobile`,
 `--stores-per-sheet 3`). Measured on 21 September 2026 on the home pages of 24
@@ -199,6 +208,25 @@ non-Shopify stores: 198 blocks, 8 bad (4%). Known leftovers: a heading that
 is its own row becomes its own block, a very tall section that cannot be
 split stays one giant block, and a store whose content never loads for the
 crawler (shop.swatch.com) yields blank blocks.
+
+## Seed quality
+
+The validator judged pages by their words, and publishers, agencies and
+software vendors that run a shop plugin have the same words as a store
+(labusinessjournal.com, feedonomics.com and chargeflow.io all passed). Weak
+store evidence alone proves nothing the other way: Nike, Gap, Wayfair and
+Ulta score "weak" because their pages are built with JavaScript. So the
+judgement is by eye, written down in `config/not-stores.txt` with a reason
+per host, and `npm run prune-seeds` applies it together with three automatic
+cases: hijacked domains (gambling or news spam), "coming soon" pages with no
+store evidence, and domains that forward to a marketplace or a domain seller.
+Held rows go to `seeds/stores.heldback.csv`; removing a host from the list
+lets it back in on the next run. On 22 Sep 2026: 1,005 rows, 968 kept, 37
+held.
+
+The better judge is the capture itself: a store where the crawler finds no
+product page with a price and an add-to-cart button is not a store. That
+check runs after the full capture (SEC-49).
 
 ## Why the crawler scripts go through `scripts/with-dns-pool.mjs`
 
