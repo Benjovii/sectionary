@@ -23,6 +23,16 @@ Secrets never go in git. Copy `.env.example` to `.env` (root), and
 `web/.env.example` to `web/.env.local`; ask Ben for values through the
 password manager, not chat.
 
+The repo is public, so turn on the secret check once per clone. It blocks a
+commit that contains a password or API key (rules in `.gitleaks.toml`; CI runs
+the same scan on every push). It needs
+[gitleaks](https://github.com/gitleaks/gitleaks): `winget install gitleaks` or
+`brew install gitleaks`.
+
+```bash
+git config core.hooksPath .githooks
+```
+
 ## Branches
 
 One branch per person: `ben`, `buna`, `leke`. It works because each of us owns
