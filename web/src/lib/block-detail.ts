@@ -19,10 +19,13 @@ export function baseType(typeHint: string): string {
 
 /**
  * The page a block belongs to: its id without `/<viewport>/<index>`. Both
- * viewports of one page share it, which is what pairs them.
+ * viewports of one page share it, which is what pairs them. Ids from the API
+ * are database UUIDs and say nothing about the page, so those blocks key on
+ * host and page URL instead.
  */
 export function pageKeyOf(block: Block): string {
-  return block.id.split("/").slice(0, -2).join("/");
+  const parts = block.id.split("/");
+  return parts.length > 2 ? parts.slice(0, -2).join("/") : `${block.host} ${block.pageUrl}`;
 }
 
 /**
