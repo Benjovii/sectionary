@@ -8,7 +8,8 @@ import type { StoreSet } from "@/contracts/store";
 import { buildIndex, queryBlocks, MAX_LIMIT, type BlockIndex, type WallQuery, type WallResponse } from "@/lib/block-source";
 import { baseType, detailIndex, type DetailIndex } from "@/lib/block-detail";
 import { expandBlocks } from "@/lib/mock-blocks";
-import { profileFromApi, profileFromIndex, type SiteView } from "@/lib/site-profile";
+import { profileFromApi, profileFromIndex, siteCardFromApi, siteCards, type SiteCard, type SiteSummary, type SiteView } from "@/lib/site-profile";
+import { flowSummaries, flowSummariesFromApi, type FlowSummary } from "@/lib/flows";
 import type { SiteProfile } from "@/contracts/api";
 import { BLOCKS_SRC, STORES_SRC, SITES_SRC, MOCK_BLOCKS, API_MODE } from "@/lib/data-source";
 
@@ -153,4 +154,52 @@ export async function loadSiteView(host: string): Promise<SiteView | null> {
     return profileFromApi((await response.json()) as SiteProfile);
   }
   return profileFromIndex(await loadBlockIndex(), host);
+}
+
+/**
+ * Every store with its pages, from GET /api/sites when NEXT_PUBLIC_SITES_SRC
+ * is set (SEC-47). 200 a request, so the 1,005 validated stores take six;
+ * fetched once per page session and shared by the Sites grid and Flows.
+ */
+function loadSiteSummaries(): Promise<SiteSummary[]> {
+  return once(siteLists, SITES_SRC, async () => {
+    const sites: SiteSummary[] = [];
+    let cursor: string | undefined;
+    do {
+      const page = await getJson<{ items: SiteSummary[]; nextCursor: string | null }>(withQuery(SITES_SRC, { cursor, limit: MAX_LIMIT }));
+      sites.push(...page.items);
+      cursor = page.nextCursor ?? undefined;
+    } while (cursor);
+    return sites;
+  });
+}
+
+const siteLists = new Map<string, Promise<SiteSummary[]>>();
+
+export type SitesDirectory = { cards: SiteCard[]; blockTypes: { value: string; count: number }[] };
+
+/**
+ * The Sites page: a card per store and the block-type directory above them.
+ * From the API, cards come from /api/sites and the type counts from the
+ * wall's facets; from the sample, both from the loaded blocks.
+ */
+export async function loadSitesDirectory(): Promise<SitesDirectory> {
+  if (SITES_SRC) {
+    const [sites, first] = await Promise.all([loadSiteSummaries(), wallSource().query({ limit: 1 })]);
+    return { cards: sites.map(siteCardFromApi), blockTypes: namedTypes(first.facets?.block ?? []) };
+  }
+  const index = await loadBlockIndex();
+  const counts = new Map<string, number>();
+  for (const b of index.blocks) counts.set(b.typeHint, (counts.get(b.typeHint) ?? 0) + 1);
+  return { cards: siteCards(index), blockTypes: namedTypes([...counts].map(([value, count]) => ({ value, count }))) };
+}
+
+/** "-part" slices are what segmentation could not name ("zoo-home-part"): one store's markup, not a kind of block worth a link. */
+function namedTypes(list: { value: string; count: number }[]) {
+  return list.filter((t) => !t.value.endsWith("-part")).sort((a, b) => b.count - a.count);
+}
+
+/** Every captured store's flow: from /api/sites when it is configured, otherwise from the loaded blocks. */
+export async function loadFlowSummaries(): Promise<FlowSummary[]> {
+  return SITES_SRC ? flowSummariesFromApi(await loadSiteSummaries()) : flowSummaries(await loadBlockIndex());
 }
