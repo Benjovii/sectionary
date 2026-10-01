@@ -28,9 +28,8 @@ import { bucketFor } from "./colour.ts";
  *  2. No `video`. Derived here from Block.videos.
  *  3. No `color`. Derived here from Block.bg, see lib/colour.ts.
  *
- * All three are filtered on the client today, so nothing is blocked; they
- * simply will not survive the move to /api/blocks (SEC-47) until the contract
- * catches up.
+ * /api/blocks runs this same function (SEC-47, server/block-index.ts), so all
+ * three work on the API path too; the contract types still need to catch up.
  */
 export type WallQuery = Omit<BlocksQuery, "vp"> & {
   /** Comma-separated viewports. Contract v1 allows only one, see above. */

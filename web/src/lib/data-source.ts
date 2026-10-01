@@ -1,8 +1,12 @@
 // Where the web app gets its data and its images.
 //
-// Data: the committed sample JSON by default. When the platform's API is up,
-// set NEXT_PUBLIC_BLOCKS_SRC=/api/blocks and NEXT_PUBLIC_STORES_SRC=/api/stores
-// in web/.env.local and nothing else changes: the item shapes are the contract.
+// Data: the committed sample JSON by default, which the browser loads whole
+// and queries itself. Set NEXT_PUBLIC_BLOCKS_SRC=/api/blocks and
+// NEXT_PUBLIC_STORES_SRC=/api/stores (SEC-47) and the app asks the API
+// instead, a page at a time, because the full capture is far too big to
+// download: the wall sends its query, and the detail view, site profiles and
+// Sites covers fetch only the stores they show. Both paths run the same query
+// code (lib/block-source.ts), so the same filters return the same blocks.
 //
 // Images: block screenshots are not in git. In development they load from the
 // deployed site, so a fresh clone shows a full wall. If you captured your own
@@ -11,6 +15,9 @@
 
 export const BLOCKS_SRC = process.env.NEXT_PUBLIC_BLOCKS_SRC ?? "/sample/blocks.json";
 export const STORES_SRC = process.env.NEXT_PUBLIC_STORES_SRC ?? "/sample/stores.json";
+
+/** True when the blocks come from the API rather than a whole-set JSON file. */
+export const BLOCKS_FROM_API = !BLOCKS_SRC.endsWith(".json");
 
 /**
  * Site profiles (SEC-19). Set NEXT_PUBLIC_SITES_SRC=/api/sites to read

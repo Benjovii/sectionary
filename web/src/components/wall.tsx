@@ -6,9 +6,10 @@ import { Button } from "@/components/ui/button";
 import { BlockCard, BlockCardSkeleton } from "@/components/block-card";
 import { BlockDialog } from "@/components/block-dialog";
 import { FilterBar, FilterBarSkeleton } from "@/components/filter-bar";
-import { loadBlockIndex } from "@/lib/load-blocks";
-import { queryBlocks, type BlockIndex, type WallQuery } from "@/lib/block-source";
-import { detailIndex } from "@/lib/block-detail";
+import { fetchBlocks, loadBlockIndex, loadDetail } from "@/lib/load-blocks";
+import { buildIndex, queryBlocks, type BlockIndex, type WallQuery, type WallResponse } from "@/lib/block-source";
+import { detailIndex, type DetailIndex } from "@/lib/block-detail";
+import { BLOCKS_FROM_API } from "@/lib/data-source";
 import { layOut, visible, GAP, type Layout } from "@/lib/wall-layout";
 import { FILTERS, readSelected, writeSelected, toggleValue, toQuery, countSelected, SEARCH_KEY, type FilterKey } from "@/lib/filters";
 import { type Block } from "@/lib/blocks";
@@ -66,7 +67,10 @@ export function Wall() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
+  // Sample path: load the whole set once and query it here. The API path
+  // loads nothing up front; the query below goes to /api/blocks instead.
   useEffect(() => {
+    if (BLOCKS_FROM_API) return;
     let alive = true;
     loadBlockIndex()
       .then((i) => alive && setIndex(i))
@@ -112,15 +116,37 @@ export function Wall() {
     [params, replace],
   );
 
-  // The first page is derived, not stored: a filter change recomputes it and
-  // the appended pages below fall away with it. This is the same call that will
-  // travel to /api/blocks, cursor and all.
-  const first = useMemo(() => (index ? queryBlocks(index, { ...query, limit: PAGE_SIZE }) : null), [index, query]);
+  // The first page. Sample path: derived, not stored, so a filter change
+  // recomputes it and the appended pages below fall away with it. API path:
+  // the same query sent to /api/blocks, and until the answer arrives the
+  // previous one stays up rather than flashing the skeleton; `shownKey` says
+  // which query the blocks on screen belong to.
+  const local = useMemo(() => (index ? queryBlocks(index, { ...query, limit: PAGE_SIZE }) : null), [index, query]);
+  const [remote, setRemote] = useState<{ key: string; response: WallResponse } | null>(null);
+
+  useEffect(() => {
+    if (!BLOCKS_FROM_API) return;
+    const controller = new AbortController();
+    fetchBlocks({ ...query, limit: PAGE_SIZE }, controller.signal).then(
+      (response) => {
+        setRemote({ key: queryKey, response });
+        setError(null);
+      },
+      (e: Error) => {
+        if (!controller.signal.aborted) setError(e.message);
+      },
+    );
+    return () => controller.abort();
+  }, [query, queryKey]);
+
+  const first = BLOCKS_FROM_API ? (remote?.response ?? null) : local;
+  const shownKey = BLOCKS_FROM_API ? (remote?.key ?? "") : queryKey;
+  const ready = first !== null;
 
   // Pages fetched by scrolling, tagged with the query they belong to so a stale
   // set is ignored rather than cleared in an effect.
   const [extra, setExtra] = useState<{ key: string; items: Block[]; cursor: string | null }>({ key: "", items: [], cursor: null });
-  const current = extra.key === queryKey;
+  const current = extra.key === shownKey;
 
   const items = useMemo(
     () => (current ? [...(first?.items ?? []), ...extra.items] : (first?.items ?? [])),
@@ -136,14 +162,21 @@ export function Wall() {
   }, [queryKey]);
 
   const loadMore = useCallback(() => {
-    if (!index || !cursor) return;
-    const next = queryBlocks(index, { ...query, cursor, limit: PAGE_SIZE }, { facets: false });
-    setExtra((prev) => ({
-      key: queryKey,
-      items: prev.key === queryKey ? [...prev.items, ...next.items] : next.items,
-      cursor: next.nextCursor,
-    }));
-  }, [index, cursor, query, queryKey]);
+    if (!cursor) return;
+    const key = shownKey;
+    const append = (next: WallResponse) =>
+      setExtra((prev) => ({
+        key,
+        items: prev.key === key ? [...prev.items, ...next.items] : next.items,
+        cursor: next.nextCursor,
+      }));
+    if (!BLOCKS_FROM_API) {
+      if (index) append(queryBlocks(index, { ...query, cursor, limit: PAGE_SIZE }, { facets: false }));
+      return;
+    }
+    // A failed page leaves the cursor where it was; the next scroll asks again.
+    fetchBlocks({ ...(JSON.parse(key) as WallQuery), cursor, limit: PAGE_SIZE }).then(append, () => {});
+  }, [index, cursor, query, shownKey]);
 
   // Measure the wall's own box, and the window's scroll, separately: the box
   // changes on resize, the scroll changes constantly.
@@ -159,7 +192,7 @@ export function Wall() {
     const observer = new ResizeObserver(measure);
     observer.observe(element);
     return () => observer.disconnect();
-  }, [index, total]);
+  }, [ready, total]);
 
   // Refreshed every render so the scroll frame below always sees the current
   // layout and cursor without re-subscribing to the scroll event.
@@ -209,7 +242,7 @@ export function Wall() {
   // Hand the scroll frame the current values. A ref write in an effect, so the
   // subscription above never has to tear down and rebuild.
   useEffect(() => {
-    latest.current = { layout, cursor, top: box.top, key: queryKey, loadMore };
+    latest.current = { layout, cursor, top: box.top, key: shownKey, loadMore };
   });
 
   // The open block lives in the URL too (`?open=<id>`), so a detail view is a
@@ -217,8 +250,8 @@ export function Wall() {
   // moving between blocks inside the view replaces it, so Back still closes
   // rather than stepping through everything seen.
   const openId = params.get(BLOCK_KEY);
-  const detail = useMemo(() => (index ? detailIndex(index) : null), [index]);
-  const open = openId && detail ? (detail.byId.get(openId) ?? null) : null;
+  const detail = useBlockDetail(openId, index, items);
+  const open = openId && detail.index ? (detail.index.byId.get(openId) ?? null) : null;
   const pushed = useRef(false);
 
   const withBlock = useCallback(
@@ -294,7 +327,7 @@ export function Wall() {
         selected={selected}
         search={search}
         total={total}
-        ready={Boolean(index)}
+        ready={ready}
         onToggle={onToggle}
         onClearAll={onClearAll}
         onSearch={onSearch}
@@ -305,7 +338,7 @@ export function Wall() {
           <p>The block set could not be loaded ({error}).</p>
           <p className="mt-1 text-[12px]">Run the capture and export scripts, then reload.</p>
         </div>
-      ) : !index ? (
+      ) : !ready ? (
         <WallSkeleton />
       ) : total === 0 ? (
         <div className="rounded-lg border border-dashed p-8 text-center text-muted-foreground">
@@ -376,12 +409,43 @@ export function Wall() {
 
       <BlockDialog
         block={open}
-        missing={Boolean(openId && detail && !open)}
-        detail={detail}
+        missing={Boolean(openId && detail.settled && !open)}
+        detail={detail.index}
         onClose={onCloseBlock}
         onOpen={onShow}
         onStep={onStep}
       />
     </div>
   );
+}
+
+/**
+ * What the detail view reads for the open block. Sample path: lookups over
+ * the whole loaded set. API path: the block's store and similar blocks,
+ * fetched when it opens (loadDetail). Until they arrive the view makes do with
+ * what is already here, so a click opens at once and fills in: the previous
+ * block's detail when the new block came from it (a similar block, the other
+ * viewport), else the blocks on the wall. `settled` is false while a fetch
+ * that could still find the block is in flight, so "not in the loaded set" is
+ * never shown early.
+ */
+function useBlockDetail(openId: string | null, index: BlockIndex | null, items: Block[]): { index: DetailIndex | null; settled: boolean } {
+  const sampleDetail = useMemo(() => (index ? detailIndex(index) : null), [index]);
+  const onWall = useMemo(() => (BLOCKS_FROM_API ? detailIndex(buildIndex(items, [])) : null), [items]);
+  const [fetched, setFetched] = useState<{ id: string; detail: DetailIndex } | null>(null);
+
+  useEffect(() => {
+    if (!BLOCKS_FROM_API || !openId) return;
+    let alive = true;
+    const settle = (detail: DetailIndex) => alive && setFetched({ id: openId, detail });
+    loadDetail(openId).then(settle, () => settle(detailIndex(buildIndex([], []))));
+    return () => {
+      alive = false;
+    };
+  }, [openId]);
+
+  if (!BLOCKS_FROM_API) return { index: sampleDetail, settled: Boolean(sampleDetail) };
+  const loaded = fetched && fetched.id === openId ? fetched.detail : null;
+  const has = (d: DetailIndex | null | undefined) => (d && openId && d.byId.has(openId) ? d : null);
+  return { index: has(loaded) ?? has(fetched?.detail) ?? has(onWall) ?? loaded, settled: loaded !== null };
 }

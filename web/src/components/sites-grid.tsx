@@ -8,8 +8,8 @@ import { Button } from "@/components/ui/button";
 import { StoreIcon } from "@/components/store-icon";
 import { Stack } from "@/components/site-profile";
 import { cn } from "@/lib/utils";
-import { loadBlockIndex } from "@/lib/load-blocks";
-import { siteCards, type SiteCard } from "@/lib/site-profile";
+import { loadCovers, loadSitesDirectory } from "@/lib/load-blocks";
+import { type SiteCard } from "@/lib/site-profile";
 import { labelFor } from "@/lib/blocks";
 import { industryLabel, platformLabel } from "@/lib/stores";
 
@@ -50,18 +50,11 @@ export function SitesGrid() {
 
   useEffect(() => {
     let alive = true;
-    loadBlockIndex().then(
-      (index) => {
+    loadSitesDirectory().then(
+      (directory) => {
         if (!alive) return;
-        setCards(siteCards(index));
-        const counts = new Map<string, number>();
-        for (const b of index.blocks) {
-          // "-part" slices are what segmentation could not name ("zoo-home-part");
-          // they are one store's markup, not a kind of block worth a link.
-          if (b.typeHint.endsWith("-part")) continue;
-          counts.set(b.typeHint, (counts.get(b.typeHint) ?? 0) + 1);
-        }
-        setBlockTypes([...counts].map(([value, count]) => ({ value, count })).sort((a, b) => b.count - a.count));
+        setCards(directory.cards);
+        setBlockTypes(directory.blockTypes);
       },
       (e: Error) => alive && setError(e.message),
     );
@@ -125,6 +118,25 @@ export function SitesGrid() {
     observer.observe(el);
     return () => observer.disconnect();
   }, [listKey, n, shown.length]);
+
+  // On the API path cards arrive without covers (see loadSitesDirectory); fetch
+  // them for the cards on screen, one query per batch. A no-op on the sample
+  // path, where every captured store already has its cover.
+  const requested = useRef(new Set<string>());
+  useEffect(() => {
+    const batch = shown
+      .slice(0, n)
+      .filter((c) => c.blockCount > 0 && !c.cover && !requested.current.has(c.store.host))
+      .map((c) => c.store);
+    if (batch.length === 0) return;
+    for (const store of batch) requested.current.add(store.host);
+    loadCovers(batch).then(
+      (covers) =>
+        setCards((prev) => prev && prev.map((c) => (covers.get(c.store.host)?.cover ? { ...c, cover: covers.get(c.store.host)!.cover } : c))),
+      // Let the next render ask again.
+      () => batch.forEach((store) => requested.current.delete(store.host)),
+    );
+  }, [shown, n]);
 
   const active = Boolean(industry || platform || country || q);
 
@@ -355,6 +367,9 @@ function SiteCardView({ card }: { card: SiteCard }) {
               </div>
             )}
           </>
+        ) : card.blockCount > 0 ? (
+          // Captured, cover still on its way from the API.
+          <div className="shimmer rounded-md bg-muted" style={{ aspectRatio: `1 / ${COVER_RATIO}` }} aria-hidden />
         ) : (
           // Nothing captured: the store's mark, quietly, in the same frame.
           <div className="flex flex-col items-center justify-center gap-2" style={{ aspectRatio: `1 / ${COVER_RATIO}` }}>

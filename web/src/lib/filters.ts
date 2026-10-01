@@ -12,7 +12,7 @@ import { platformLabel, industryLabel } from "@/lib/stores";
 import { COLOUR_BUCKETS, COLOUR_LABEL, COLOUR_SWATCH } from "@/lib/colour";
 import type { WallQuery } from "@/lib/block-source";
 
-export type FilterKey = "page" | "block" | "vp" | "platform" | "theme" | "app" | "industry" | "country" | "video" | "color";
+export type FilterKey = "host" | "page" | "block" | "vp" | "platform" | "theme" | "app" | "industry" | "country" | "video" | "color";
 
 export type FilterSpec = {
   key: FilterKey;
@@ -44,6 +44,9 @@ const COUNTRY_LABEL: Record<string, string> = {
 };
 
 export const FILTERS: FilterSpec[] = [
+  // One store's blocks. The site profile links here (`/?host=`), and at the
+  // full capture it is the only quick way to a particular store's blocks.
+  { key: "host", label: "Store", format: (v) => v, byCount: true, searchable: true },
   { key: "page", label: "Page", format: (v) => PAGE_TYPE_LABEL[v] ?? v },
   { key: "block", label: "Block", format: labelFor, byCount: true, searchable: true },
   { key: "vp", label: "Viewport", format: (v) => (v === "mobile" ? "Mobile" : "Desktop") },
