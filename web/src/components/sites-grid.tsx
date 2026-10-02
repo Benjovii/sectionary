@@ -8,8 +8,8 @@ import { Button } from "@/components/ui/button";
 import { StoreIcon } from "@/components/store-icon";
 import { Stack } from "@/components/site-profile";
 import { cn } from "@/lib/utils";
-import { loadBlockIndex } from "@/lib/load-blocks";
-import { siteCards, type SiteCard } from "@/lib/site-profile";
+import { loadSitesDirectory } from "@/lib/load-blocks";
+import { type SiteCard } from "@/lib/site-profile";
 import { labelFor } from "@/lib/blocks";
 import { industryLabel, platformLabel } from "@/lib/stores";
 
@@ -50,18 +50,11 @@ export function SitesGrid() {
 
   useEffect(() => {
     let alive = true;
-    loadBlockIndex().then(
-      (index) => {
+    loadSitesDirectory().then(
+      (directory) => {
         if (!alive) return;
-        setCards(siteCards(index));
-        const counts = new Map<string, number>();
-        for (const b of index.blocks) {
-          // "-part" slices are what segmentation could not name ("zoo-home-part");
-          // they are one store's markup, not a kind of block worth a link.
-          if (b.typeHint.endsWith("-part")) continue;
-          counts.set(b.typeHint, (counts.get(b.typeHint) ?? 0) + 1);
-        }
-        setBlockTypes([...counts].map(([value, count]) => ({ value, count })).sort((a, b) => b.count - a.count));
+        setCards(directory.cards);
+        setBlockTypes(directory.blockTypes);
       },
       (e: Error) => alive && setError(e.message),
     );
@@ -347,14 +340,14 @@ function SiteCardView({ card }: { card: SiteCard }) {
               className="relative overflow-hidden rounded-md shadow-[0_8px_30px_-8px_rgb(0_0_0/0.5)] transition-transform duration-300 ease-out group-hover:-translate-y-0.5"
               style={{ aspectRatio: `1 / ${COVER_RATIO}` }}
             >
-              <Stack src={null} blocks={cover.desktop} ratio={COVER_RATIO} />
+              <Stack src={cover.shots?.desktop ?? null} blocks={cover.desktop} ratio={COVER_RATIO} />
             </div>
-            {cover.mobile.length > 0 && (
+            {(cover.mobile.length > 0 || cover.shots?.mobile) && (
               <div
                 className="absolute right-[5%] bottom-[6%] w-[17%] overflow-hidden rounded-md border-2 border-card shadow-[0_8px_24px_-6px_rgb(0_0_0/0.6)]"
                 style={{ aspectRatio: "9 / 19" }}
               >
-                <Stack src={null} blocks={cover.mobile} ratio={19 / 9} />
+                <Stack src={cover.shots?.mobile ?? null} blocks={cover.mobile} ratio={19 / 9} />
               </div>
             )}
           </>

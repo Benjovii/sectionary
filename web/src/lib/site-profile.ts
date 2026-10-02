@@ -164,7 +164,11 @@ function capturesOf(pages: ProfilePage[]): SiteView["captures"] {
 
 /** The API's SiteProfile in the view's shape. Blocks stay empty: the API pages carry full-page shots instead. */
 export function profileFromApi(profile: SiteProfile): SiteView {
-  const pages: ProfilePage[] = profile.pages.map((p) => ({
+  return { store: profile.store, listed: true, pages: pagesFromApi(profile.pages), captures: profile.captures };
+}
+
+function pagesFromApi(apiPages: SiteProfile["pages"]): ProfilePage[] {
+  const pages: ProfilePage[] = apiPages.map((p) => ({
     key: p.url,
     url: p.url,
     type: p.type,
@@ -177,7 +181,28 @@ export function profileFromApi(profile: SiteProfile): SiteView {
     mobileBlocks: [],
   }));
   pages.sort(byPageOrder);
-  return { store: profile.store, listed: true, pages, captures: profile.captures };
+  return pages;
+}
+
+/** GET /api/sites: a store and its pages at their latest capture, the profile without its history. */
+export type SiteSummary = Omit<SiteProfile, "captures">;
+
+/** A store's pages from GET /api/sites, in page order, for the Sites grid and the Flows index. */
+export function summaryPages(summary: SiteSummary): ProfilePage[] {
+  return pagesFromApi(summary.pages);
+}
+
+/** A Sites card from GET /api/sites. The cover is the home page's full-page shots (another page when there is no home). */
+export function siteCardFromApi(summary: SiteSummary): SiteCard {
+  const pages = summaryPages(summary);
+  const coverPage = pages.find((p) => p.type === "home") ?? pages[0];
+  return {
+    store: summary.store,
+    listed: true,
+    pageCount: pages.length,
+    blockCount: pages.reduce((n, p) => n + p.blockCount, 0),
+    cover: coverPage ? { desktop: [], mobile: [], shots: { desktop: coverPage.desktop, mobile: coverPage.mobile } } : null,
+  };
 }
 
 /** One store on the Sites grid: who it is and what its cover shows. */
@@ -186,8 +211,11 @@ export type SiteCard = {
   listed: boolean;
   pageCount: number;
   blockCount: number;
-  /** The home page's blocks in order (another page when there is no home), or null when nothing is captured. */
-  cover: { desktop: Block[]; mobile: Block[] } | null;
+  /**
+   * The home page's blocks in order (another page when there is no home), or
+   * null when nothing is captured. From the API, its full-page shots instead.
+   */
+  cover: { desktop: Block[]; mobile: Block[]; shots?: { desktop: string | null; mobile: string | null } } | null;
 };
 
 /**

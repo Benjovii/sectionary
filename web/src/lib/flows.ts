@@ -13,7 +13,7 @@ import type { Block } from "@/contracts/block";
 import type { Store } from "@/contracts/store";
 import type { BlockIndex } from "./block-source.ts";
 import { isMock } from "./mock-blocks.ts";
-import { pagesFromBlocks, storeFromBlocks, type ProfilePage } from "./site-profile.ts";
+import { pagesFromBlocks, storeFromBlocks, summaryPages, type ProfilePage, type SiteSummary } from "./site-profile.ts";
 
 export const FLOW_STEPS = ["home", "collection", "product", "cart", "checkout"] as const;
 export type FlowStepType = (typeof FLOW_STEPS)[number];
@@ -72,14 +72,25 @@ export function flowSummaries(index: BlockIndex): FlowSummary[] {
     const listed = index.storeByHost.get(host);
     summaries.push({ store: listed ?? storeFromBlocks(host, blocks), listed: Boolean(listed), flow: flowOf(pagesFromBlocks(blocks)) });
   }
+  return summaries.sort(byFlow);
+}
 
+/** The same list from GET /api/sites (SEC-47): every store with a capture, in the same order. */
+export function flowSummariesFromApi(sites: SiteSummary[]): FlowSummary[] {
+  return sites
+    .filter((site) => site.pages.length > 0)
+    .map((site) => ({ store: site.store, listed: true, flow: flowOf(summaryPages(site)) }))
+    .sort(byFlow);
+}
+
+/** Complete flows first, then the most steps, then traffic rank, then name. */
+function byFlow(a: FlowSummary, b: FlowSummary): number {
   const rank = (s: FlowSummary) => s.store.rank ?? Number.POSITIVE_INFINITY;
-  return summaries.sort(
-    (a, b) =>
-      Number(b.flow.complete) - Number(a.flow.complete) ||
-      b.flow.captured - a.flow.captured ||
-      rank(a) - rank(b) ||
-      a.store.brand.localeCompare(b.store.brand),
+  return (
+    Number(b.flow.complete) - Number(a.flow.complete) ||
+    b.flow.captured - a.flow.captured ||
+    rank(a) - rank(b) ||
+    a.store.brand.localeCompare(b.store.brand)
   );
 }
 
