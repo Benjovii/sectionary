@@ -48,7 +48,7 @@ data/myzoobox.com/home/
   and the segmentation strategy used, or an `error`.
 - `blocks[]`: one entry per block per viewport, with `file` relative to the
   manifest's folder (null if that screenshot failed), position, size, type
-  hint, headline, first 400 characters of text, counts of buttons, images and
+  hint, headline, first 2,000 characters of text (the API serves the first 400), counts of buttons, images and
   videos, and the background colour.
 
 The importer should treat `host + page.url + capturedAt` as the identity of a

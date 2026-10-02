@@ -266,7 +266,9 @@ export function collectBlocks(opts: { minHeight: number; maxBlocks: number }): C
       top: Math.round(cs.position === 'fixed' ? r.top : r.top + window.scrollY),
       height: Math.round(r.height),
       width: Math.round(r.width),
-      text: text.slice(0, 400),
+      // 2,000 characters: search indexes up to 4,000 and embeds 2,000, and a buy box's purchase options
+      // (subscribe & save, delivery every N weeks) sit past the first 400. The API still serves 400.
+      text: text.slice(0, 2000),
       textLength: text.length,
       headline: head ? (head.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 160) : null,
       buttons: el.querySelectorAll('a.button, a.btn, button, [class*="button"], [class*="btn"], input[type="submit"]').length,
