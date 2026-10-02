@@ -1,0 +1,3407 @@
+{
+  "version": 1,
+  "createdAt": "2026-10-02T10:49:45.744Z",
+  "selection": "200 of 421 blocks (latest captures): with a screenshot, one per distinct site+copy, round-robin over site+page type in sha256(id) order",
+  "blocks": [
+    {
+      "key": "anker.com|https://www.anker.com/collections/power-banks?ref=image_category_banner|mobile|7",
+      "blockId": "1fc6eb69-35d4-49e2-8099-715eafc67da3",
+      "host": "anker.com",
+      "pageType": "collection",
+      "pageUrl": "https://www.anker.com/collections/power-banks?ref=image_category_banner",
+      "viewport": "mobile",
+      "blockIndex": 7,
+      "typeHint": "faq",
+      "headline": "FAQ About Anker Power Banks",
+      "text": "FAQ About Anker Power Banks How can I quickly recharge my backup battery if power returns for only one hour? Speed is your best defense against rolling blackouts. The Anker Prime Power Bank (26K, 300W) is the industry leader in recharge speed. The \"1-Hour Window\" Strategy: Recharge at Top Speed: During winter storms, power often flickers on for short periods. The Anker Prime supports 250W Input—An",
+      "imageKey": "/anker.com/collections-power-banks-ee151e/blocks/m-07-faq.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "charlottetilbury.com|https://charlottetilbury.com/|mobile|4",
+      "blockId": "9d990d52-af5f-442a-849f-08ed1d25d96e",
+      "host": "charlottetilbury.com",
+      "pageType": "home",
+      "pageUrl": "https://charlottetilbury.com/",
+      "viewport": "mobile",
+      "blockIndex": 4,
+      "typeHint": "hero",
+      "headline": null,
+      "text": "24 hours only! Pillow Talk 3 Beauty Icons for 2!* Use code Pillowtalkparty at checkout. Shop now. T&Cs apply.",
+      "imageKey": "/charlottetilbury.com/home/blocks/m-04-hero.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "charlottetilbury.com|https://www.charlottetilbury.com/uk/products/new|desktop|3",
+      "blockId": "135e260b-9959-45a1-b682-aaf79f3ec8a9",
+      "host": "charlottetilbury.com",
+      "pageType": "product",
+      "pageUrl": "https://www.charlottetilbury.com/uk/products/new",
+      "viewport": "desktop",
+      "blockIndex": 3,
+      "typeHint": "footer",
+      "headline": "About",
+      "text": "Item 1 of 5 Free Delivery on all orders over £49 Item 2 of 5 Unlock rewards and benefits with Charlotte's Darlings Loyalty Club Item 3 of 5 Complete your Beauty Profile to get personalised recommendations Item 4 of 5 Download the App Easy beauty for you Item 5 of 5 Book a 1:1 Online Beauty Consultation With Charlotte’s pro makeup artists. ABOUT Store Locator About Charlotte Careers Privacy Policy",
+      "imageKey": "/charlottetilbury.com/uk-products-new/blocks/d-03-footer.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "copperandbrass.net|https://www.copperandbrass.net/category/all-products|desktop|2",
+      "blockId": "5800d441-897c-411e-9452-01ad4e8e8302",
+      "host": "copperandbrass.net",
+      "pageType": "collection",
+      "pageUrl": "https://www.copperandbrass.net/category/all-products",
+      "viewport": "desktop",
+      "blockIndex": 2,
+      "typeHint": "unknown",
+      "headline": "Shop All",
+      "text": "Shop All",
+      "imageKey": "/copperandbrass.net/category-all-products/blocks/d-02-unknown.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "copperandbrass.net|https://copperandbrass.net/|mobile|2",
+      "blockId": "44d64b21-e945-4b90-ac58-85d5a3285df9",
+      "host": "copperandbrass.net",
+      "pageType": "home",
+      "pageUrl": "https://copperandbrass.net/",
+      "viewport": "mobile",
+      "blockIndex": 2,
+      "typeHint": "unknown",
+      "headline": null,
+      "text": "Shop Now",
+      "imageKey": "/copperandbrass.net/home/blocks/m-02-unknown.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "farrow-ball.com|https://farrow-ball.com/|mobile|1",
+      "blockId": "6c54f7be-9b2e-44ee-a3b3-cdbeabdb1ad0",
+      "host": "farrow-ball.com",
+      "pageType": "home",
+      "pageUrl": "https://farrow-ball.com/",
+      "viewport": "mobile",
+      "blockIndex": 1,
+      "typeHint": "header",
+      "headline": "Europe",
+      "text": "Basket Toggle Nav Close Paint Samples Paint Wallpaper Colour Consultancy Inspiration & Ideas Help & Advice Stockist Login Sign in Find a Stockist Basket Search",
+      "imageKey": "/farrow-ball.com/home/blocks/m-01-header.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "melula.com|https://melula.com/|desktop|5",
+      "blockId": "4dec9b28-5ff8-4697-a5fc-1cce1abb69b8",
+      "host": "melula.com",
+      "pageType": "home",
+      "pageUrl": "https://melula.com/",
+      "viewport": "desktop",
+      "blockIndex": 5,
+      "typeHint": "gallery",
+      "headline": null,
+      "text": "",
+      "imageKey": "/melula.com/home/blocks/d-05-gallery.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "myzoobox.com|https://myzoobox.com/cart|mobile|2",
+      "blockId": "d2b4572e-ce52-4533-a23e-545bd33bd3e3",
+      "host": "myzoobox.com",
+      "pageType": "cart",
+      "pageUrl": "https://myzoobox.com/cart",
+      "viewport": "mobile",
+      "blockIndex": 2,
+      "typeHint": "cart-items",
+      "headline": "Your cart",
+      "text": "🛒 Your cart is empty Looks like you haven't added anything yet. Let's fix that! Continue shopping Have an account? Log in to check out faster. Loading...",
+      "imageKey": "/myzoobox.com/cart/blocks/m-02-cart-items.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "myzoobox.com|https://myzoobox.com/collections/edventures|mobile|2",
+      "blockId": "a62eb7d5-b27c-4a88-a047-62cdba19f96c",
+      "host": "myzoobox.com",
+      "pageType": "collection",
+      "pageUrl": "https://myzoobox.com/collections/edventures",
+      "viewport": "mobile",
+      "blockIndex": 2,
+      "typeHint": "banner",
+      "headline": "Collection: EDventures",
+      "text": "Collection: EDventures",
+      "imageKey": "/myzoobox.com/collections-edventures/blocks/m-02-banner.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "myzoobox.com|https://myzoobox.com/|desktop|5",
+      "blockId": "3d5a0ba4-58b7-45c2-ac2d-6a55e8a7b516",
+      "host": "myzoobox.com",
+      "pageType": "home",
+      "pageUrl": "https://myzoobox.com/",
+      "viewport": "desktop",
+      "blockIndex": 5,
+      "typeHint": "zoo-home-part",
+      "headline": "Learning they beg for, not a chore",
+      "text": "Why families stay Learning they beg for, not a chore Built by educators, tested on real kids, and designed so you can hand it over and watch them go. Real science, not fluff Written with zoologists and educators so the facts hold up to a curious eight-year-old. Zero prep for you Every material, instruction, and cut-out is in the box. No shopping list, no printer. Compassion built in Each animal co",
+      "imageKey": "/myzoobox.com/home/blocks/d-05-zoo-home-part.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "myzoobox.com|https://myzoobox.com/products/zoologist-club-sibling-kit-easy-reader-3-month-plan|desktop|4",
+      "blockId": "ce2806e7-ac4d-47ac-8bbb-8f498c2f9a59",
+      "host": "myzoobox.com",
+      "pageType": "product",
+      "pageUrl": "https://myzoobox.com/products/zoologist-club-sibling-kit-easy-reader-3-month-plan",
+      "viewport": "desktop",
+      "blockIndex": 4,
+      "typeHint": "main-part",
+      "headline": "Get a New Animal Every Month!",
+      "text": "Get a New Animal Every Month! Find the perfect science adventure for your child. Ages 3–5 Play-based animal learning for little explorers, built to do together. Guided activities built for preschool attention spans Builds early skills like fine motor, early math, and early literacy Open-and-go learning with minimal prep EXPLORE CUB CLUB Learn more Ages 5–12 Real zoology + hands-on STEM for big thi",
+      "imageKey": "/myzoobox.com/products-zoologist-club-sibling-kit-easy-reader-3-month-plan/blocks/d-04-main-part.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "nanit.com|https://www.nanit.com/collections/accessories|desktop|4",
+      "blockId": "4ad6c01c-d384-457b-b276-5d48ab660e53",
+      "host": "nanit.com",
+      "pageType": "collection",
+      "pageUrl": "https://www.nanit.com/collections/accessories",
+      "viewport": "desktop",
+      "blockIndex": 4,
+      "typeHint": "footer",
+      "headline": null,
+      "text": "Follow Us Facebook Instagram YouTube TikTok Pinterest LinkedIn Translation missing: en.general.social.links.threads About Why Nanit Careers Press Privacy & Security Reviews Support Contact Us Payment Options Product FAQs Server Status Shipping & Returns Store Locator Partnerships Partner with us Referral Program Research Worldwide Retailers Resources Memberships Nanit Blog Nanit Community Nanit La",
+      "imageKey": "/nanit.com/collections-accessories/blocks/d-04-footer.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "nanit.com|https://nanit.com/|desktop|7",
+      "blockId": "6343118b-9f59-477e-9292-a416ab6eb8fe",
+      "host": "nanit.com",
+      "pageType": "home",
+      "pageUrl": "https://nanit.com/",
+      "viewport": "desktop",
+      "blockIndex": 7,
+      "typeHint": "lookbook",
+      "headline": "Invest in a nursery you'll love for years",
+      "text": "Invest in a nursery you'll love for years Upgrade your baby's space with one cost-effective bundle Breathing Wear Sleeping Bag $34.99 Smart Baby Monitor System From $289.99 Sound + Light Machine $99.99 Home 8\" Display $179.00 Smart Baby Monitor + Flex Stand $249.00",
+      "imageKey": "/nanit.com/home/blocks/d-07-lookbook.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "nanit.com|https://www.nanit.com/products/cammies|mobile|5",
+      "blockId": "00ae958c-6895-487c-a6e4-c19dc1feb44d",
+      "host": "nanit.com",
+      "pageType": "product",
+      "pageUrl": "https://www.nanit.com/products/cammies",
+      "viewport": "mobile",
+      "blockIndex": 5,
+      "typeHint": "footer-copyright",
+      "headline": null,
+      "text": "Privacy Policy Terms + Conditions Accessibility Statement Sitemap Cookies Your Privacy Choices © 2026 Nanit",
+      "imageKey": "/nanit.com/products-cammies/blocks/m-05-footer-copyright.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "oliveclothing.com|https://www.oliveclothing.com/categories/women/skirts-shorts|desktop|1",
+      "blockId": "faa764b9-050a-49f5-b985-bb0835f44d9a",
+      "host": "oliveclothing.com",
+      "pageType": "collection",
+      "pageUrl": "https://www.oliveclothing.com/categories/women/skirts-shorts",
+      "viewport": "desktop",
+      "blockIndex": 1,
+      "typeHint": "header",
+      "headline": "Search",
+      "text": "🇬🇧 FREE SHIPPING FOR ORDERS OF £95+ · FREE RETURNS WOMEN MEN SEARCH SIGN IN MY CART (0)",
+      "imageKey": "/oliveclothing.com/categories-women-skirts-shorts/blocks/d-01-header.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "oliveclothing.com|https://oliveclothing.com/|desktop|6",
+      "blockId": "1649d074-e40a-455e-972f-39724e1b51a3",
+      "host": "oliveclothing.com",
+      "pageType": "home",
+      "pageUrl": "https://oliveclothing.com/",
+      "viewport": "desktop",
+      "blockIndex": 6,
+      "typeHint": "footer-webpages",
+      "headline": "Footer Start",
+      "text": "Footer Start About Us Olive Melbourne/Dublin Notice Garment Care Delivery Returns Size Privacy Legal Stockists Contact Us Gift Certificates Withdraw from contract here SUBSCRIBE TO OUR NEWSLETTER Get the latest updates on new products and upcoming sales Website Email Address I'M SHOPPING Womenswear Menswear Both Instagram Facebook Pinterest X Tiktok Delivery country United Kingdom © 2026 Olive",
+      "imageKey": "/oliveclothing.com/home/blocks/d-06-footer-webpages.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "papyrusonline.com|https://papyrusonline.com/|mobile|2",
+      "blockId": "68e92d03-2ae6-45e2-bddb-c522591f5cd0",
+      "host": "papyrusonline.com",
+      "pageType": "home",
+      "pageUrl": "https://papyrusonline.com/",
+      "viewport": "mobile",
+      "blockIndex": 2,
+      "typeHint": "newsletter",
+      "headline": "Stay in touch with PAPYRUS",
+      "text": "Stay in touch with PAPYRUS Papyrus newsletter form First Name* Last Name* Email* SUBSCRIBE Required* By clicking “subscribe”, you agree to receive emails from PapyrusOnline.com and accept our Terms of Service, Privacy Policy, and Cookies Policy.",
+      "imageKey": "/papyrusonline.com/home/blocks/m-02-newsletter.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "papyrusonline.com|https://www.papyrusonline.com/product/recipe-for-perfection-birthday-greeting-card|desktop|1",
+      "blockId": "dbd13fcb-8979-4550-972b-ea48210f7951",
+      "host": "papyrusonline.com",
+      "pageType": "product",
+      "pageUrl": "https://www.papyrusonline.com/product/recipe-for-perfection-birthday-greeting-card",
+      "viewport": "desktop",
+      "blockIndex": 1,
+      "typeHint": "header",
+      "headline": null,
+      "text": "Celebrations Lifestyle About Us Retail Locator GREETING CARDS & STATIONERY GIFT PACKAGING CANDLES PAPYRUS BY REEDS JEWELERS",
+      "imageKey": "/papyrusonline.com/product-recipe-for-perfection-birthday-greeting-card/blocks/d-01-header.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "shop.penguin.co.uk|https://shop.penguin.co.uk/products/groovy-chick-the-official-colouring-book-by-groovy-chick|mobile|1",
+      "blockId": "4fb4f2e3-ba6e-4767-88ff-a199e7a36a4c",
+      "host": "shop.penguin.co.uk",
+      "pageType": "product",
+      "pageUrl": "https://shop.penguin.co.uk/products/groovy-chick-the-official-colouring-book-by-groovy-chick",
+      "viewport": "mobile",
+      "blockIndex": 1,
+      "typeHint": "main",
+      "headline": "Groovy Chick: The Official Colouring Book",
+      "text": "Skip to product information TTS Book Groovy Chick: The Official Colouring Book €11,95 Decrease quantity Increase quantity Sold out Description Step back into a simpler time with our favourite 90s Icon, Groovy Chick, in this cute and cosy colouring book, the perfect relaxing activity. Designed to help you slow down and reconnect, this book is the perfect escape back into a world of the iconic 90s C",
+      "imageKey": "/shop.penguin.co.uk/products-groovy-chick-the-official-colouring-book-by-groovy-chick/blocks/m-01-main.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "store-usa.arduino.cc|https://store-usa.arduino.cc/collections/accessories|desktop|7",
+      "blockId": "28c98b61-5911-405e-81ef-61c4b38c3ce3",
+      "host": "store-usa.arduino.cc",
+      "pageType": "collection",
+      "pageUrl": "https://store-usa.arduino.cc/collections/accessories",
+      "viewport": "desktop",
+      "blockIndex": 7,
+      "typeHint": "product",
+      "headline": "Headers Strip 14 ways Arduino MKR1000 Printed",
+      "text": "Headers Strip 14 ways Arduino MKR1000 Printed 2 Reviews 14 pin Female/Male header strips MKR1000 printed, very useful for board extensions. We use them extensively on Proto Shield PCB, but they are useful in any shield because of their height. Features... $1.50 4.5",
+      "imageKey": "/store-usa.arduino.cc/collections-accessories/blocks/d-07-product.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "store-usa.arduino.cc|https://store-usa.arduino.cc/|mobile|2",
+      "blockId": "f9dea6c8-8853-403f-8a58-d29b99190fa0",
+      "host": "store-usa.arduino.cc",
+      "pageType": "home",
+      "pageUrl": "https://store-usa.arduino.cc/",
+      "viewport": "mobile",
+      "blockIndex": 2,
+      "typeHint": "dynamic-highlights-banner",
+      "headline": null,
+      "text": "New Products Discover the latest Arduino products and innovations for smarter, faster projects Boards & Modules Browse Arduino boards and modules to power any DIY electronics projects Kits Hands-on Arduino kits with everything you need to learn, build, and create Create your Business Account Exclusive access to Arduino solutions for companies and educators",
+      "imageKey": "/store-usa.arduino.cc/home/blocks/m-02-dynamic-highlights-banner.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "store-usa.arduino.cc|https://store-usa.arduino.cc/products/usb-c-power-supply-65w|mobile|6",
+      "blockId": "770e1927-0892-4109-8307-0a259833f5fd",
+      "host": "store-usa.arduino.cc",
+      "pageType": "product",
+      "pageUrl": "https://store-usa.arduino.cc/products/usb-c-power-supply-65w",
+      "viewport": "mobile",
+      "blockIndex": 6,
+      "typeHint": "static-product-recommendations",
+      "headline": "Inspired by your shopping trends",
+      "text": "Inspired by your shopping trends COMING SOON! Arduino USB-C Cable (24 pin) Unlock the full potential of Arduino UNO Q and other boards in the Arduino ecosystem with a high-quality cable offering a full 24-pin USB-C to USB-C connection for full-spec performance. Tested by ... $5.79 NEW! Arduino USB-C Hub (8 in 1) 8 Reviews Unlock the full potential of the UNO Q and other boards in the Arduino ecosy",
+      "imageKey": "/store-usa.arduino.cc/products-usb-c-power-supply-65w/blocks/m-06-static-product-recommendations.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "store.dji.com|https://store.dji.com/shop/camera-drones?from=store_footer|mobile|5",
+      "blockId": "58f880d2-62da-45b8-92dd-26248aeb1798",
+      "host": "store.dji.com",
+      "pageType": "collection",
+      "pageUrl": "https://store.dji.com/shop/camera-drones?from=store_footer",
+      "viewport": "mobile",
+      "blockIndex": 5,
+      "typeHint": "footer",
+      "headline": null,
+      "text": "Product Categories Camera Drones Handheld Education & Industry Service Accessory Help & Support Programs Explore United States / English Copyright © 2026 DJI All Rights Reserved. Privacy PolicyCookie PreferencesDo Not Sell Or Share My Personal InformationAccessibility StatementTerms of UseSite Map",
+      "imageKey": "/store.dji.com/shop-camera-drones-a10e7f/blocks/m-05-footer.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "store.dji.com|https://store.dji.com/|mobile|1",
+      "blockId": "7b935cdb-bbbe-4861-8111-3032740cd823",
+      "host": "store.dji.com",
+      "pageType": "home",
+      "pageUrl": "https://store.dji.com/",
+      "viewport": "mobile",
+      "blockIndex": 1,
+      "typeHint": "banner",
+      "headline": "Top Picks",
+      "text": "Top Picks Explore our top-selling gear and upgrade your setup. Shop Now Revolutionary Image Quality Action Camera Shop Now Action Camera with Best-in-Class Image Quality Shop Now Compact and Lightweight Gimbal for Content Creators Shop Now",
+      "imageKey": "/store.dji.com/home/blocks/m-01-banner.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "store.duolingo.com|https://store.duolingo.com/collections/accessories|mobile|4",
+      "blockId": "4244d121-5833-45ff-b760-c4681ed4516f",
+      "host": "store.duolingo.com",
+      "pageType": "collection",
+      "pageUrl": "https://store.duolingo.com/collections/accessories",
+      "viewport": "mobile",
+      "blockIndex": 4,
+      "typeHint": "collection",
+      "headline": null,
+      "text": "Duo & Lily BFF Mug Set Regular Price €35,95 EUR Duo & Lily BFF Mug Set Product Price€35,95 EUR",
+      "imageKey": "/store.duolingo.com/collections-accessories/blocks/m-04-collection.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "store.duolingo.com|https://store.duolingo.com/|mobile|16",
+      "blockId": "c7b7be78-22e3-46b5-a9f1-8e0a44b4ec5b",
+      "host": "store.duolingo.com",
+      "pageType": "home",
+      "pageUrl": "https://store.duolingo.com/",
+      "viewport": "mobile",
+      "blockIndex": 16,
+      "typeHint": "feature",
+      "headline": null,
+      "text": "Falstaff Plushie Regular Price €30,95 EUR Falstaff Plushie Product Price€30,95 EUR",
+      "imageKey": "/store.duolingo.com/home/blocks/m-16-feature.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "store.duolingo.com|https://store.duolingo.com/products/duolingo-chess-set|desktop|4",
+      "blockId": "0b9f9905-8af5-4195-b3bb-bdc35480e6a3",
+      "host": "store.duolingo.com",
+      "pageType": "product",
+      "pageUrl": "https://store.duolingo.com/products/duolingo-chess-set",
+      "viewport": "desktop",
+      "blockIndex": 4,
+      "typeHint": "footer-top",
+      "headline": null,
+      "text": "Facebook instagram twitter x social Share ACCESSORIES PLUSHIES DUOLINGO HELP TERMS PRIVACY RETURN POLICY CALIFORNIA PRIVACY CALIFORNIA TRANSPARENCY GIFT CARD POLICY",
+      "imageKey": "/store.duolingo.com/products-duolingo-chess-set/blocks/d-04-footer-top.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "theordinary.com|https://theordinary.com/en-ca/category/best-sellers|desktop|2",
+      "blockId": "4c0b9745-6a1c-49c9-911e-60c0308ec2fe",
+      "host": "theordinary.com",
+      "pageType": "collection",
+      "pageUrl": "https://theordinary.com/en-ca/category/best-sellers",
+      "viewport": "desktop",
+      "blockIndex": 2,
+      "typeHint": "header",
+      "headline": null,
+      "text": "Skip to main content Skip to footer content Previous CARBON NEUTRAL SHIPPING ON ALL ORDERS. YOUR ACCOUNT HAS A NEW LOOK. LOG IN TO EXPLORE UPDATES. COMPLIMENTARY SHIPPING ON ORDERS OVER 25 CAD CARBON NEUTRAL SHIPPING ON ALL ORDERS. YOUR ACCOUNT HAS A NEW LOOK. LOG IN TO EXPLORE UPDATES. COMPLIMENTARY SHIPPING ON ORDERS OVER 25 CAD CARBON NEUTRAL SHIPPING ON ALL ORDERS. Next Login 0 THE ORDINARY NI",
+      "imageKey": "/theordinary.com/en-ca-category-best-sellers/blocks/d-02-header.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "theordinary.com|https://theordinary.com/|mobile|4",
+      "blockId": "2f40385e-1584-4add-b787-a115a0fca610",
+      "host": "theordinary.com",
+      "pageType": "home",
+      "pageUrl": "https://theordinary.com/",
+      "viewport": "mobile",
+      "blockIndex": 4,
+      "typeHint": "footer",
+      "headline": "Stay In Touch.",
+      "text": "Stay In Touch. Email Address Subscribe *By providing your email address you are agreeing to receive email communications from DECIEM Inc., its affiliates, brands (The Ordinary, NIOD, and LOoPHA) and/or marketing partners. This can be changed at any time. Please refer to our Privacy Policy and Terms of Use for more details or Contact Us. Company Our Commitments Customer Care Gift Cards Contact Us S",
+      "imageKey": "/theordinary.com/home/blocks/m-04-footer.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "typology.com|https://global.typology.com/collections/best-sellers|desktop|2",
+      "blockId": "60042b2b-ad9b-4b52-8d53-cfdcb2c0aa84",
+      "host": "typology.com",
+      "pageType": "collection",
+      "pageUrl": "https://global.typology.com/collections/best-sellers",
+      "viewport": "desktop",
+      "blockIndex": 2,
+      "typeHint": "unknown-part",
+      "headline": "Tinted Serum T10 — Vitamin C + Aloe Vera — 29,90 €",
+      "text": "BEST-SELLER Tinted Serum T10 — Vitamin C + Aloe Vera — 29,90 € BEST-SELLER Radiance Serum L32 — 15% Vitamin C Complex + 1% Vitamin E — from 17,90 € RADIANCE Glow Drops T31 — 5% Vitamin C + Aloe Vera — 22,90 € BEST-SELLER 9-Ingredient Face Moisturiser D41 — 22,50 € ANTI-REDNESS Color Corrector for Redness T33 — 2% Niacinamide + Green Seaweed Extract — 24,90 € DAILY SPF Day Cream for Multiple Signs",
+      "imageKey": "/typology.com/collections-best-sellers/blocks/d-02-unknown-part.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "typology.com|https://typology.com/|desktop|5",
+      "blockId": "eb7f3030-750c-4d64-aa37-5d9621b92d36",
+      "host": "typology.com",
+      "pageType": "home",
+      "pageUrl": "https://typology.com/",
+      "viewport": "desktop",
+      "blockIndex": 5,
+      "typeHint": "unknown",
+      "headline": "COMING SOON:ADVENT CALENDAR 2026",
+      "text": "COMING SOON: ADVENT CALENDAR 2026 Expected release date: 5 October 2026 JOIN THE WAITLIST TODAY",
+      "imageKey": "/typology.com/home/blocks/d-05-unknown.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "typology.com|https://global.typology.com/products/regenerating-micro-spicules-serum-pdrn-egf-complex|desktop|2",
+      "blockId": "20acfafd-b836-47da-a06a-ad74d72b9109",
+      "host": "typology.com",
+      "pageType": "product",
+      "pageUrl": "https://global.typology.com/products/regenerating-micro-spicules-serum-pdrn-egf-complex",
+      "viewport": "desktop",
+      "blockIndex": 2,
+      "typeHint": "unknown",
+      "headline": null,
+      "text": "THIS PRODUCT IS MADE IN FRANCE, VEGAN, YUKA SCORE 91/100",
+      "imageKey": "/typology.com/products-regenerating-micro-spicules-serum-pdrn-egf-complex/blocks/d-02-unknown.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "anker.com|https://www.anker.com/collections/all-products-charging|mobile|1",
+      "blockId": "5eee01c2-a966-4c82-9ad4-55c16d5f040e",
+      "host": "anker.com",
+      "pageType": "collection",
+      "pageUrl": "https://www.anker.com/collections/all-products-charging",
+      "viewport": "mobile",
+      "blockIndex": 1,
+      "typeHint": "unknown-part",
+      "headline": "Power Every Device with Anker Fast Charging Solutions",
+      "text": "Power Every Device with Anker Fast Charging Solutions Power up all your devices with Anker fast charging solutions, including GaN chargers, Qi2 wireless chargers, travel chargers, docking stations & multi-device charging stations for Apple & Samsung ecosystems. Learn More",
+      "imageKey": "/anker.com/collections-all-products-charging/blocks/m-01-unknown-part.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "charlottetilbury.com|https://charlottetilbury.com/|mobile|5",
+      "blockId": "a3e012b4-c925-472d-9446-e972f22eeeba",
+      "host": "charlottetilbury.com",
+      "pageType": "home",
+      "pageUrl": "https://charlottetilbury.com/",
+      "viewport": "mobile",
+      "blockIndex": 5,
+      "typeHint": "footer",
+      "headline": "About",
+      "text": "Item 1 of 5 Free Delivery on all orders over £49 Item 2 of 5 Unlock rewards and benefits with Charlotte's Darlings Loyalty Club Item 3 of 5 Complete your Beauty Profile to get personalised recommendations Item 4 of 5 Download the App Easy beauty for you Item 5 of 5 Book a 1:1 Online Beauty Consultation With Charlotte’s pro makeup artists. SIGN UP TO RECEIVE EMAILS Be the first to know about produc",
+      "imageKey": "/charlottetilbury.com/home/blocks/m-05-footer.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "charlottetilbury.com|https://www.charlottetilbury.com/uk/products/new|desktop|2",
+      "blockId": "c257259a-afcb-4450-8e39-4d10713b2ef3",
+      "host": "charlottetilbury.com",
+      "pageType": "product",
+      "pageUrl": "https://www.charlottetilbury.com/uk/products/new",
+      "viewport": "desktop",
+      "blockIndex": 2,
+      "typeHint": "banner",
+      "headline": "Need help narrowing it down, darling?",
+      "text": "Need help narrowing it down, darling? ASK CHARLOTTE",
+      "imageKey": "/charlottetilbury.com/uk-products-new/blocks/d-02-banner.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "copperandbrass.net|https://www.copperandbrass.net/category/all-products|desktop|5",
+      "blockId": "b7ce5487-1b8d-4ff2-8ce3-e927c1562c00",
+      "host": "copperandbrass.net",
+      "pageType": "collection",
+      "pageUrl": "https://www.copperandbrass.net/category/all-products",
+      "viewport": "desktop",
+      "blockIndex": 5,
+      "typeHint": "unknown-part",
+      "headline": "Happily Ever After Storybook Notebook",
+      "text": "Arrives 11/5/26 Happily Ever After Storybook Notebook Price $30.00 Main Character Spiral Notebook Price $20.00 Arrives 10/1/2026 Blooming Hardcover Notebook Price $20.00 Be TheVillain Hardcover Notebook Price $20.00 Arrives 9/20/26 She's Building Wealth Budget Planner Price $25.00 Arrives: 8/20/26 Devastating Divas Notebook Price $20.00 Arrives: 8/20/26 Pretty Ladies Hardcover Notebook Price $20.0",
+      "imageKey": "/copperandbrass.net/category-all-products/blocks/d-05-unknown-part.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "copperandbrass.net|https://copperandbrass.net/|desktop|1",
+      "blockId": "702eee26-ce11-45da-832b-e06a94b293e9",
+      "host": "copperandbrass.net",
+      "pageType": "home",
+      "pageUrl": "https://copperandbrass.net/",
+      "viewport": "desktop",
+      "blockIndex": 1,
+      "typeHint": "header",
+      "headline": null,
+      "text": "Free Shipping On All Orders Over $75 before taxes and after applicable discounts. sales@copperandbrass.net COPPER & BRASS PAPER GOODS About Shop Contact Policies & Shipping Privacy Policy Search Results Log In 0",
+      "imageKey": "/copperandbrass.net/home/blocks/d-01-header.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "farrow-ball.com|https://farrow-ball.com/|desktop|1",
+      "blockId": "bd170ab9-beb6-49ab-bd92-4910ab2fedba",
+      "host": "farrow-ball.com",
+      "pageType": "home",
+      "pageUrl": "https://farrow-ball.com/",
+      "viewport": "desktop",
+      "blockIndex": 1,
+      "typeHint": "header",
+      "headline": "Europe",
+      "text": "Stockist Login Sign in Find a Stockist Basket Paint Samples Paint Wallpaper Colour Consultancy Inspiration & Ideas Help & Advice Search",
+      "imageKey": "/farrow-ball.com/home/blocks/d-01-header.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "melula.com|https://melula.com/|mobile|8",
+      "blockId": "5de8d9f6-214e-4c0b-b697-28873304b340",
+      "host": "melula.com",
+      "pageType": "home",
+      "pageUrl": "https://melula.com/",
+      "viewport": "mobile",
+      "blockIndex": 8,
+      "typeHint": "footer",
+      "headline": null,
+      "text": "Melula 11 Dannevirkegade, København, 1763, Denmark hello@melula.com CONTACT & WHOLESALETERMS AND CONDITIONSSHIPPING & RETURNS",
+      "imageKey": "/melula.com/home/blocks/m-08-footer.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "myzoobox.com|https://myzoobox.com/cart|mobile|3",
+      "blockId": "bf11bd01-082c-41b3-86a5-8915f1a6fcd9",
+      "host": "myzoobox.com",
+      "pageType": "cart",
+      "pageUrl": "https://myzoobox.com/cart",
+      "viewport": "mobile",
+      "blockIndex": 3,
+      "typeHint": "footer",
+      "headline": "Stay Wild, Join the ZOOmmunity!",
+      "text": "🦁 Stay Wild, Join the ZOOmmunity! Get exclusive deals, animal fun facts, and be the first to know about new EDventures. Sign Up By signing up, you agree to our Terms and Privacy Policy. Hands-on animal adventures, delivered monthly. Inspiring curiosity & sparking conservation. Learn More About My ZOO Box FAQs School Orders EMPOWER Foundation Gift Guide Meet the Pangolin Contact Us Affiliates & Pa",
+      "imageKey": "/myzoobox.com/cart/blocks/m-03-footer.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "myzoobox.com|https://myzoobox.com/collections/edventures|mobile|3",
+      "blockId": "3f22f140-b401-4fcc-8a7d-4640484f905a",
+      "host": "myzoobox.com",
+      "pageType": "collection",
+      "pageUrl": "https://myzoobox.com/collections/edventures",
+      "viewport": "mobile",
+      "blockIndex": 3,
+      "typeHint": "product-grid",
+      "headline": "Filter:",
+      "text": "Filter and sort 9 products Cheetah EDventure Regular price $39.95 USD Dolphin EDventure Regular price $39.95 USD Meerkat EDventure Regular price $39.95 USD Skunk EDventure Regular price $39.95 USD Hippopotamus EDventure Regular price $39.95 USD Porcupine EDventure Regular price $39.95 USD Octopus EDventure Regular price $39.95 USD Chimpanzee EDventure Regular price $39.95 USD Orangutan EDventure R",
+      "imageKey": "/myzoobox.com/collections-edventures/blocks/m-03-product-grid.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "myzoobox.com|https://myzoobox.com/|mobile|1",
+      "blockId": "5c3cbc73-dc90-41cc-bce2-c2446ba844b5",
+      "host": "myzoobox.com",
+      "pageType": "home",
+      "pageUrl": "https://myzoobox.com/",
+      "viewport": "mobile",
+      "blockIndex": 1,
+      "typeHint": "header",
+      "headline": null,
+      "text": "🎁 Get Your First Box for Free with code FREEBOX View Details × × OUR CLUBS Cub Club Ages 3 – 5 Zoologist Club Ages 5 – 12 POPULAR SEARCHES 🐬 Dolphin 🦈 Shark 🦁 Lion 🐧 Penguin 🐘 Elephant 🌊 Ocean 🦕 Dinosaur 💬 Support × Start Exploring → Subscriptions Gifting School Orders The ZOO Store Member Area",
+      "imageKey": "/myzoobox.com/home/blocks/m-01-header.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "myzoobox.com|https://myzoobox.com/products/zoologist-club-sibling-kit-easy-reader-3-month-plan|desktop|2",
+      "blockId": "49884270-124c-4c2c-8981-538c7112631b",
+      "host": "myzoobox.com",
+      "pageType": "product",
+      "pageUrl": "https://myzoobox.com/products/zoologist-club-sibling-kit-easy-reader-3-month-plan",
+      "viewport": "desktop",
+      "blockIndex": 2,
+      "typeHint": "product",
+      "headline": "Zoologist Club + Sibling Kit + Easy Reader (3 Month Plan)",
+      "text": "Zoologist Club + Sibling Kit + Easy Reader (3 Month Plan) $71.95 − + ADD TO CART Free Shipping On orders over $99 Secure Payment 100% protected transactions Easy Returns 30-day return policy Fast Email Support Get quick responses from our team via support email. SHARE THIS PRODUCT",
+      "imageKey": "/myzoobox.com/products-zoologist-club-sibling-kit-easy-reader-3-month-plan/blocks/d-02-product.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "nanit.com|https://www.nanit.com/collections/accessories|mobile|4",
+      "blockId": "e20d0367-ccbc-42de-bde5-8183a4490be2",
+      "host": "nanit.com",
+      "pageType": "collection",
+      "pageUrl": "https://www.nanit.com/collections/accessories",
+      "viewport": "mobile",
+      "blockIndex": 4,
+      "typeHint": "footer",
+      "headline": null,
+      "text": "About Support Partnerships Resources Follow Us Facebook Instagram YouTube TikTok Pinterest LinkedIn Translation missing: en.general.social.links.threads",
+      "imageKey": "/nanit.com/collections-accessories/blocks/m-04-footer.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "nanit.com|https://nanit.com/|mobile|6",
+      "blockId": "12521f5f-1acd-45aa-bc79-2f8e354474ef",
+      "host": "nanit.com",
+      "pageType": "home",
+      "pageUrl": "https://nanit.com/",
+      "viewport": "mobile",
+      "blockIndex": 6,
+      "typeHint": "benefits-cards",
+      "headline": "A smart system makes a big difference",
+      "text": "A smart system makes a big difference Nanit helps you better understand your baby–from anywhere Crystal-clear connection You're always right there Safety notifications Know exactly what they need in real time Breathing Motion Monitoring Track breathing motion without sensors Advanced sleep insights Science-backed insights",
+      "imageKey": "/nanit.com/home/blocks/m-06-benefits-cards.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "nanit.com|https://www.nanit.com/products/cammies|mobile|3",
+      "blockId": "04367839-6e05-489d-a6b1-8ec54f81f209",
+      "host": "nanit.com",
+      "pageType": "product",
+      "pageUrl": "https://www.nanit.com/products/cammies",
+      "viewport": "mobile",
+      "blockIndex": 3,
+      "typeHint": "faq-enhanced",
+      "headline": "FAQs",
+      "text": "FAQs What are Cammies? What are Cammies made of? How do I clean my Cammies? Are Cammies safe for the nursery? How many Cammies characters are there? Can I swap out Cammies characters? Do Cammies affect how my Nanit Smart Baby Monitor works? Do Cammies block the Nanit camera? Can I change my Nanit camera cover? Can I buy more than one Cammie?",
+      "imageKey": "/nanit.com/products-cammies/blocks/m-03-faq-enhanced.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "oliveclothing.com|https://www.oliveclothing.com/categories/women/skirts-shorts|mobile|2",
+      "blockId": "05761295-3301-46de-ba79-f13cc97c66bd",
+      "host": "oliveclothing.com",
+      "pageType": "collection",
+      "pageUrl": "https://www.oliveclothing.com/categories/women/skirts-shorts",
+      "viewport": "mobile",
+      "blockIndex": 2,
+      "typeHint": "footer-webpages",
+      "headline": "Footer Start",
+      "text": "Footer Start SUBSCRIBE TO OUR NEWSLETTER Get the latest updates on new products and upcoming sales Website Email Address I'M SHOPPING Womenswear Menswear Both Delivery country United Kingdom © 2026 Olive",
+      "imageKey": "/oliveclothing.com/categories-women-skirts-shorts/blocks/m-02-footer-webpages.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "oliveclothing.com|https://oliveclothing.com/|desktop|4",
+      "blockId": "050b563b-dad8-42cf-9a51-17f89eb55b92",
+      "host": "oliveclothing.com",
+      "pageType": "home",
+      "pageUrl": "https://oliveclothing.com/",
+      "viewport": "desktop",
+      "blockIndex": 4,
+      "typeHint": "product",
+      "headline": "Women",
+      "text": "FEATURED WOMEN VIEW ALL VIEW IN MOTION FAYE RIBBONED VEST, BLACK £58.00 VIEW IN MOTION FAYE RIBBONED VEST, BLACK GINGHAM £54.00 VIEW IN MOTION OVERSIZE BOUCLE ROLL NECK JUMPER, BLACK £99.00 OVERSIZE BOUCLE ROLL NECK JUMPER, MOSS £99.00 OVERSIZE BOUCLE ROLL NECK JUMPER, PEBBLE £99.00 VIEW IN MOTION LOOSE FIT SOFT KNIT, FOREST £109.00 LOOSE FIT SOFT KNIT, WOOD £109.00 VIEW IN MOTION LOOSE FIT SOFT K",
+      "imageKey": "/oliveclothing.com/home/blocks/d-04-product.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "papyrusonline.com|https://papyrusonline.com/|mobile|3",
+      "blockId": "38d064b4-e11d-43f1-89f8-5a05c585fa04",
+      "host": "papyrusonline.com",
+      "pageType": "home",
+      "pageUrl": "https://papyrusonline.com/",
+      "viewport": "mobile",
+      "blockIndex": 3,
+      "typeHint": "footer",
+      "headline": null,
+      "text": "ABOUT RETAIL LOCATIONS ONLINE RETAIL PARTNERS FAQS DO NOT SELL OR SHARE MY INFO COOKIE SETTINGS",
+      "imageKey": "/papyrusonline.com/home/blocks/m-03-footer.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "shop.penguin.co.uk|https://shop.penguin.co.uk/products/groovy-chick-the-official-colouring-book-by-groovy-chick|mobile|2",
+      "blockId": "c4246a3d-f226-46c3-ac8e-c3d284521dd0",
+      "host": "shop.penguin.co.uk",
+      "pageType": "product",
+      "pageUrl": "https://shop.penguin.co.uk/products/groovy-chick-the-official-colouring-book-by-groovy-chick",
+      "viewport": "mobile",
+      "blockIndex": 2,
+      "typeHint": "section",
+      "headline": null,
+      "text": "",
+      "imageKey": "/shop.penguin.co.uk/products-groovy-chick-the-official-colouring-book-by-groovy-chick/blocks/m-02-section.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "store-usa.arduino.cc|https://store-usa.arduino.cc/collections/accessories|desktop|3",
+      "blockId": "8fbdbdbb-4e8a-41aa-aa64-bc8bf314aea3",
+      "host": "store-usa.arduino.cc",
+      "pageType": "collection",
+      "pageUrl": "https://store-usa.arduino.cc/collections/accessories",
+      "viewport": "desktop",
+      "blockIndex": 3,
+      "typeHint": "product",
+      "headline": "Arduino USB-C Hub (8 in 1)",
+      "text": "NEW! Arduino USB-C Hub (8 in 1) 8 Reviews Unlock the full potential of the UNO Q and other boards in the Arduino ecosystem with expanded physical interfaces. The official, 8-in-1 hub gives you the ports and connections needed for displays,... $16.34 4.9",
+      "imageKey": "/store-usa.arduino.cc/collections-accessories/blocks/d-03-product.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "store-usa.arduino.cc|https://store-usa.arduino.cc/|mobile|7",
+      "blockId": "a3fe6802-ef0a-48f0-98ea-d098ab0efc20",
+      "host": "store-usa.arduino.cc",
+      "pageType": "home",
+      "pageUrl": "https://store-usa.arduino.cc/",
+      "viewport": "mobile",
+      "blockIndex": 7,
+      "typeHint": "175319714256db168d",
+      "headline": null,
+      "text": "",
+      "imageKey": "/store-usa.arduino.cc/home/blocks/m-07-175319714256db168d.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "store-usa.arduino.cc|https://store-usa.arduino.cc/products/usb-c-power-supply-65w|mobile|3",
+      "blockId": "704ef84d-1ed1-46fe-b488-9ebfd8b83270",
+      "host": "store-usa.arduino.cc",
+      "pageType": "product",
+      "pageUrl": "https://store-usa.arduino.cc/products/usb-c-power-supply-65w",
+      "viewport": "mobile",
+      "blockIndex": 3,
+      "typeHint": "product",
+      "headline": "Arduino USB-C Power Supply (65W)",
+      "text": "Arduino USB-C Power Supply (65W) NEW! SKU TPX00256 Barcode 7630049206106 Show more Current price $28.00 Quantity ADD TO CART A 65 W multi-plug designed for compatibility with multiple countries, delivering stable, regulated power for demanding workloads. Share this: Share on Facebook Tweet on Twitter Share on LinkedIn Pin on Pinterest",
+      "imageKey": "/store-usa.arduino.cc/products-usb-c-power-supply-65w/blocks/m-03-product.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "store.dji.com|https://store.dji.com/shop/camera-drones?from=store_footer|mobile|2",
+      "blockId": "8cce3174-bccb-47a7-a1e9-8e14bbd3988c",
+      "host": "store.dji.com",
+      "pageType": "collection",
+      "pageUrl": "https://store.dji.com/shop/camera-drones?from=store_footer",
+      "viewport": "mobile",
+      "blockIndex": 2,
+      "typeHint": "unknown-part",
+      "headline": "Which Drone Is Right for Me?",
+      "text": "Which Drone Is Right for Me? Entry-Level Advanced Flagship Immersive Cinematic DJI Mini 3 DJI Flip DJI Neo DJI Mini 3 DJI Flip DJI Neo Premier Entry-Level Camera Drone All-in-One Vlog Camera Drone A Palm-Sized Drone for Vlogs From USD $419 From USD $439 From USD $169 Buy Now Buy Now Buy Now < 249 g Weight < 249 g Weight 135 g Weight 51 mins Max Flight Time 31 mins Max Flight Time 18 mins Max Fligh",
+      "imageKey": "/store.dji.com/shop-camera-drones-a10e7f/blocks/m-02-unknown-part.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "store.dji.com|https://store.dji.com/|mobile|4",
+      "blockId": "05838858-0a48-48be-82ae-a931b52c4297",
+      "host": "store.dji.com",
+      "pageType": "home",
+      "pageUrl": "https://store.dji.com/",
+      "viewport": "mobile",
+      "blockIndex": 4,
+      "typeHint": "unknown-part",
+      "headline": "Handheld · Pro Shooting",
+      "text": "Handheld · Pro Shooting DJI RS 5 Lightweight Commercial Stabilizer From USD $569 Buy Now 1 2 3 Compact and Lightweight Gimbal for Content Creators DJI RS 4 Mini From USD $309 1 2 3 Expansive Flagship Stabilizer DJI RS 4 Pro From USD $869 1 2 3 Cinema Camera DJI Ronin 4D-6K From USD $4,999 Buying guides Which Handheld Is Right for Me? All Accessories",
+      "imageKey": "/store.dji.com/home/blocks/m-04-unknown-part.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "store.duolingo.com|https://store.duolingo.com/collections/accessories|mobile|9",
+      "blockId": "81f9554d-2283-45c2-a895-4f5a532f6f43",
+      "host": "store.duolingo.com",
+      "pageType": "collection",
+      "pageUrl": "https://store.duolingo.com/collections/accessories",
+      "viewport": "mobile",
+      "blockIndex": 9,
+      "typeHint": "collection",
+      "headline": null,
+      "text": "Duo Plushie Blind Box Keychain Regular Price €15,95 - €173,95 EUR Duo Plushie Blind Box Keychain Product Price€15,95 - €173,95 EUR",
+      "imageKey": "/store.duolingo.com/collections-accessories/blocks/m-09-collection.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "store.duolingo.com|https://store.duolingo.com/|mobile|14",
+      "blockId": "f7453384-15f2-41e3-909c-0a0aae202de5",
+      "host": "store.duolingo.com",
+      "pageType": "home",
+      "pageUrl": "https://store.duolingo.com/",
+      "viewport": "mobile",
+      "blockIndex": 14,
+      "typeHint": "feature",
+      "headline": null,
+      "text": "Duo Blind Box Regular Price €13,95 - €155,95 EUR Duo Blind Box Product Price€13,95 - €155,95 EUR",
+      "imageKey": "/store.duolingo.com/home/blocks/m-14-feature.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "store.duolingo.com|https://store.duolingo.com/products/duolingo-chess-set|desktop|3",
+      "blockId": "034deeaf-a766-41a3-a2e3-a695f2827eaa",
+      "host": "store.duolingo.com",
+      "pageType": "product",
+      "pageUrl": "https://store.duolingo.com/products/duolingo-chess-set",
+      "viewport": "desktop",
+      "blockIndex": 3,
+      "typeHint": "product-recommendations",
+      "headline": "SUGGESTED PRODUCTS",
+      "text": "SUGGESTED PRODUCTS Oscar Plushie Regular price €28,95 EUR Oscar Plushie product price€28,95 EUR Duo Plushie Regular price €26,95 EUR Duo Plushie product price€26,95 EUR Duo Blind Box Regular price €13,95 - €155,95 EUR Duo Blind Box product price€13,95 - €155,95 EUR Sleepy Duo Touch Light Regular price €26,95 EUR Sleepy Duo Touch Light product price€26,95 EUR 1 2",
+      "imageKey": "/store.duolingo.com/products-duolingo-chess-set/blocks/d-03-product-recommendations.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "theordinary.com|https://theordinary.com/en-ca/category/best-sellers|desktop|1",
+      "blockId": "f97a7db2-e172-4b27-b435-985e63aed6b8",
+      "host": "theordinary.com",
+      "pageType": "collection",
+      "pageUrl": "https://theordinary.com/en-ca/category/best-sellers",
+      "viewport": "desktop",
+      "blockIndex": 1,
+      "typeHint": "product",
+      "headline": null,
+      "text": "Recommended For You Lacto-PDRN* 4% + B9 Eye Cream Squalane Cleanser Daily Hydration Bottle AHA 30% + BHA 2% Peeling Solution Salicylic Acid 2% Solution",
+      "imageKey": "/theordinary.com/en-ca-category-best-sellers/blocks/d-01-product.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "theordinary.com|https://theordinary.com/|desktop|4",
+      "blockId": "4f3ed3d7-736c-43d0-b333-209b3c05fe85",
+      "host": "theordinary.com",
+      "pageType": "home",
+      "pageUrl": "https://theordinary.com/",
+      "viewport": "desktop",
+      "blockIndex": 4,
+      "typeHint": "feature",
+      "headline": "Discover In-Store Consultations",
+      "text": "Discover In-Store Consultations One-on-one consultations have arrived. Book an appointment for expert guidance and personalized recommendations tailored to your skin's needs. Learn More Book Now",
+      "imageKey": "/theordinary.com/home/blocks/d-04-feature.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "typology.com|https://global.typology.com/collections/best-sellers|desktop|1",
+      "blockId": "5cdec6e7-fb45-478d-a39b-1956f3ebf8dc",
+      "host": "typology.com",
+      "pageType": "collection",
+      "pageUrl": "https://global.typology.com/collections/best-sellers",
+      "viewport": "desktop",
+      "blockIndex": 1,
+      "typeHint": "unknown-part",
+      "headline": "Bestsellers",
+      "text": "HomeBest sellers BEST SELLERS Our customers' most-loved face, body, hand and hair care. As with all Typology products, these best-sellers have been formulated without irritating parabens, phenoxyethanol, paraffin oil or sulphates.",
+      "imageKey": "/typology.com/collections-best-sellers/blocks/d-01-unknown-part.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "typology.com|https://typology.com/|desktop|7",
+      "blockId": "847e5dd4-aaee-47fe-b87b-1d21f11b7503",
+      "host": "typology.com",
+      "pageType": "home",
+      "pageUrl": "https://typology.com/",
+      "viewport": "desktop",
+      "blockIndex": 7,
+      "typeHint": "unknown",
+      "headline": null,
+      "text": "Understand your skin and its complex needs. BEGIN DIAGNOSTIC TEST",
+      "imageKey": "/typology.com/home/blocks/d-07-unknown.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "typology.com|https://global.typology.com/products/regenerating-micro-spicules-serum-pdrn-egf-complex|desktop|3",
+      "blockId": "a159b8a5-153d-47d1-ad36-04004cdacbff",
+      "host": "typology.com",
+      "pageType": "product",
+      "pageUrl": "https://global.typology.com/products/regenerating-micro-spicules-serum-pdrn-egf-complex",
+      "viewport": "desktop",
+      "blockIndex": 3,
+      "typeHint": "unknown",
+      "headline": "How to apply the Regenerating Micro-Spicules Serum A63?",
+      "text": "All your frequently asked questions about Regenerating Micro-Spicules Serum — 3% PDRN-EGF Complex How to apply the Regenerating Micro-Spicules Serum A63? Who is the Regenerating Micro-Spicules Serum A63 for? Is the Regenerating Micro-Spicules Serum A63 suitable for pregnant or breastfeeding women? Is it normal to feel a tingling sensation when applying? Does the Regenerating Micro-Spicules Serum A",
+      "imageKey": "/typology.com/products-regenerating-micro-spicules-serum-pdrn-egf-complex/blocks/d-03-unknown.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "anker.com|https://www.anker.com/collections/all-products-charging|desktop|1",
+      "blockId": "3ba3f62a-1263-44bd-b404-c4b561399221",
+      "host": "anker.com",
+      "pageType": "collection",
+      "pageUrl": "https://www.anker.com/collections/all-products-charging",
+      "viewport": "desktop",
+      "blockIndex": 1,
+      "typeHint": "header",
+      "headline": null,
+      "text": "Power Bank Charger Wireless Charger Cable AC Power Hubs & Docks Series Shop By Member Benefits Explore & Support",
+      "imageKey": "/anker.com/collections-all-products-charging/blocks/d-01-header.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "charlottetilbury.com|https://charlottetilbury.com/|desktop|2",
+      "blockId": "86ea5e9a-701e-4cb5-bb3d-e7b11eba6bd1",
+      "host": "charlottetilbury.com",
+      "pageType": "home",
+      "pageUrl": "https://charlottetilbury.com/",
+      "viewport": "desktop",
+      "blockIndex": 2,
+      "typeHint": "product",
+      "headline": "AIRBRUSH FLAWLESS SETTING SPRAYOriginal 100 ml",
+      "text": "Shop Best Sellers AIRBRUSH FLAWLESS SETTING SPRAY Original 100 ml £33.00 £26.40 ADD TO BAG AIRBRUSH FLAWLESS FINISH 1 Fair £40.00 £32.00 ADD TO BAG HOLLYWOOD FLAWLESS FILTER 4 Medium £40.00 £32.00 ADD TO BAG MINI PILLOW TALK LIP KIT Pillow Talk Original £21.00 £16.80 ADD TO BAG AWARD WINNING BEAUTIFUL SKIN SUN-KISSED GLOW BRONZER 2 Medium £47.00 £37.60 ADD TO BAG UNREAL SKIN SHEER GLOW TINT HYDRAT",
+      "imageKey": "/charlottetilbury.com/home/blocks/d-02-product.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "copperandbrass.net|https://www.copperandbrass.net/category/all-products|desktop|6",
+      "blockId": "b242f989-e1a7-4f11-b975-657ca90f8221",
+      "host": "copperandbrass.net",
+      "pageType": "collection",
+      "pageUrl": "https://www.copperandbrass.net/category/all-products",
+      "viewport": "desktop",
+      "blockIndex": 6,
+      "typeHint": "footer",
+      "headline": "We Are So Much More Than Stationery",
+      "text": "COPPER & BRASS PAPER GOODS We Are So Much More Than Stationery Quick Links About Shipping & Policies Address Warner Robins, GA 31088 sales@copperandbrass.net Opening Hours Mon - Fri:8AM- 5PM Privacy Policy Contact © 2026 by Copper and Brass Paper Goods",
+      "imageKey": "/copperandbrass.net/category-all-products/blocks/d-06-footer.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "copperandbrass.net|https://copperandbrass.net/|mobile|1",
+      "blockId": "5a6a7565-a20b-4679-8939-415112ce8f67",
+      "host": "copperandbrass.net",
+      "pageType": "home",
+      "pageUrl": "https://copperandbrass.net/",
+      "viewport": "mobile",
+      "blockIndex": 1,
+      "typeHint": "header",
+      "headline": null,
+      "text": "COPPER & BRASS PAPER GOODS",
+      "imageKey": "/copperandbrass.net/home/blocks/m-01-header.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "farrow-ball.com|https://farrow-ball.com/|desktop|2",
+      "blockId": "f5771c31-926b-4f26-9112-8cf0264284b8",
+      "host": "farrow-ball.com",
+      "pageType": "home",
+      "pageUrl": "https://farrow-ball.com/",
+      "viewport": "desktop",
+      "blockIndex": 2,
+      "typeHint": "footer",
+      "headline": null,
+      "text": "About Us Responsibility Sign Up to Our Emails Social Media Press Become An Affiliate Events Careers Gender Pay Report Modern Slavery Act Diversity, Equity and Inclusion Customer Services Delivery & Returns Help & FAQs Contact Us Klarna Farrow & Ball Showrooms Become a Stockist Accessibility Statement Terms & Conditions Privacy Notice Cookie Policy & Online Security Follow Us Pay Securely © 2026 Fa",
+      "imageKey": "/farrow-ball.com/home/blocks/d-02-footer.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "melula.com|https://melula.com/|desktop|1",
+      "blockId": "67906b4e-905d-4ec9-bee4-6e9772c0211c",
+      "host": "melula.com",
+      "pageType": "home",
+      "pageUrl": "https://melula.com/",
+      "viewport": "desktop",
+      "blockIndex": 1,
+      "typeHint": "header",
+      "headline": null,
+      "text": "SHOPABOUT 0",
+      "imageKey": "/melula.com/home/blocks/d-01-header.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "myzoobox.com|https://myzoobox.com/collections/edventures|desktop|3",
+      "blockId": "4498256b-4e31-493a-afb4-534408cf5556",
+      "host": "myzoobox.com",
+      "pageType": "collection",
+      "pageUrl": "https://myzoobox.com/collections/edventures",
+      "viewport": "desktop",
+      "blockIndex": 3,
+      "typeHint": "product-grid",
+      "headline": "Filter:",
+      "text": "Filter: Availability Price Sort by: Featured Most relevant Best selling Alphabetically, A-Z Alphabetically, Z-A Price, low to high Price, high to low Date, old to new Date, new to old 9 products Cheetah EDventure Regular price $39.95 USD Dolphin EDventure Regular price $39.95 USD Meerkat EDventure Regular price $39.95 USD Skunk EDventure Regular price $39.95 USD Hippopotamus EDventure Regular pric",
+      "imageKey": "/myzoobox.com/collections-edventures/blocks/d-03-product-grid.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "myzoobox.com|https://myzoobox.com/|desktop|1",
+      "blockId": "bdf15b98-4415-417c-87ca-4b2d71897bd8",
+      "host": "myzoobox.com",
+      "pageType": "home",
+      "pageUrl": "https://myzoobox.com/",
+      "viewport": "desktop",
+      "blockIndex": 1,
+      "typeHint": "header",
+      "headline": null,
+      "text": "🎁 Get Your First Box for Free with code FREEBOX View Details × Subscriptions Gifting School Orders The ZOO Store Start Now Member Area × OUR CLUBS Cub Club Ages 3 – 5 Zoologist Club Ages 5 – 12 POPULAR SEARCHES 🐬 Dolphin 🦈 Shark 🦁 Lion 🐧 Penguin 🐘 Elephant 🌊 Ocean 🦕 Dinosaur 💬 Support × Start Exploring → Subscriptions Gifting School Orders The ZOO Store Member Area",
+      "imageKey": "/myzoobox.com/home/blocks/d-01-header.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "myzoobox.com|https://myzoobox.com/products/zoologist-club-sibling-kit-easy-reader-3-month-plan|desktop|3",
+      "blockId": "e2693fbf-2b5b-4e44-8b9e-21bf03556bdb",
+      "host": "myzoobox.com",
+      "pageType": "product",
+      "pageUrl": "https://myzoobox.com/products/zoologist-club-sibling-kit-easy-reader-3-month-plan",
+      "viewport": "desktop",
+      "blockIndex": 3,
+      "typeHint": "product",
+      "headline": null,
+      "text": "Description Reviews No description available.",
+      "imageKey": "/myzoobox.com/products-zoologist-club-sibling-kit-easy-reader-3-month-plan/blocks/d-03-product.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "nanit.com|https://www.nanit.com/collections/accessories|desktop|2",
+      "blockId": "b1307f6c-3720-4f78-98aa-3c42131616d2",
+      "host": "nanit.com",
+      "pageType": "collection",
+      "pageUrl": "https://www.nanit.com/collections/accessories",
+      "viewport": "desktop",
+      "blockIndex": 2,
+      "typeHint": "main-collection-banner",
+      "headline": "Accessories",
+      "text": "Accessories",
+      "imageKey": "/nanit.com/collections-accessories/blocks/d-02-main-collection-banner.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "nanit.com|https://nanit.com/|desktop|1",
+      "blockId": "f300961f-d899-4833-bc46-6caf496201be",
+      "host": "nanit.com",
+      "pageType": "home",
+      "pageUrl": "https://nanit.com/",
+      "viewport": "desktop",
+      "blockIndex": 1,
+      "typeHint": "header",
+      "headline": null,
+      "text": "Nanit Shop Shop Smart Baby Monitor Smart Baby Monitor Features Features Resources Resources Share $100 off, Get $20 Share $100 off, Get $20 Login Search Cart",
+      "imageKey": "/nanit.com/home/blocks/d-01-header.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "nanit.com|https://www.nanit.com/products/cammies|mobile|2",
+      "blockId": "581649db-9e04-4d5c-b70c-17f77d0d5fea",
+      "host": "nanit.com",
+      "pageType": "product",
+      "pageUrl": "https://www.nanit.com/products/cammies",
+      "viewport": "mobile",
+      "blockIndex": 2,
+      "typeHint": "main-product",
+      "headline": "Cammies",
+      "text": "Cammies $24.99 A NANIT.COM EXCLUSIVE The perfect pairing with the Nanit Smart Baby Video Monitor, Cammies gives your camera a friendly new face without getting in the way of the features parents rely on. Your favorite smart baby video monitor, now with a cover designed to bring more smiles from above. Can't pick a favorite? Bring all the friends home with a Cammies 4-pack. Animal Animal: Blinky Bu",
+      "imageKey": "/nanit.com/products-cammies/blocks/m-02-main-product.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "oliveclothing.com|https://oliveclothing.com/|desktop|3",
+      "blockId": "428e5589-eb4c-42bf-9a27-cbf6f3b9d679",
+      "host": "oliveclothing.com",
+      "pageType": "home",
+      "pageUrl": "https://oliveclothing.com/",
+      "viewport": "desktop",
+      "blockIndex": 3,
+      "typeHint": "product",
+      "headline": "Selected From The Current Edit",
+      "text": "A CLOSER LOOK SELECTED FROM THE CURRENT EDIT TOPS Faye Ribboned Vest, Black A sleeveless top in crisp black cotton with a softly flared A-line silhouette and structured feel. Designed with thick contrast-trim ribbon ties and subtle hem splits for a clean yet playful finish. S/M is best... £58.00 Shop the Piece MORE TO CONSIDER VIEW IN MOTION FAYE RIBBONED VEST, BLACK GINGHAM £54.00 VIEW IN MOTION",
+      "imageKey": "/oliveclothing.com/home/blocks/d-03-product.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "papyrusonline.com|https://papyrusonline.com/|mobile|1",
+      "blockId": "000ac4ad-6f19-4532-bd6b-fe316b6c6b81",
+      "host": "papyrusonline.com",
+      "pageType": "home",
+      "pageUrl": "https://papyrusonline.com/",
+      "viewport": "mobile",
+      "blockIndex": 1,
+      "typeHint": "header",
+      "headline": null,
+      "text": "CelebrationsExpand Summer Shop Birthday Wedding Baby Candles LifestyleExpand View All What to Write Series Articles Featured Artists Featured Collections About UsExpand Our Story Our Greeting Card Treatments Sustainability Our BCRF Partnership Testimonials Retail Locator Search Search Close search Open search Account Shopping Cart 0 GREETING CARDS & STATIONERYExpand CategoryExpand Greeting Cards S",
+      "imageKey": "/papyrusonline.com/home/blocks/m-01-header.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "shop.penguin.co.uk|https://shop.penguin.co.uk/products/groovy-chick-the-official-colouring-book-by-groovy-chick|mobile|6",
+      "blockId": "9477f968-99b5-41ca-bafb-cf6c62cfaed4",
+      "host": "shop.penguin.co.uk",
+      "pageType": "product",
+      "pageUrl": "https://shop.penguin.co.uk/products/groovy-chick-the-official-colouring-book-by-groovy-chick",
+      "viewport": "mobile",
+      "blockIndex": 6,
+      "typeHint": "section",
+      "headline": null,
+      "text": "Penguin Books Limited A Penguin Random House Company. © 1995 - 2026 Penguin Books Ltd. Registered number: 861590 England. Registered office: One Embassy Gardens, 8 Viaduct Gardens, London, SW11 7BW, UK.",
+      "imageKey": "/shop.penguin.co.uk/products-groovy-chick-the-official-colouring-book-by-groovy-chick/blocks/m-06-section.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "store-usa.arduino.cc|https://store-usa.arduino.cc/collections/accessories|mobile|8",
+      "blockId": "e4e0d819-e6f7-4648-ac4d-d60308d408de",
+      "host": "store-usa.arduino.cc",
+      "pageType": "collection",
+      "pageUrl": "https://store-usa.arduino.cc/collections/accessories",
+      "viewport": "mobile",
+      "blockIndex": 8,
+      "typeHint": "product",
+      "headline": "Engineering Kit Motors Backup",
+      "text": "Engineering Kit Motors Backup 1 Review Arduino Engineering Kit R2 contains all the components students need to complete each project, but we know that in the excitement of using the kit, the motors may sometimes burn, break or simply ge... $46.10 4.0",
+      "imageKey": "/store-usa.arduino.cc/collections-accessories/blocks/m-08-product.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "store-usa.arduino.cc|https://store-usa.arduino.cc/|mobile|1",
+      "blockId": "dc7f1be1-3411-43d7-abab-a6aacd06e9cd",
+      "host": "store-usa.arduino.cc",
+      "pageType": "home",
+      "pageUrl": "https://store-usa.arduino.cc/",
+      "viewport": "mobile",
+      "blockIndex": 1,
+      "typeHint": "pxs-slideshow",
+      "headline": "Arduino® VENTUNO™ Q is available now!",
+      "text": "Arduino® VENTUNO™ Q is available now! WHERE AI TAKES ACTION PRE-ORDER NOW DISCOVER THE PRODUCT Arduino® UNO™ Q One board. Linux computing power, Arduino open-source ecosystem and real time control to accelerate your development pipeline and cut down your total deployment costs UNO Q 2GB UNO Q 4GB Arduino® UNO™ Media Carrier Superpower vision, display and audio applications! BUY NOW Slide 1 Slide 2",
+      "imageKey": "/store-usa.arduino.cc/home/blocks/m-01-pxs-slideshow.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "store-usa.arduino.cc|https://store-usa.arduino.cc/products/usb-c-power-supply-65w|desktop|1",
+      "blockId": "90024244-c289-4d29-9520-da700d0cf734",
+      "host": "store-usa.arduino.cc",
+      "pageType": "product",
+      "pageUrl": "https://store-usa.arduino.cc/products/usb-c-power-supply-65w",
+      "viewport": "desktop",
+      "blockIndex": 1,
+      "typeHint": "static-product",
+      "headline": "Arduino USB-C Power Supply (65W)",
+      "text": "Home Arduino USB-C Power Supply (65W) Click to expand Arduino USB-C Power Supply (65W) NEW! SKU TPX00256 Barcode 7630049206106 Show more Current price $28.00 Quantity ADD TO CART ADD TO WISHLIST A 65 W multi-plug designed for compatibility with multiple countries, delivering stable, regulated power for demanding workloads. Share this: Share on Facebook Tweet on Twitter Share on LinkedIn Pin on Pin",
+      "imageKey": "/store-usa.arduino.cc/products-usb-c-power-supply-65w/blocks/d-01-static-product.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "store.dji.com|https://store.dji.com/shop/camera-drones?from=store_footer|mobile|4",
+      "blockId": "2e659e34-e615-4bf1-83b9-252d189499a7",
+      "host": "store.dji.com",
+      "pageType": "collection",
+      "pageUrl": "https://store.dji.com/shop/camera-drones?from=store_footer",
+      "viewport": "mobile",
+      "blockIndex": 4,
+      "typeHint": "unknown-part",
+      "headline": "Camera Drones Playbook",
+      "text": "Camera Drones Playbook Essential Accessories for DJI Avata 2 Get the MOST Out of Your New FPV Drone DJI Avata First Use Tutorials Videos, FAQ and More Mini 4 Pro: A Skyward Upgrade! DJI Mini 4 Pro soars with our latest firmware The Ultimate Mavic 3 Series Accessory Guide With these must-have accessories, the sky is the limit Mavic 3 Series and Mini 3 Pro Now Support FPV Thrilling, Immersive Flight",
+      "imageKey": "/store.dji.com/shop-camera-drones-a10e7f/blocks/m-04-unknown-part.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "store.dji.com|https://store.dji.com/|desktop|1",
+      "blockId": "98d78854-74ff-4eaf-ac0a-0d6bb3e83f33",
+      "host": "store.dji.com",
+      "pageType": "home",
+      "pageUrl": "https://store.dji.com/",
+      "viewport": "desktop",
+      "blockIndex": 1,
+      "typeHint": "unknown",
+      "headline": "Home page",
+      "text": "Home page Top Picks Explore our top-selling gear and upgrade your setup. Shop Now Revolutionary Image Quality Action Camera Shop Now Action Camera with Best-in-Class Image Quality Shop Now Compact and Lightweight Gimbal for Content Creators Shop Now DJI Air Osmo Action Ronin Stabilizers DJI Power DJI Mic Ronin Cinema Cameras Pro Accessories Osmo Pocket Osmo 360 Osmo Mobile DJI Mavic DJI Mini DJI F",
+      "imageKey": "/store.dji.com/home/blocks/d-01-unknown.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "store.duolingo.com|https://store.duolingo.com/collections/accessories|mobile|21",
+      "blockId": "0573f4c8-653e-4671-9a4f-a6c5581aeec5",
+      "host": "store.duolingo.com",
+      "pageType": "collection",
+      "pageUrl": "https://store.duolingo.com/collections/accessories",
+      "viewport": "mobile",
+      "blockIndex": 21,
+      "typeHint": "collection",
+      "headline": null,
+      "text": "Duo Beach Ball Regular Price €26,95 EUR Duo Beach Ball Product Price€26,95 EUR",
+      "imageKey": "/store.duolingo.com/collections-accessories/blocks/m-21-collection.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "store.duolingo.com|https://store.duolingo.com/|mobile|11",
+      "blockId": "470583e0-45d0-458b-94fb-797d6e8a23e8",
+      "host": "store.duolingo.com",
+      "pageType": "home",
+      "pageUrl": "https://store.duolingo.com/",
+      "viewport": "mobile",
+      "blockIndex": 11,
+      "typeHint": "feature",
+      "headline": null,
+      "text": "Anime Duo Plushie Regular Price €30,95 EUR Anime Duo Plushie Product Price€30,95 EUR",
+      "imageKey": "/store.duolingo.com/home/blocks/m-11-feature.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "store.duolingo.com|https://store.duolingo.com/products/duolingo-chess-set|mobile|3",
+      "blockId": "eb05b545-95cc-4e46-858c-4bf46706732f",
+      "host": "store.duolingo.com",
+      "pageType": "product",
+      "pageUrl": "https://store.duolingo.com/products/duolingo-chess-set",
+      "viewport": "mobile",
+      "blockIndex": 3,
+      "typeHint": "product-recommendations",
+      "headline": "SUGGESTED PRODUCTS",
+      "text": "SUGGESTED PRODUCTS Oscar Plushie Regular price €28,95 EUR Oscar Plushie product price€28,95 EUR Duo Plushie Regular price €26,95 EUR Duo Plushie product price€26,95 EUR Duo Blind Box Regular price €13,95 - €155,95 EUR Duo Blind Box product price€13,95 - €155,95 EUR Sleepy Duo Touch Light Regular price €26,95 EUR Sleepy Duo Touch Light product price€26,95 EUR",
+      "imageKey": "/store.duolingo.com/products-duolingo-chess-set/blocks/m-03-product-recommendations.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "theordinary.com|https://theordinary.com/en-ca/category/best-sellers|desktop|3",
+      "blockId": "a9c7cdce-54c8-4878-82c6-ec8e579dcaeb",
+      "host": "theordinary.com",
+      "pageType": "collection",
+      "pageUrl": "https://theordinary.com/en-ca/category/best-sellers",
+      "viewport": "desktop",
+      "blockIndex": 3,
+      "typeHint": "unknown",
+      "headline": null,
+      "text": "",
+      "imageKey": "/theordinary.com/en-ca-category-best-sellers/blocks/d-03-unknown.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "theordinary.com|https://theordinary.com/|mobile|1",
+      "blockId": "83688d19-58af-4f17-a743-7487053bfdc9",
+      "host": "theordinary.com",
+      "pageType": "home",
+      "pageUrl": "https://theordinary.com/",
+      "viewport": "mobile",
+      "blockIndex": 1,
+      "typeHint": "header",
+      "headline": null,
+      "text": "Skip to main content Skip to footer content Previous CARBON NEUTRAL SHIPPING ON ALL ORDERS. YOUR ACCOUNT HAS A NEW LOOK. LOG IN TO EXPLORE UPDATES. COMPLIMENTARY SHIPPING ON ORDERS OVER 25 CAD CARBON NEUTRAL SHIPPING ON ALL ORDERS. YOUR ACCOUNT HAS A NEW LOOK. LOG IN TO EXPLORE UPDATES. COMPLIMENTARY SHIPPING ON ORDERS OVER 25 CAD CARBON NEUTRAL SHIPPING ON ALL ORDERS. Next Login 0 Close Login 0 F",
+      "imageKey": "/theordinary.com/home/blocks/m-01-header.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "typology.com|https://global.typology.com/collections/best-sellers|desktop|4",
+      "blockId": "274c4d02-fa50-41a2-bd31-11eb71ac25c0",
+      "host": "typology.com",
+      "pageType": "collection",
+      "pageUrl": "https://global.typology.com/collections/best-sellers",
+      "viewport": "desktop",
+      "blockIndex": 4,
+      "typeHint": "footer",
+      "headline": null,
+      "text": "ABOUT FEWER INGREDIENTS, HIGHER STANDARDS 100% MADE IN FRANCE YOUR TRUST IN US ALWAYS IMPROVING JOBS AFFILIATION HELP FREQUENTLY ASKED QUESTIONS ORDERS AND DELIVERY TERMS OF SALES GET IN TOUCH PRIVACY POLICY Change delivery country GLOBAL Follow us on Instagram and Tiktok",
+      "imageKey": "/typology.com/collections-best-sellers/blocks/d-04-footer.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "typology.com|https://typology.com/|mobile|10",
+      "blockId": "da365908-88ee-49e8-a574-be31bd664d2e",
+      "host": "typology.com",
+      "pageType": "home",
+      "pageUrl": "https://typology.com/",
+      "viewport": "mobile",
+      "blockIndex": 10,
+      "typeHint": "footer",
+      "headline": null,
+      "text": "ABOUT HELP Change delivery country GLOBAL Follow us on Instagram and Tiktok",
+      "imageKey": "/typology.com/home/blocks/m-10-footer.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "anker.com|https://www.anker.com/collections/power-banks?ref=image_category_banner|mobile|3",
+      "blockId": "beedc6d6-f759-4d93-9ff5-1ac8da044429",
+      "host": "anker.com",
+      "pageType": "collection",
+      "pageUrl": "https://www.anker.com/collections/power-banks?ref=image_category_banner",
+      "viewport": "mobile",
+      "blockIndex": 3,
+      "typeHint": "product-part",
+      "headline": null,
+      "text": "Open filter Sort Recommended 37 Item(s) Found",
+      "imageKey": "/anker.com/collections-power-banks-ee151e/blocks/m-03-product-part.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "charlottetilbury.com|https://charlottetilbury.com/|mobile|1",
+      "blockId": "b273ccbe-007b-4617-89e9-2432cd56a9b2",
+      "host": "charlottetilbury.com",
+      "pageType": "home",
+      "pageUrl": "https://charlottetilbury.com/",
+      "viewport": "mobile",
+      "blockIndex": 1,
+      "typeHint": "header",
+      "headline": "Charlotte Tilbury",
+      "text": "0 Charlotte Tilbury Search product, shade, colour",
+      "imageKey": "/charlottetilbury.com/home/blocks/m-01-header.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "copperandbrass.net|https://www.copperandbrass.net/category/all-products|mobile|6",
+      "blockId": "e8f054ae-5077-4f4a-ac28-efd43437f3e3",
+      "host": "copperandbrass.net",
+      "pageType": "collection",
+      "pageUrl": "https://www.copperandbrass.net/category/all-products",
+      "viewport": "mobile",
+      "blockIndex": 6,
+      "typeHint": "footer",
+      "headline": "We Are So Much More Than Stationery",
+      "text": "COPPER & BRASS PAPER GOODS We Are So Much More Than Stationery sales@copperandbrass.net Address Warner Robins, GA 31088 Opening Hours Mon - Fri:8AM- 5PM Quick Links About Privacy Policy Contact Shipping & Policies © 2026 by Copper and Brass Paper Goods",
+      "imageKey": "/copperandbrass.net/category-all-products/blocks/m-06-footer.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "melula.com|https://melula.com/|desktop|4",
+      "blockId": "e7fd7c1f-191d-4573-96c8-d682f70c5c8a",
+      "host": "melula.com",
+      "pageType": "home",
+      "pageUrl": "https://melula.com/",
+      "viewport": "desktop",
+      "blockIndex": 4,
+      "typeHint": "unknown",
+      "headline": "Melula Kids shoes",
+      "text": "Melula Kids shoes Melula a Copenhagen based kids fashion brand. Colourful, playfull and gender neutral. Designed in Denmark, produced in Portugal. Read our story.",
+      "imageKey": "/melula.com/home/blocks/d-04-unknown.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "myzoobox.com|https://myzoobox.com/|mobile|9",
+      "blockId": "a694219d-de62-466f-b79c-828980d9d632",
+      "host": "myzoobox.com",
+      "pageType": "home",
+      "pageUrl": "https://myzoobox.com/",
+      "viewport": "mobile",
+      "blockIndex": 9,
+      "typeHint": "zoo-home-part",
+      "headline": "Not ready to commit?",
+      "text": "No subscription needed Not ready to commit? Try a single animal EDventure or a themed bundle. Same box, same hands-on projects, one-time purchase. Browse the ZOO Store",
+      "imageKey": "/myzoobox.com/home/blocks/m-09-zoo-home-part.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "nanit.com|https://www.nanit.com/collections/accessories|desktop|3",
+      "blockId": "e35e0aa8-0917-4682-8c96-3c71bd06e7cd",
+      "host": "nanit.com",
+      "pageType": "collection",
+      "pageUrl": "https://www.nanit.com/collections/accessories",
+      "viewport": "desktop",
+      "blockIndex": 3,
+      "typeHint": "main-collection-part",
+      "headline": null,
+      "text": "Add to cart Floor Stand $100.00 White Add to cart Wall Mount $100.00 White Add to cart Flex Stand $49.00 White Add to cart Home 8\" Display $179.00 White Choose options Cammies $24.99 Add to cart Cammies 4-Pack $69.00 Add to cart Sound + Light $99.99 White Choose options Travel Case $29.99 Two Tone Canvas Green Blue Gray Choose options Clearance Travel Case $29.99 Abstract Stripe Half Moon Marble G",
+      "imageKey": "/nanit.com/collections-accessories/blocks/d-03-main-collection-part.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "nanit.com|https://nanit.com/|mobile|7",
+      "blockId": "1bc01c7c-6e54-44cb-858f-5c33572157c2",
+      "host": "nanit.com",
+      "pageType": "home",
+      "pageUrl": "https://nanit.com/",
+      "viewport": "mobile",
+      "blockIndex": 7,
+      "typeHint": "lookbook",
+      "headline": "Invest in a nursery you'll love for years",
+      "text": "Invest in a nursery you'll love for years Upgrade your baby's space with one cost-effective bundle",
+      "imageKey": "/nanit.com/home/blocks/m-07-lookbook.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "nanit.com|https://www.nanit.com/products/cammies|desktop|2",
+      "blockId": "2877f6d8-f4fd-4fcd-a628-3d5daaeab141",
+      "host": "nanit.com",
+      "pageType": "product",
+      "pageUrl": "https://www.nanit.com/products/cammies",
+      "viewport": "desktop",
+      "blockIndex": 2,
+      "typeHint": "main-product",
+      "headline": "Cammies",
+      "text": "Overview & Specs Cammies $24.99 A NANIT.COM EXCLUSIVE The perfect pairing with the Nanit Smart Baby Video Monitor, Cammies gives your camera a friendly new face without getting in the way of the features parents rely on. Your favorite smart baby video monitor, now with a cover designed to bring more smiles from above. Can't pick a favorite? Bring all the friends home with a Cammies 4-pack. Animal",
+      "imageKey": "/nanit.com/products-cammies/blocks/d-02-main-product.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "oliveclothing.com|https://oliveclothing.com/|mobile|2",
+      "blockId": "5c5d5ae8-422d-4dc9-8d3b-94bcb9da841a",
+      "host": "oliveclothing.com",
+      "pageType": "home",
+      "pageUrl": "https://oliveclothing.com/",
+      "viewport": "mobile",
+      "blockIndex": 2,
+      "typeHint": "hero",
+      "headline": null,
+      "text": "",
+      "imageKey": "/oliveclothing.com/home/blocks/m-02-hero.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "shop.penguin.co.uk|https://shop.penguin.co.uk/products/groovy-chick-the-official-colouring-book-by-groovy-chick|desktop|5",
+      "blockId": "ad0a1f75-f7ae-435a-9042-de7f75055287",
+      "host": "shop.penguin.co.uk",
+      "pageType": "product",
+      "pageUrl": "https://shop.penguin.co.uk/products/groovy-chick-the-official-colouring-book-by-groovy-chick",
+      "viewport": "desktop",
+      "blockIndex": 5,
+      "typeHint": "footer",
+      "headline": null,
+      "text": "Help Help About Penguin Shop Contact Us FAQs Account Useful Information Useful Information Delivery & Returns Privacy Policy Terms & Conditions Sustainability Follow Penguin Follow Penguin Visit the Penguin website Gift Cards Gift Cards Shop Gift Cards Facebook Instagram Twitter",
+      "imageKey": "/shop.penguin.co.uk/products-groovy-chick-the-official-colouring-book-by-groovy-chick/blocks/d-05-footer.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "store-usa.arduino.cc|https://store-usa.arduino.cc/collections/accessories|desktop|6",
+      "blockId": "8108c7a8-adf4-4475-abc4-ae6fadffdd63",
+      "host": "store-usa.arduino.cc",
+      "pageType": "collection",
+      "pageUrl": "https://store-usa.arduino.cc/collections/accessories",
+      "viewport": "desktop",
+      "blockIndex": 6,
+      "typeHint": "product",
+      "headline": "Female Headers 14 ways Arduino MKR1000 Printed",
+      "text": "Female Headers 14 ways Arduino MKR1000 Printed 14 pin Female Headers MKR1000 printed, we use them extensively on Large MKR Proto Shield PCB. Features: Receptacle Style: Square Number of Ways/Pins: 14 Pin Spacing: 2.54 mm Component Height: Plast... $1.50",
+      "imageKey": "/store-usa.arduino.cc/collections-accessories/blocks/d-06-product.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "store-usa.arduino.cc|https://store-usa.arduino.cc/|mobile|6",
+      "blockId": "52674a50-453b-41e4-8210-dcf74a521700",
+      "host": "store-usa.arduino.cc",
+      "pageType": "home",
+      "pageUrl": "https://store-usa.arduino.cc/",
+      "viewport": "mobile",
+      "blockIndex": 6,
+      "typeHint": "d2700cb0-8c81-4dfa-b52a-ffa74b4ce",
+      "headline": "Discover Arduino Cloud plans and bundles",
+      "text": "Discover Arduino Cloud plans and bundles Build smart connected projects and access to advanced features like OTA updates, triggers, notifications, and extended data storage. EXPLORE NOW",
+      "imageKey": "/store-usa.arduino.cc/home/blocks/m-06-d2700cb0-8c81-4dfa-b52a-ffa74b4ce.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "store-usa.arduino.cc|https://store-usa.arduino.cc/products/usb-c-power-supply-65w|mobile|2",
+      "blockId": "6b47831c-9062-4474-a458-a63c4b1e4c11",
+      "host": "store-usa.arduino.cc",
+      "pageType": "product",
+      "pageUrl": "https://store-usa.arduino.cc/products/usb-c-power-supply-65w",
+      "viewport": "mobile",
+      "blockIndex": 2,
+      "typeHint": "product",
+      "headline": "Overview",
+      "text": "Overview Unlock the full potential of Arduino® VENTUNO™ Q and other boards in the Arduino ecosystem with stable and regulated power delivery, tested by Arduino itself for maximum reliability – and superior protection of your hardware from power fluctuations. This official 65 W multi-plug is compatible with standard sockets in the EU, UK, US, China, Japan, India and other Asian countries, to keep y",
+      "imageKey": "/store-usa.arduino.cc/products-usb-c-power-supply-65w/blocks/m-02-product.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "store.dji.com|https://store.dji.com/shop/camera-drones?from=store_footer|mobile|1",
+      "blockId": "ea5d0116-c47f-4d8c-89b2-6c8247b5de98",
+      "host": "store.dji.com",
+      "pageType": "collection",
+      "pageUrl": "https://store.dji.com/shop/camera-drones?from=store_footer",
+      "viewport": "mobile",
+      "blockIndex": 1,
+      "typeHint": "unknown-part",
+      "headline": "DJI Drone Buying Guide",
+      "text": "DJI Drone Buying Guide Find Your Ideal Drone Take a quiz > Shop Accessories Buy now > DJI Care Service Plans Learn more >",
+      "imageKey": "/store.dji.com/shop-camera-drones-a10e7f/blocks/m-01-unknown-part.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "store.dji.com|https://store.dji.com/|mobile|2",
+      "blockId": "bca13026-442d-4d07-baab-78d4c7cb2b6b",
+      "host": "store.dji.com",
+      "pageType": "home",
+      "pageUrl": "https://store.dji.com/",
+      "viewport": "mobile",
+      "blockIndex": 2,
+      "typeHint": "unknown-part",
+      "headline": "What's Hot",
+      "text": "What's Hot Osmo Action 5 Pro The Action Camera With Revolutionary Image Quality From USD $319 Buy Now DJI RS 4 Mini Compact and Lightweight Gimbal for Content Creators From USD $309 Buy Now Osmo Action 4 Action Camera with Best-in-Class Image Quality From USD $239 Buy Now DJI Power 500 512Wh Portable Power Station From USD $299 Buy Now",
+      "imageKey": "/store.dji.com/home/blocks/m-02-unknown-part.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "store.duolingo.com|https://store.duolingo.com/collections/accessories|mobile|1",
+      "blockId": "2a36754c-00a7-4d69-85eb-06c98f342f6f",
+      "host": "store.duolingo.com",
+      "pageType": "collection",
+      "pageUrl": "https://store.duolingo.com/collections/accessories",
+      "viewport": "mobile",
+      "blockIndex": 1,
+      "typeHint": "header-section",
+      "headline": "Just added to your cart",
+      "text": "Free shipping on eligible orders to the U.S., Canada & select countries in Latin America Spend $50 on eligible items, get a FREE mystery Duo pin! Search Cart USA Accessories Apparel Plushies",
+      "imageKey": "/store.duolingo.com/collections-accessories/blocks/m-01-header-section.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "store.duolingo.com|https://store.duolingo.com/|mobile|8",
+      "blockId": "67627e01-1bb0-412d-a2c9-9b867944f502",
+      "host": "store.duolingo.com",
+      "pageType": "home",
+      "pageUrl": "https://store.duolingo.com/",
+      "viewport": "mobile",
+      "blockIndex": 8,
+      "typeHint": "featured-collections-part",
+      "headline": "meet the piano that integrates with duolingo",
+      "text": "meet the piano that integrates with duolingo LEARN MORE",
+      "imageKey": "/store.duolingo.com/home/blocks/m-08-featured-collections-part.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "store.duolingo.com|https://store.duolingo.com/products/duolingo-chess-set|desktop|2",
+      "blockId": "4a10fb81-4985-4a4b-9439-dbd1b8740758",
+      "host": "store.duolingo.com",
+      "pageType": "product",
+      "pageUrl": "https://store.duolingo.com/products/duolingo-chess-set",
+      "viewport": "desktop",
+      "blockIndex": 2,
+      "typeHint": "product",
+      "headline": "Duolingo Chess Set",
+      "text": "Duolingo Chess Set Regular price €57,95 EUR Tax included. product variants Select quantity - + ADD TO CART Adding product to your cart DETAILS This Duolingo Chess set comes with everything you need to start playing right away: a full board, 32 smooth, sturdy pieces, and an instruction manual packed with tips, tricks, and sharp advice from Oscar. From your first move to checkmate, it’s ready for ga",
+      "imageKey": "/store.duolingo.com/products-duolingo-chess-set/blocks/d-02-product.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "theordinary.com|https://theordinary.com/en-ca/category/best-sellers|desktop|4",
+      "blockId": "feffb0fc-9217-4231-8a82-1fa2ea12d5e8",
+      "host": "theordinary.com",
+      "pageType": "collection",
+      "pageUrl": "https://theordinary.com/en-ca/category/best-sellers",
+      "viewport": "desktop",
+      "blockIndex": 4,
+      "typeHint": "footer",
+      "headline": "Stay In Touch.",
+      "text": "Stay In Touch. Email Address Subscribe *By providing your email address you are agreeing to receive email communications from DECIEM Inc., its affiliates, brands (The Ordinary, NIOD, and LOoPHA) and/or marketing partners. This can be changed at any time. Please refer to our Privacy Policy and Terms of Use for more details or Contact Us. Company About Us The Ordinary DNA Join Us Modern Slavery Act",
+      "imageKey": "/theordinary.com/en-ca-category-best-sellers/blocks/d-04-footer.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "typology.com|https://global.typology.com/collections/best-sellers|mobile|2",
+      "blockId": "6c8e7035-2dd0-4788-afd2-c1dd699e4225",
+      "host": "typology.com",
+      "pageType": "collection",
+      "pageUrl": "https://global.typology.com/collections/best-sellers",
+      "viewport": "mobile",
+      "blockIndex": 2,
+      "typeHint": "unknown-part",
+      "headline": "Tinted Serum T10 — Vitamin C + Aloe Vera — 29,90 €",
+      "text": "BEST-SELLER Tinted Serum T10 — Vitamin C + Aloe Vera — 29,90 € BEST-SELLER Radiance Serum L32 — 15% Vitamin C Complex + 1% Vitami… — from 17,90 € RADIANCE Glow Drops T31 — 5% Vitamin C + Aloe Vera — 22,90 € BEST-SELLER 9-Ingredient Face Moisturiser D41 — 22,50 € ANTI-REDNESS Color Corrector for Redness T33 — 2% Niacinamide + Green Seaweed… — 24,90 € DAILY SPF Day Cream for Multiple Signs of Aging",
+      "imageKey": "/typology.com/collections-best-sellers/blocks/m-02-unknown-part.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "typology.com|https://typology.com/|desktop|1",
+      "blockId": "b767dcdf-af96-4405-8e13-45ed0515eca1",
+      "host": "typology.com",
+      "pageType": "home",
+      "pageUrl": "https://typology.com/",
+      "viewport": "desktop",
+      "blockIndex": 1,
+      "typeHint": "header",
+      "headline": null,
+      "text": "PRODUCTS DIAGNOSTIC EN/€ CART",
+      "imageKey": "/typology.com/home/blocks/d-01-header.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "anker.com|https://www.anker.com/collections/all-products-charging|desktop|6",
+      "blockId": "ebd696cf-efd8-41db-bb02-0339aacc9136",
+      "host": "anker.com",
+      "pageType": "collection",
+      "pageUrl": "https://www.anker.com/collections/all-products-charging",
+      "viewport": "desktop",
+      "blockIndex": 6,
+      "typeHint": "faq",
+      "headline": "Charging FAQs",
+      "text": "Charging FAQs What types of charging products does Anker offer? Anker offers a full range of fast charging products, including GaN chargers, travel chargers, sophisticated Qi2 wireless charging docks, and versatile multi-port charging stations. Whether you need to charge smartphones, tablets, laptops, or wearables, Anker has you covered. How do I choose the right charger for my devices? Start with",
+      "imageKey": "/anker.com/collections-all-products-charging/blocks/d-06-faq.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "charlottetilbury.com|https://charlottetilbury.com/|mobile|3",
+      "blockId": "a69e3d2d-bd94-4988-a3d4-ffb70a1081be",
+      "host": "charlottetilbury.com",
+      "pageType": "home",
+      "pageUrl": "https://charlottetilbury.com/",
+      "viewport": "mobile",
+      "blockIndex": 3,
+      "typeHint": "product",
+      "headline": "BEAUTY CHECK-IN KITTravel Size Makeup Kit",
+      "text": "Shop Magical Savings BEAUTY CHECK-IN KIT Travel Size Makeup Kit £80.00 £64.00 CHOOSE SHADES AIRBRUSH FLAWLESS FINISH & SET DUO Complexion Kit £73.00 £58.40 CHOOSE SHADES NEW! AIRBRUSH FLAWLESS BLUR + LOCK DUO Face Kit £73.00 £69.35 CHOOSE SHADES UNREAL SUMMER GLOW TRIO Face Kit £101.00 £80.80 CHOOSE SHADES UNREAL SKIN & BLUSH HEALTHY GLOW DUO Face & Cheek Kit £69.00 £55.20 CHOOSE SHADES CHARLOTTE’",
+      "imageKey": "/charlottetilbury.com/home/blocks/m-03-product.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "copperandbrass.net|https://www.copperandbrass.net/category/all-products|desktop|3",
+      "blockId": "5b3010fd-1a16-4c70-b775-5c0acf8fda6b",
+      "host": "copperandbrass.net",
+      "pageType": "collection",
+      "pageUrl": "https://www.copperandbrass.net/category/all-products",
+      "viewport": "desktop",
+      "blockIndex": 3,
+      "typeHint": "unknown-part",
+      "headline": null,
+      "text": "",
+      "imageKey": "/copperandbrass.net/category-all-products/blocks/d-03-unknown-part.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "melula.com|https://melula.com/|desktop|7",
+      "blockId": "54bba089-8088-4767-8eed-ddc18bbbe949",
+      "host": "melula.com",
+      "pageType": "home",
+      "pageUrl": "https://melula.com/",
+      "viewport": "desktop",
+      "blockIndex": 7,
+      "typeHint": "unknown",
+      "headline": "They talk about us",
+      "text": "They talk about us",
+      "imageKey": "/melula.com/home/blocks/d-07-unknown.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "myzoobox.com|https://myzoobox.com/|mobile|8",
+      "blockId": "6fbad349-8f1b-4070-89e8-ea98b03f26c8",
+      "host": "myzoobox.com",
+      "pageType": "home",
+      "pageUrl": "https://myzoobox.com/",
+      "viewport": "mobile",
+      "blockIndex": 8,
+      "typeHint": "zoo-home-part",
+      "headline": "How the adventure works",
+      "text": "Simple as that How the adventure works Pick their club once. A new animal arrives every month, ready to open and dig into together. Cub Club · 3 to 5 Zoologist · 5 to 12 Sibling packs for a full house 1 Find their club Cub Club for ages 3 to 5, Zoologist Club for ages 5 to 12. Sibling packs cover a full house. 2 Open it together Inside: a new animal to study, hands-on projects, a science-rich book",
+      "imageKey": "/myzoobox.com/home/blocks/m-08-zoo-home-part.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "nanit.com|https://www.nanit.com/collections/accessories|mobile|3",
+      "blockId": "0df62c03-4c31-44c1-8353-09b00dfbc5f2",
+      "host": "nanit.com",
+      "pageType": "collection",
+      "pageUrl": "https://www.nanit.com/collections/accessories",
+      "viewport": "mobile",
+      "blockIndex": 3,
+      "typeHint": "main-collection-part",
+      "headline": null,
+      "text": "Floor Stand $100.00 White Wall Mount $100.00 White Flex Stand $49.00 White Home 8\" Display $179.00 White Cammies $24.99 Cammies 4-Pack $69.00 Sound + Light $99.99 White Travel Case $29.99 Two Tone Canvas Green Blue Gray Clearance Travel Case $29.99 Abstract Stripe Half Moon Marble Greige +1 Sound + Light Travel Case $24.99 Blue Traveling Light Case $34.99 Blue Oxford Green Oxford Heather Gray Oxfo",
+      "imageKey": "/nanit.com/collections-accessories/blocks/m-03-main-collection-part.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "nanit.com|https://nanit.com/|desktop|5",
+      "blockId": "7ec58581-015f-4090-a499-e8751de76051",
+      "host": "nanit.com",
+      "pageType": "home",
+      "pageUrl": "https://nanit.com/",
+      "viewport": "desktop",
+      "blockIndex": 5,
+      "typeHint": "logo-list",
+      "headline": "Loved by experts and parents like you",
+      "text": "Loved by experts and parents like you Nanit is the award-winning smart baby video monitor",
+      "imageKey": "/nanit.com/home/blocks/d-05-logo-list.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "oliveclothing.com|https://oliveclothing.com/|mobile|1",
+      "blockId": "88cea397-902f-49e2-9457-2c6ddf39d284",
+      "host": "oliveclothing.com",
+      "pageType": "home",
+      "pageUrl": "https://oliveclothing.com/",
+      "viewport": "mobile",
+      "blockIndex": 1,
+      "typeHint": "header",
+      "headline": "Search",
+      "text": "🇬🇧 FREE SHIPPING FOR ORDERS OF £95+ · FREE RETURNS Toggle search Toggle menu (0)",
+      "imageKey": "/oliveclothing.com/home/blocks/m-01-header.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "shop.penguin.co.uk|https://shop.penguin.co.uk/products/groovy-chick-the-official-colouring-book-by-groovy-chick|mobile|4",
+      "blockId": "3dd51be0-cc9f-42c3-8e45-d640fea55f71",
+      "host": "shop.penguin.co.uk",
+      "pageType": "product",
+      "pageUrl": "https://shop.penguin.co.uk/products/groovy-chick-the-official-colouring-book-by-groovy-chick",
+      "viewport": "mobile",
+      "blockIndex": 4,
+      "typeHint": "section",
+      "headline": "Sign up to the Penguin Newsletter",
+      "text": "For latest offers, products and more + 10% off your first order* Sign up to the Penguin Newsletter *Discount exclusions apply, please visit our discount terms and conditions to learn more. By signing up you agree to receive communication from Penguin Newsletter. To find out what personal data we collect and how we use it, please visit our Privacy Policy. You can unsubscribe at any time. Email Join",
+      "imageKey": "/shop.penguin.co.uk/products-groovy-chick-the-official-colouring-book-by-groovy-chick/blocks/m-04-section.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "store-usa.arduino.cc|https://store-usa.arduino.cc/collections/accessories|desktop|13",
+      "blockId": "071d9729-8997-48c2-a543-a35ed9587b26",
+      "host": "store-usa.arduino.cc",
+      "pageType": "collection",
+      "pageUrl": "https://store-usa.arduino.cc/collections/accessories",
+      "viewport": "desktop",
+      "blockIndex": 13,
+      "typeHint": "arduino-footer",
+      "headline": "Arduino Newsletter",
+      "text": "Region Back to top FOLLOW US NEWSLETTER SUBSCRIBE Shipping Policy Payment Methods Sales Conditions Distributors ASK FOR SUPPORT © 2026 Arduino S.r.l. - Partita IVA 09755110963 Terms & Conditions Privacy Policy Security Refund Policy Cookie Settings",
+      "imageKey": "/store-usa.arduino.cc/collections-accessories/blocks/d-13-arduino-footer.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "store-usa.arduino.cc|https://store-usa.arduino.cc/|desktop|5",
+      "blockId": "181e43f5-c414-4c1f-83be-ec7745edb2ee",
+      "host": "store-usa.arduino.cc",
+      "pageType": "home",
+      "pageUrl": "https://store-usa.arduino.cc/",
+      "viewport": "desktop",
+      "blockIndex": 5,
+      "typeHint": "dynamic-promo-grid",
+      "headline": "Explore our innovative solutions",
+      "text": "Explore our innovative solutions Boards for creative projects DISCOVER NOW STEM Kits for schools and self-learners DISCOVER NOW Industrial IoT platform solutions DISCOVER NOW",
+      "imageKey": "/store-usa.arduino.cc/home/blocks/d-05-dynamic-promo-grid.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "store-usa.arduino.cc|https://store-usa.arduino.cc/products/usb-c-power-supply-65w|mobile|1",
+      "blockId": "68ed1022-a04e-49f2-b42c-5f6724d4561e",
+      "host": "store-usa.arduino.cc",
+      "pageType": "product",
+      "pageUrl": "https://store-usa.arduino.cc/products/usb-c-power-supply-65w",
+      "viewport": "mobile",
+      "blockIndex": 1,
+      "typeHint": "product",
+      "headline": null,
+      "text": "Tap to zoom",
+      "imageKey": "/store-usa.arduino.cc/products-usb-c-power-supply-65w/blocks/m-01-product.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "store.dji.com|https://store.dji.com/shop/camera-drones?from=store_footer|desktop|1",
+      "blockId": "ee6fdd8e-c54d-46ea-a9db-029792414a82",
+      "host": "store.dji.com",
+      "pageType": "collection",
+      "pageUrl": "https://store.dji.com/shop/camera-drones?from=store_footer",
+      "viewport": "desktop",
+      "blockIndex": 1,
+      "typeHint": "unknown",
+      "headline": "Camera Drones",
+      "text": "Camera Drones Unlock adventure in the sky DJI Drone Buying Guide Find Your Ideal Drone Take a quiz > Shop Accessories Buy now > DJI Care Service Plans Learn more > Which Drone Is Right for Me? Entry-Level Advanced Flagship Immersive Cinematic DJI Mini 3 DJI Flip DJI Neo DJI Mini 3 DJI Flip DJI Neo Premier Entry-Level Camera Drone All-in-One Vlog Camera Drone A Palm-Sized Drone for Vlogs From USD $",
+      "imageKey": "/store.dji.com/shop-camera-drones-a10e7f/blocks/d-01-unknown.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "store.dji.com|https://store.dji.com/|mobile|10",
+      "blockId": "7390e637-8241-4e3a-8e71-e316aceabc05",
+      "host": "store.dji.com",
+      "pageType": "home",
+      "pageUrl": "https://store.dji.com/",
+      "viewport": "mobile",
+      "blockIndex": 10,
+      "typeHint": "unknown-part",
+      "headline": "Buying Guides",
+      "text": "Buying Guides Follow Me Drones 2024 Best drones that follow you automatically DJI Air 3S vs DJI Air 3 Is it worth the upgrade？ Osmo Action 5 Pro Unboxing 4 Key New Upgrades DJI Avata 2 vs DJI Avata What's New? Your Ultimate Camera Stabilizer for 2024 Explore the DJI Ronin Series DJI Mic 2 vs. DJI Mic In-Depth Review of 4 Key Upgrades Action cameras and low-light 5 things to know Vlogging Reinvente",
+      "imageKey": "/store.dji.com/home/blocks/m-10-unknown-part.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "store.duolingo.com|https://store.duolingo.com/collections/accessories|mobile|7",
+      "blockId": "8f2ea3d5-7e2b-46e3-a103-b1c8fb2d43e4",
+      "host": "store.duolingo.com",
+      "pageType": "collection",
+      "pageUrl": "https://store.duolingo.com/collections/accessories",
+      "viewport": "mobile",
+      "blockIndex": 7,
+      "typeHint": "collection",
+      "headline": null,
+      "text": "Duo Slippers Regular Price €26,95 EUR Duo Slippers Product Price€26,95 EUR",
+      "imageKey": "/store.duolingo.com/collections-accessories/blocks/m-07-collection.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "store.duolingo.com|https://store.duolingo.com/|mobile|4",
+      "blockId": "aeda10c5-6ee8-46d5-aaf8-f8fe286304d0",
+      "host": "store.duolingo.com",
+      "pageType": "home",
+      "pageUrl": "https://store.duolingo.com/",
+      "viewport": "mobile",
+      "blockIndex": 4,
+      "typeHint": "feature",
+      "headline": null,
+      "text": "Duolingo Chess Set Regular Price €57,95 EUR Duolingo Chess Set Product Price€57,95 EUR",
+      "imageKey": "/store.duolingo.com/home/blocks/m-04-feature.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "typology.com|https://global.typology.com/collections/best-sellers|desktop|3",
+      "blockId": "e7cf3ab5-b612-498c-81b0-a9c798e332e3",
+      "host": "typology.com",
+      "pageType": "collection",
+      "pageUrl": "https://global.typology.com/collections/best-sellers",
+      "viewport": "desktop",
+      "blockIndex": 3,
+      "typeHint": "unknown-part",
+      "headline": null,
+      "text": "KEEP THE ESSENTIAL. OUR FORMULAS ARE SHORT, WITH ONLY ESSENTIAL INGREDIENTS. MADE IN FRANCE",
+      "imageKey": "/typology.com/collections-best-sellers/blocks/d-03-unknown-part.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "typology.com|https://typology.com/|mobile|1",
+      "blockId": "f47dcef7-2655-4f54-859e-6ad9c3e20bba",
+      "host": "typology.com",
+      "pageType": "home",
+      "pageUrl": "https://typology.com/",
+      "viewport": "mobile",
+      "blockIndex": 1,
+      "typeHint": "hero",
+      "headline": "BACK IN STOCK — SERUM A63",
+      "text": "BACK IN STOCK — SERUM A63 Sold out in 24 hours. Now available.",
+      "imageKey": "/typology.com/home/blocks/m-01-hero.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "anker.com|https://www.anker.com/collections/all-products-charging|mobile|3",
+      "blockId": "46155c66-e8d2-45e5-9087-b7de6ebbe62e",
+      "host": "anker.com",
+      "pageType": "collection",
+      "pageUrl": "https://www.anker.com/collections/all-products-charging",
+      "viewport": "mobile",
+      "blockIndex": 3,
+      "typeHint": "unknown-part",
+      "headline": null,
+      "text": "New Anker Nano Charger (45W, Smart Display, 180° Foldable) $29.99$39.99 $10 OFF Hot Anker Laptop Power Bank (25K, 165W, Built-In and Retractable Cables) $104.99$119.99 $15 OFF New Anker Prime Power Bank (26K, 300W) $199.99$229.99 $30 OFF New Anker Nano Charging Station (7-in-1, 100W) $79.99 Anker Prime DL7400 Docking Station (14-in-1, Triple Display, DisplayLink) $259.99$299.99 $40 OFF New Anker N",
+      "imageKey": "/anker.com/collections-all-products-charging/blocks/m-03-unknown-part.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "charlottetilbury.com|https://charlottetilbury.com/|desktop|1",
+      "blockId": "bd43699b-e629-4076-9546-85b7c209dfa4",
+      "host": "charlottetilbury.com",
+      "pageType": "home",
+      "pageUrl": "https://charlottetilbury.com/",
+      "viewport": "desktop",
+      "blockIndex": 1,
+      "typeHint": "header",
+      "headline": "Your Bag",
+      "text": "Loyalty 0 ▲ YOUR BAG £0.00 0 ITEMS EXCL. DELIVERY There Are No Items In Your Bag Charlotte Tilbury United Kingdom | EN | GBP £ 20% OFF (ALMOST) EVERYTHING!* NEW IN MAKEUP SKINCARE BEST SELLERS GIFTS FRAGRANCE SHADE MATCH TOOLS SERVICES",
+      "imageKey": "/charlottetilbury.com/home/blocks/d-01-header.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "melula.com|https://melula.com/|mobile|1",
+      "blockId": "a4db106f-8bc3-46f9-907d-bf1e352e9f70",
+      "host": "melula.com",
+      "pageType": "home",
+      "pageUrl": "https://melula.com/",
+      "viewport": "mobile",
+      "blockIndex": 1,
+      "typeHint": "unknown",
+      "headline": "FOR COLOURFUL",
+      "text": "FOR COLOURFUL STEPS IN LIFE VISIT OUR SHOP",
+      "imageKey": "/melula.com/home/blocks/m-01-unknown.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "myzoobox.com|https://myzoobox.com/|mobile|3",
+      "blockId": "5067dd74-5fcc-4260-aae2-503f3e12bd0d",
+      "host": "myzoobox.com",
+      "pageType": "home",
+      "pageUrl": "https://myzoobox.com/",
+      "viewport": "mobile",
+      "blockIndex": 3,
+      "typeHint": "zoo-home-part",
+      "headline": "Which explorer are you shopping for?",
+      "text": "Start here Which explorer are you shopping for? Two clubs, built around how children actually learn at each age. Both arrive monthly with a new animal to fall in love with. Ages 3 to 5 Play-based animal adventures for little explorers, built to do together. Guided crafts made for preschool attention spans Builds fine motor, early math, and early literacy Open and go, almost no prep for grown-ups F",
+      "imageKey": "/myzoobox.com/home/blocks/m-03-zoo-home-part.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "nanit.com|https://nanit.com/|desktop|2",
+      "blockId": "c99bcf00-9fae-4d48-a590-20f4c7b2d470",
+      "host": "nanit.com",
+      "pageType": "home",
+      "pageUrl": "https://nanit.com/",
+      "viewport": "desktop",
+      "blockIndex": 2,
+      "typeHint": "hero-slider",
+      "headline": "You could buy a baby monitor. Or you could buy a Nanit.",
+      "text": "Time to get (sleep) schooled Sign up for free weekly sleep lessons, get 20% off the Smart Baby Monitor System. Enroll Today",
+      "imageKey": "/nanit.com/home/blocks/d-02-hero-slider.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "oliveclothing.com|https://oliveclothing.com/|mobile|5",
+      "blockId": "8d4ca32f-2477-464c-a8cc-ea575d4f4d04",
+      "host": "oliveclothing.com",
+      "pageType": "home",
+      "pageUrl": "https://oliveclothing.com/",
+      "viewport": "mobile",
+      "blockIndex": 5,
+      "typeHint": "product",
+      "headline": "Men",
+      "text": "FEATURED MEN VIEW ALL MENSWEAR | WIDE-CUT SUIT TROUSERS, BLACK £79.00 VIEW IN MOTION MENSWEAR | CROPPED LINEN CHECK SHIRT, BROWN £54.00 MENSWEAR | WASHED COTTON SHIRT, SORA £49.00 MENSWEAR | CUPELLE SHIRT, BLACK £89.00 VIEW IN MOTION MENSWEAR | STACK TEE, CREAM £26.00 VIEW IN MOTION MENSWEAR | STACK TEE, BLUE £26.00 MENSWEAR | TONAL PINSTRIPE PANTS, BLACK £99.00 EMAIL ME MENSWEAR | MICRO CHECK SHI",
+      "imageKey": "/oliveclothing.com/home/blocks/m-05-product.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "store-usa.arduino.cc|https://store-usa.arduino.cc/collections/accessories|mobile|11",
+      "blockId": "ce306a7c-7875-4b03-8882-3e00806699f3",
+      "host": "store-usa.arduino.cc",
+      "pageType": "collection",
+      "pageUrl": "https://store-usa.arduino.cc/collections/accessories",
+      "viewport": "mobile",
+      "blockIndex": 11,
+      "typeHint": "product",
+      "headline": "14.5mm Strip 10 ways 2 pcs",
+      "text": "14.5mm Strip 10 ways 2 pcs Pair of 10 pin Female/Male header strips, very useful for board extensions. We use them extensively on Proto Shield PCB, but they are useful in any shield because of their height. Features: Rec... $2.50 4.0",
+      "imageKey": "/store-usa.arduino.cc/collections-accessories/blocks/m-11-product.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "store-usa.arduino.cc|https://store-usa.arduino.cc/|mobile|4",
+      "blockId": "6a665368-cb69-488f-b8fc-5608dd4dd57d",
+      "host": "store-usa.arduino.cc",
+      "pageType": "home",
+      "pageUrl": "https://store-usa.arduino.cc/",
+      "viewport": "mobile",
+      "blockIndex": 4,
+      "typeHint": "dynamic-featured-collection",
+      "headline": "Stay ahead with the latest Arduino innovations!",
+      "text": "Stay ahead with the latest Arduino innovations! NEW! Arduino USB-C Power Supply (65W) Unlock the full potential of Arduino® VENTUNO™ Q and other boards in the Arduino ecosystem with stable and regulated power delivery, tested by Arduino itself for maximum reliability – and superior ... $28.00 PRE-ORDER! Arduino®️ VENTUNO™ Q Built around a dual-brain architecture that pairs a Qualcomm Dragonwing™ I",
+      "imageKey": "/store-usa.arduino.cc/home/blocks/m-04-dynamic-featured-collection.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "store-usa.arduino.cc|https://store-usa.arduino.cc/products/usb-c-power-supply-65w|mobile|5",
+      "blockId": "7e3e9419-2c1c-48f9-b598-e6a7f283403d",
+      "host": "store-usa.arduino.cc",
+      "pageType": "product",
+      "pageUrl": "https://store-usa.arduino.cc/products/usb-c-power-supply-65w",
+      "viewport": "mobile",
+      "blockIndex": 5,
+      "typeHint": "product",
+      "headline": "Get Inspired",
+      "text": "Get Inspired PROJECT HUB VENTUNO Q Integration with JetArm Project Tutorial by rmite The JetArm Face-tracking and Voice control solution developed on Ventuno Q running Ubuntu features camera-based AI detection and Automatic Speech Recognition (ASR) control via ROS 2 and interfaced via Arduino App Lab READ MORE BLOG The age of Physical AI is here, and it runs on the Arduino® VENTUNO™ Q board August",
+      "imageKey": "/store-usa.arduino.cc/products-usb-c-power-supply-65w/blocks/m-05-product.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "store.dji.com|https://store.dji.com/shop/camera-drones?from=store_footer|mobile|3",
+      "blockId": "8b9e350b-6226-4de2-b8e3-6a206e8d9c0f",
+      "host": "store.dji.com",
+      "pageType": "collection",
+      "pageUrl": "https://store.dji.com/shop/camera-drones?from=store_footer",
+      "viewport": "mobile",
+      "blockIndex": 3,
+      "typeHint": "unknown-part",
+      "headline": "Moments By You",
+      "text": "Moments By You DJI Mavic 3 Pro Elliot Grafton Exploring The Wild DJI Mavic 3 斯塔克的斯 · SkyPixel This trip to Yunnan province lasted 20 days. Traveling through Tibet during winter, one can encounter all kinds of accidents. The second half of this trip was a bit hectic, but the long-distance hiking in Yu Beng village was an experience beyond words. more DJI Mavic 3 Classic NorrisNiman · SkyPixel No pl",
+      "imageKey": "/store.dji.com/shop-camera-drones-a10e7f/blocks/m-03-unknown-part.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "store.dji.com|https://store.dji.com/|mobile|8",
+      "blockId": "8156eb47-9c9c-474d-ac98-000ed5b7bba4",
+      "host": "store.dji.com",
+      "pageType": "home",
+      "pageUrl": "https://store.dji.com/",
+      "viewport": "mobile",
+      "blockIndex": 8,
+      "typeHint": "unknown-part",
+      "headline": "Services",
+      "text": "Services Learn More About DJI's Services",
+      "imageKey": "/store.dji.com/home/blocks/m-08-unknown-part.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "store.duolingo.com|https://store.duolingo.com/collections/accessories|mobile|3",
+      "blockId": "984c3d67-3acf-419a-9e7a-45abfcb18923",
+      "host": "store.duolingo.com",
+      "pageType": "collection",
+      "pageUrl": "https://store.duolingo.com/collections/accessories",
+      "viewport": "mobile",
+      "blockIndex": 3,
+      "typeHint": "collection",
+      "headline": null,
+      "text": "Sleepy Duo Touch Light Regular Price €26,95 EUR Sleepy Duo Touch Light Product Price€26,95 EUR",
+      "imageKey": "/store.duolingo.com/collections-accessories/blocks/m-03-collection.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "store.duolingo.com|https://store.duolingo.com/|desktop|1",
+      "blockId": "ef80a423-a277-41a9-8b47-e4d48a68d7dd",
+      "host": "store.duolingo.com",
+      "pageType": "home",
+      "pageUrl": "https://store.duolingo.com/",
+      "viewport": "desktop",
+      "blockIndex": 1,
+      "typeHint": "header-section",
+      "headline": "Just added to your cart",
+      "text": "Free shipping on eligible orders to the U.S., Canada & select countries in Latin America Spend $50 on eligible items, get a FREE mystery Duo pin! ACCESSORIES APPAREL PLUSHIES Search Cart USA",
+      "imageKey": "/store.duolingo.com/home/blocks/d-01-header-section.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "typology.com|https://typology.com/|desktop|8",
+      "blockId": "15841ead-9c27-4663-9fc3-5632934c25b1",
+      "host": "typology.com",
+      "pageType": "home",
+      "pageUrl": "https://typology.com/",
+      "viewport": "desktop",
+      "blockIndex": 8,
+      "typeHint": "unknown",
+      "headline": "New Arrivals",
+      "text": "NEW ARRIVALS VIEW MORE COMING SOON Advent Calendar 2026 — 179,90 € NEW SHADE Serum Mascara T50 — 1% Pea Peptides + Castor Oil — 23,50 € NEW SHADE Moisturizing Lip Oil T40 — 10% Squalane + Vitamin E — 25,50 € NEW Regenerating Micro-Spicules Serum A63 — 3% PDRN-EGF Complex — from 29,90 €",
+      "imageKey": "/typology.com/home/blocks/d-08-unknown.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "anker.com|https://www.anker.com/collections/all-products-charging|mobile|2",
+      "blockId": "5e75877a-0adb-47d7-a7de-78aa4871211b",
+      "host": "anker.com",
+      "pageType": "collection",
+      "pageUrl": "https://www.anker.com/collections/all-products-charging",
+      "viewport": "mobile",
+      "blockIndex": 2,
+      "typeHint": "unknown-part",
+      "headline": "Best Sellers",
+      "text": "Anker Charger (140W, 4-Port, PD 3.1) with USB-C Cable $NaN Buy Now Hot Anker Prime Charger (250W, 6 Ports, GaNPrime) $149.99 Buy Now $34 OFF Hot Anker Prime Charger (160W, 3 Ports, Smart Display) $115.99$149.99 Buy Now $10 OFF Hot Anker Nano Charger (45W, Smart Display, 180° Foldable) $29.99$39.99 Buy Now",
+      "imageKey": "/anker.com/collections-all-products-charging/blocks/m-02-unknown-part.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "melula.com|https://melula.com/|mobile|7",
+      "blockId": "b148290d-7b02-4e31-9600-742d05fb6064",
+      "host": "melula.com",
+      "pageType": "home",
+      "pageUrl": "https://melula.com/",
+      "viewport": "mobile",
+      "blockIndex": 7,
+      "typeHint": "unknown",
+      "headline": "Follow us on Instagram @melula_copenhagen",
+      "text": "Follow us on Instagram @melula_copenhagen Subscribe Sign up with your email address to receive news and updates. SIGN UP We respect your privacy.",
+      "imageKey": "/melula.com/home/blocks/m-07-unknown.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "myzoobox.com|https://myzoobox.com/|mobile|10",
+      "blockId": "a072b72a-332a-412d-a06a-b72d4391c4a5",
+      "host": "myzoobox.com",
+      "pageType": "home",
+      "pageUrl": "https://myzoobox.com/",
+      "viewport": "mobile",
+      "blockIndex": 10,
+      "typeHint": "zoo-home-part",
+      "headline": "Every box comes with our promise",
+      "text": "Every box comes with our promise Four reasons you can order without second-guessing it. Zoologist Approved Every theme is reviewed by zoologists, so your child is learning accurate animal science from the start. 30 Day Money Back Guarantee Try it risk free. Not a fit? We'll refund you within 30 days. Dedicated Team of Educators Created with certified teachers to be age appropriate, easy to use, an",
+      "imageKey": "/myzoobox.com/home/blocks/m-10-zoo-home-part.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "nanit.com|https://nanit.com/|mobile|1",
+      "blockId": "65528794-d4c4-4dab-9f26-f8584868e271",
+      "host": "nanit.com",
+      "pageType": "home",
+      "pageUrl": "https://nanit.com/",
+      "viewport": "mobile",
+      "blockIndex": 1,
+      "typeHint": "header",
+      "headline": null,
+      "text": "Site navigation Search Nanit Cart",
+      "imageKey": "/nanit.com/home/blocks/m-01-header.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "store-usa.arduino.cc|https://store-usa.arduino.cc/collections/accessories|mobile|9",
+      "blockId": "de5dcc37-edd3-4e4c-b702-fff2c6a44b9c",
+      "host": "store-usa.arduino.cc",
+      "pageType": "collection",
+      "pageUrl": "https://store-usa.arduino.cc/collections/accessories",
+      "viewport": "mobile",
+      "blockIndex": 9,
+      "typeHint": "product",
+      "headline": "ArduiBox MKR Standard with transparent lid",
+      "text": "ArduiBox MKR Standard with transparent lid At the heart of the enclosure is an additional PCB with an integrated voltage regulator (soldering required) and prototyping area. This PCB comes with slots for the Arduino MKR or Portenta H7 board... $35.00",
+      "imageKey": "/store-usa.arduino.cc/collections-accessories/blocks/m-09-product.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "store-usa.arduino.cc|https://store-usa.arduino.cc/|desktop|4",
+      "blockId": "cc9f8bb4-5d98-46c6-a920-d4b5beff9def",
+      "host": "store-usa.arduino.cc",
+      "pageType": "home",
+      "pageUrl": "https://store-usa.arduino.cc/",
+      "viewport": "desktop",
+      "blockIndex": 4,
+      "typeHint": "dynamic-featured-collection",
+      "headline": "Stay ahead with the latest Arduino innovations!",
+      "text": "Stay ahead with the latest Arduino innovations! NEW! Arduino USB-C Power Supply (65W) $28.00 PRE-ORDER! Arduino®️ VENTUNO™ Q $299.00 NEW! Modulino™ Motors $12.40 NEW! Modulino™ Hub $8.55 NEW! Modulino™ Extender $11.93 NEW! Arduino® UNO™ Media Carrier $19.25 COMING SOON! Arduino UNO Breakout Carrier $9.58 NEW! Arduino BugHopper $19.25 NEW! Modulino™ LED Matrix $8.26 NEW! Arduino USB-C Hub (8 in 1)",
+      "imageKey": "/store-usa.arduino.cc/home/blocks/d-04-dynamic-featured-collection.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "store-usa.arduino.cc|https://store-usa.arduino.cc/products/usb-c-power-supply-65w|mobile|4",
+      "blockId": "c555213c-c305-4a91-b749-a8501a46286d",
+      "host": "store-usa.arduino.cc",
+      "pageType": "product",
+      "pageUrl": "https://store-usa.arduino.cc/products/usb-c-power-supply-65w",
+      "viewport": "mobile",
+      "blockIndex": 4,
+      "typeHint": "product",
+      "headline": "Conformities",
+      "text": "Conformities The following Declarations of Conformities have been granted for this board: CE RoHS REACH FCC WEEE UKCA For any further information about our certifications please visit docs.arduino.cc/certifications",
+      "imageKey": "/store-usa.arduino.cc/products-usb-c-power-supply-65w/blocks/m-04-product.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "store.dji.com|https://store.dji.com/|mobile|7",
+      "blockId": "0a423d47-819c-4a16-82cd-e864915463c6",
+      "host": "store.dji.com",
+      "pageType": "home",
+      "pageUrl": "https://store.dji.com/",
+      "viewport": "mobile",
+      "blockIndex": 7,
+      "typeHint": "unknown-part",
+      "headline": "Portable Power Station",
+      "text": "Portable Power Station 1 2 3 2048Wh Portable Power Station DJI Power 2000 From USD $1,299 DJI Power 1000 Portable Power Station USD $999 USD $699 DJI Power 500 Portable Power Station USD $499 USD $299 Learn More About Portable Power Station",
+      "imageKey": "/store.dji.com/home/blocks/m-07-unknown-part.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "store.duolingo.com|https://store.duolingo.com/collections/accessories|mobile|17",
+      "blockId": "d1e46c2e-2794-4da8-8bf8-7ea9f3398a58",
+      "host": "store.duolingo.com",
+      "pageType": "collection",
+      "pageUrl": "https://store.duolingo.com/collections/accessories",
+      "viewport": "mobile",
+      "blockIndex": 17,
+      "typeHint": "collection",
+      "headline": null,
+      "text": "Zari Sticker Pack Regular Price €8,95 EUR Zari Sticker Pack Product Price€8,95 EUR",
+      "imageKey": "/store.duolingo.com/collections-accessories/blocks/m-17-collection.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "store.duolingo.com|https://store.duolingo.com/|mobile|9",
+      "blockId": "19f202bf-f818-4cbd-b46e-8d37a14a9841",
+      "host": "store.duolingo.com",
+      "pageType": "home",
+      "pageUrl": "https://store.duolingo.com/",
+      "viewport": "mobile",
+      "blockIndex": 9,
+      "typeHint": "feature",
+      "headline": null,
+      "text": "Mood Swing Duo Plushie Regular Price €22,95 EUR SOLD OUT Mood Swing Duo Plushie Product Price€22,95 EUR This Product Is Sold Out",
+      "imageKey": "/store.duolingo.com/home/blocks/m-09-feature.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "typology.com|https://typology.com/|desktop|6",
+      "blockId": "93c9e5ef-5f1e-4f3b-908a-6f4684ede590",
+      "host": "typology.com",
+      "pageType": "home",
+      "pageUrl": "https://typology.com/",
+      "viewport": "desktop",
+      "blockIndex": 6,
+      "typeHint": "collection",
+      "headline": "Autumn Routines",
+      "text": "AUTUMN ROUTINES VIEW ALL ROUTINES REDNESS RELIEF DUO TINTED ESSENTIALS TRIO VITAMIN C DUO ESSENTIALS SKINCARE TRIO INSTANT RADIANCE DUO EYE CONTOUR SMOOTHING DUO TINTED COMPLEXION DUO TINTED FACE + LIP TRIO BRIGHTENING EYE DUO FIRST WRINKLES DUO",
+      "imageKey": "/typology.com/home/blocks/d-06-collection.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "anker.com|https://www.anker.com/collections/power-banks?ref=image_category_banner|mobile|6",
+      "blockId": "5a88cf63-3f34-4ca2-b115-14d9bb857458",
+      "host": "anker.com",
+      "pageType": "collection",
+      "pageUrl": "https://www.anker.com/collections/power-banks?ref=image_category_banner",
+      "viewport": "mobile",
+      "blockIndex": 6,
+      "typeHint": "unknown",
+      "headline": "Power Banks and Portable Chargers",
+      "text": "Power Banks and Portable Chargers Anker offers a fantastic range of powerful and innovative portable power banks and portable chargers that will supercharge your charging experience. Whether you need a high‑capacity power bank for travel or an ultra‑slim portable charger for daily use, our lineup has you covered. Explore our collections of 10000 mAh Power Banks and 20000mAh Power Bank options to f",
+      "imageKey": "/anker.com/collections-power-banks-ee151e/blocks/m-06-unknown.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "myzoobox.com|https://myzoobox.com/|desktop|2",
+      "blockId": "4e236eef-87c1-41db-be11-4fdb36e1234f",
+      "host": "myzoobox.com",
+      "pageType": "home",
+      "pageUrl": "https://myzoobox.com/",
+      "viewport": "desktop",
+      "blockIndex": 2,
+      "typeHint": "hero",
+      "headline": "Real zoology, made for kids",
+      "text": "A new animal friend every month Real zoology, made for kids Hands-on animal adventures that spark discovery, creativity, and compassion in kids ages 3 to 12. Delivered to your door, screen free. Join a monthly club Shop one-time sets Rated 5 out of 5 200,000+ ZOO Boxes delivered Free U.S. shipping",
+      "imageKey": "/myzoobox.com/home/blocks/d-02-hero.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "nanit.com|https://nanit.com/|desktop|8",
+      "blockId": "9af5abb9-9998-4c60-9dc5-72af48c67d32",
+      "host": "nanit.com",
+      "pageType": "home",
+      "pageUrl": "https://nanit.com/",
+      "viewport": "desktop",
+      "blockIndex": 8,
+      "typeHint": "rich-text",
+      "headline": null,
+      "text": "Shop Bundles",
+      "imageKey": "/nanit.com/home/blocks/d-08-rich-text.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "store-usa.arduino.cc|https://store-usa.arduino.cc/collections/accessories|desktop|4",
+      "blockId": "1decd739-8dcf-4c67-bdf3-796b6b804908",
+      "host": "store-usa.arduino.cc",
+      "pageType": "collection",
+      "pageUrl": "https://store-usa.arduino.cc/collections/accessories",
+      "viewport": "desktop",
+      "blockIndex": 4,
+      "typeHint": "product",
+      "headline": "MKR2UNO Adapter",
+      "text": "MKR2UNO Adapter The MKR2UNO Adapter allows you to turn your Arduino UNO form factor based project into a MKR based one without too much effort! You can so upgrade your project with a powerful board with integrated... $15.70 5.0",
+      "imageKey": "/store-usa.arduino.cc/collections-accessories/blocks/d-04-product.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "store-usa.arduino.cc|https://store-usa.arduino.cc/|mobile|8",
+      "blockId": "cc790788-b323-4ff0-b031-7c5ab1d73367",
+      "host": "store-usa.arduino.cc",
+      "pageType": "home",
+      "pageUrl": "https://store-usa.arduino.cc/",
+      "viewport": "mobile",
+      "blockIndex": 8,
+      "typeHint": "pxs-newsletter",
+      "headline": "Your gateway to Arduino Deals",
+      "text": "Your gateway to Arduino Deals Sign up for email updates and be the first to know about deals and new products. Email address SIGN UP",
+      "imageKey": "/store-usa.arduino.cc/home/blocks/m-08-pxs-newsletter.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "store-usa.arduino.cc|https://store-usa.arduino.cc/products/usb-c-power-supply-65w|desktop|2",
+      "blockId": "81004650-fc3a-4903-a193-8c01138ede26",
+      "host": "store-usa.arduino.cc",
+      "pageType": "product",
+      "pageUrl": "https://store-usa.arduino.cc/products/usb-c-power-supply-65w",
+      "viewport": "desktop",
+      "blockIndex": 2,
+      "typeHint": "static-product-recommendations",
+      "headline": "Inspired by your shopping trends",
+      "text": "Inspired by your shopping trends COMING SOON! Arduino USB-C Cable (24 pin) $5.79 NEW! Arduino USB-C Hub (8 in 1) 8 Reviews $16.34 4.9 NEW! Modulino™ Hub $8.55 NEW! Modulino™ Vibro $11.36 5.0",
+      "imageKey": "/store-usa.arduino.cc/products-usb-c-power-supply-65w/blocks/d-02-static-product-recommendations.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "store.dji.com|https://store.dji.com/|mobile|9",
+      "blockId": "265d1901-fbe3-4a08-b7cb-45e89ba7c8ab",
+      "host": "store.dji.com",
+      "pageType": "home",
+      "pageUrl": "https://store.dji.com/",
+      "viewport": "mobile",
+      "blockIndex": 9,
+      "typeHint": "unknown-part",
+      "headline": "Education & Industry",
+      "text": "Education & Industry Enterprise Intelligent drone-based industrial solutions Education Programming education solutions",
+      "imageKey": "/store.dji.com/home/blocks/m-09-unknown-part.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "store.duolingo.com|https://store.duolingo.com/collections/accessories|mobile|14",
+      "blockId": "d22953f5-fee0-4d19-8545-0d05016aba9c",
+      "host": "store.duolingo.com",
+      "pageType": "collection",
+      "pageUrl": "https://store.duolingo.com/collections/accessories",
+      "viewport": "mobile",
+      "blockIndex": 14,
+      "typeHint": "collection",
+      "headline": null,
+      "text": "Duo Sticker Pack Regular Price €8,95 EUR Duo Sticker Pack Product Price€8,95 EUR",
+      "imageKey": "/store.duolingo.com/collections-accessories/blocks/m-14-collection.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "store.duolingo.com|https://store.duolingo.com/|mobile|10",
+      "blockId": "c9f3548f-d060-4940-b13e-164db9bdf861",
+      "host": "store.duolingo.com",
+      "pageType": "home",
+      "pageUrl": "https://store.duolingo.com/",
+      "viewport": "mobile",
+      "blockIndex": 10,
+      "typeHint": "feature",
+      "headline": null,
+      "text": "Buff Duo Plushie Regular Price €28,95 EUR Buff Duo Plushie Product Price€28,95 EUR",
+      "imageKey": "/store.duolingo.com/home/blocks/m-10-feature.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "typology.com|https://typology.com/|mobile|8",
+      "blockId": "801cbc7e-6391-43ba-919c-fa02eafd64de",
+      "host": "typology.com",
+      "pageType": "home",
+      "pageUrl": "https://typology.com/",
+      "viewport": "mobile",
+      "blockIndex": 8,
+      "typeHint": "collection",
+      "headline": "Shop by concern",
+      "text": "SHOP BY CONCERN NIGHT CARE TINTED CARE FACE SERUMS MOISTURISERS EYE CONTOUR CARE LIP CARE HAIR CARE BODY CARE SKIN AGING DUOS, TRIOS & KITS GIFT SETS VIEW NEW ARRIVALS",
+      "imageKey": "/typology.com/home/blocks/m-08-collection.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "anker.com|https://www.anker.com/collections/power-banks?ref=image_category_banner|desktop|5",
+      "blockId": "20bbc286-6bd0-4a52-a764-221e4cfdfcd0",
+      "host": "anker.com",
+      "pageType": "collection",
+      "pageUrl": "https://www.anker.com/collections/power-banks?ref=image_category_banner",
+      "viewport": "desktop",
+      "blockIndex": 5,
+      "typeHint": "product-part",
+      "headline": "Color: Space Black",
+      "text": "$30 OFF New Anker Prime Power Bank (26K, 300W) $199.99$229.99 $199.99 $15 OFF Hot Anker Laptop Power Bank (25K, 165W, Built-In and Retractable Cables) $104.99$119.99 $104.99 Sale Hot Anker MagGo Power Bank (10K) $89.99 $89.99 Hot Anker MagGo Power Bank (10K, Slim) $79.86 $79.86 Sale New Anker Nano Power Bank (5K, MagGo, Slim) $54.99 $54.99 Anker MagGo 2 Pro The World's Fastest and Coolest Wireless",
+      "imageKey": "/anker.com/collections-power-banks-ee151e/blocks/d-05-product-part.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "myzoobox.com|https://myzoobox.com/|desktop|6",
+      "blockId": "daacba30-143d-4051-9442-3a86470ca1c5",
+      "host": "myzoobox.com",
+      "pageType": "home",
+      "pageUrl": "https://myzoobox.com/",
+      "viewport": "desktop",
+      "blockIndex": 6,
+      "typeHint": "zoo-home-part",
+      "headline": "There is a lot more inside My ZOO Box",
+      "text": "Not just another animal box There is a lot more inside My ZOO Box Some animal kits give kids something to make. My ZOO Box gives them an animal to understand. 200,000+ boxes delivered A TYPICAL ANIMAL KIT Inside My ZOO Box Simplified words that talk down to kids Real zoology and science vocabulary An activity sheet or two Science-rich books, not just activity sheets A craft with an animal printed",
+      "imageKey": "/myzoobox.com/home/blocks/d-06-zoo-home-part.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "nanit.com|https://nanit.com/|desktop|9",
+      "blockId": "b8e4e867-30ea-4495-aa33-86478d2a8b65",
+      "host": "nanit.com",
+      "pageType": "home",
+      "pageUrl": "https://nanit.com/",
+      "viewport": "desktop",
+      "blockIndex": 9,
+      "typeHint": "shop-the-feed",
+      "headline": "What’s our favorite view? Yours",
+      "text": "What’s our favorite view? Yours @get_nanit Follow Us Smart Baby Monitor System Shop Breathing Wear Sleeping Bag Shop Smart Baby Monitor System Shop Smart Baby Monitor System Shop",
+      "imageKey": "/nanit.com/home/blocks/d-09-shop-the-feed.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "store-usa.arduino.cc|https://store-usa.arduino.cc/collections/accessories|mobile|10",
+      "blockId": "ae65307c-9da5-4745-9154-2d5a2e2d8588",
+      "host": "store-usa.arduino.cc",
+      "pageType": "collection",
+      "pageUrl": "https://store-usa.arduino.cc/collections/accessories",
+      "viewport": "mobile",
+      "blockIndex": 10,
+      "typeHint": "product",
+      "headline": "Grove - Tilt Switch",
+      "text": "Grove - Tilt Switch Inside the tilt switch is a pair of balls that make contact with the pins when the case is upright. Tilt the case over and the balls don’t touch, thus not making a connection. It is wired to the SI... $4.50",
+      "imageKey": "/store-usa.arduino.cc/collections-accessories/blocks/m-10-product.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "store-usa.arduino.cc|https://store-usa.arduino.cc/|mobile|3",
+      "blockId": "e50c8d24-c9cf-4893-a78f-ccd0263b84ec",
+      "host": "store-usa.arduino.cc",
+      "pageType": "home",
+      "pageUrl": "https://store-usa.arduino.cc/",
+      "viewport": "mobile",
+      "blockIndex": 3,
+      "typeHint": "dynamic-featured-product",
+      "headline": "Arduino® UNO™ Q 4GB",
+      "text": "Arduino® UNO™ Q 4GB SKU ABX00173 Barcode 7630049205727 Show more Current price $79.00 Quantity ADD TO CART Availability: In stock, ready to be shipped",
+      "imageKey": "/store-usa.arduino.cc/home/blocks/m-03-dynamic-featured-product.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "store.dji.com|https://store.dji.com/|mobile|6",
+      "blockId": "9ee879e2-fc36-42a2-a1cd-d7771c146100",
+      "host": "store.dji.com",
+      "pageType": "home",
+      "pageUrl": "https://store.dji.com/",
+      "viewport": "mobile",
+      "blockIndex": 6,
+      "typeHint": "unknown-part",
+      "headline": "Handheld · Daily Vlogging",
+      "text": "Handheld · Daily Vlogging Osmo Pocket 3 1″ CMOS Pocket Gimbal Camera From USD $439 Buy Now 1 2 3 Action Camera Osmo Action 5 Pro From USD $319 1 2 3 Action Camera Osmo Action 4 From USD $239 1 2 3 Flagship Intelligent Tracking Phone Gimbal Osmo Mobile 7P USD $99 Buying guides Which Handheld Is Right for Me? All Accessories",
+      "imageKey": "/store.dji.com/home/blocks/m-06-unknown-part.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "store.duolingo.com|https://store.duolingo.com/collections/accessories|mobile|6",
+      "blockId": "e73ecf6e-ea32-455d-8251-3efe060aa22c",
+      "host": "store.duolingo.com",
+      "pageType": "collection",
+      "pageUrl": "https://store.duolingo.com/collections/accessories",
+      "viewport": "mobile",
+      "blockIndex": 6,
+      "typeHint": "collection",
+      "headline": null,
+      "text": "Together Forever Pin Set Regular Price €13,95 EUR Together Forever Pin Set Product Price€13,95 EUR",
+      "imageKey": "/store.duolingo.com/collections-accessories/blocks/m-06-collection.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "store.duolingo.com|https://store.duolingo.com/|mobile|5",
+      "blockId": "7a412fa8-d5a8-4dec-9c01-732b3b8d1398",
+      "host": "store.duolingo.com",
+      "pageType": "home",
+      "pageUrl": "https://store.duolingo.com/",
+      "viewport": "mobile",
+      "blockIndex": 5,
+      "typeHint": "feature",
+      "headline": null,
+      "text": "Duo Plushie Regular Price €26,95 EUR Duo Plushie Product Price€26,95 EUR",
+      "imageKey": "/store.duolingo.com/home/blocks/m-05-feature.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "typology.com|https://typology.com/|desktop|10",
+      "blockId": "a022d2b5-ea8e-474b-9882-9519004469e2",
+      "host": "typology.com",
+      "pageType": "home",
+      "pageUrl": "https://typology.com/",
+      "viewport": "desktop",
+      "blockIndex": 10,
+      "typeHint": "unknown",
+      "headline": "102605 five-star reviews.",
+      "text": "102605 five-star reviews. OUR OVERALL RATING IS 4.2 OUT OF 5 STARS FROM OVER 162978 REVIEWS. TATIANA K. “Despite having sensitive skin, I’ve always needed a facial scrub that makes me feel brand new. This scrub is incredible in both texture and effectiveness; it’s the go-to scrub before my skincare routine. I’ve adopted it...” About Radiance Face Scrub P71 - Rosehip Oil SEE ALL REVIEWS",
+      "imageKey": "/typology.com/home/blocks/d-10-unknown.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "anker.com|https://www.anker.com/collections/power-banks?ref=image_category_banner|desktop|4",
+      "blockId": "86e3961c-259a-47e7-a8cc-e8de3e73e1ce",
+      "host": "anker.com",
+      "pageType": "collection",
+      "pageUrl": "https://www.anker.com/collections/power-banks?ref=image_category_banner",
+      "viewport": "desktop",
+      "blockIndex": 4,
+      "typeHint": "product-part",
+      "headline": null,
+      "text": "Close filter Clear 37 Item(s) Found Sort Recommended",
+      "imageKey": "/anker.com/collections-power-banks-ee151e/blocks/d-04-product-part.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "myzoobox.com|https://myzoobox.com/|mobile|13",
+      "blockId": "883326b2-cfe9-4d8d-bd59-7e6a9129769b",
+      "host": "myzoobox.com",
+      "pageType": "home",
+      "pageUrl": "https://myzoobox.com/",
+      "viewport": "mobile",
+      "blockIndex": 13,
+      "typeHint": "pagefly-home-part",
+      "headline": "Real Zoology,Made for Kids",
+      "text": "Real Zoology, Made for Kids Hands-on animal adventures that spark discovery, creativity, and compassion in kids ages 3-12. Join a Monthly Club Shop Themed Sets",
+      "imageKey": "/myzoobox.com/home/blocks/m-13-pagefly-home-part.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "nanit.com|https://nanit.com/|desktop|3",
+      "blockId": "1b777d9d-80e1-48eb-8910-7a209d66d133",
+      "host": "nanit.com",
+      "pageType": "home",
+      "pageUrl": "https://nanit.com/",
+      "viewport": "desktop",
+      "blockIndex": 3,
+      "typeHint": "featured-collection-enhanced",
+      "headline": "We’ve raised the bar for smart baby monitors",
+      "text": "We’ve raised the bar for smart baby monitors Bye bye, basic baby monitors: Nanit created one intelligent system to grow with your family through every age and stage. Choose options Smart Baby Monitor System From $289.99 Shop SAVE 15% Choose options The Best Sellers Bundle From $369.00 Shop Add to cart Sound + Light From $99.99 Shop",
+      "imageKey": "/nanit.com/home/blocks/d-03-featured-collection-enhanced.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "store-usa.arduino.cc|https://store-usa.arduino.cc/collections/accessories|mobile|5",
+      "blockId": "6b4b4fab-14cc-40a4-a28b-a912b3202a7a",
+      "host": "store-usa.arduino.cc",
+      "pageType": "collection",
+      "pageUrl": "https://store-usa.arduino.cc/collections/accessories",
+      "viewport": "mobile",
+      "blockIndex": 5,
+      "typeHint": "product",
+      "headline": "Arduino Replacements Pack",
+      "text": "Arduino Replacements Pack Even though Arduino Education kits are jam-packed with everything you need, we know that mislaying parts in the excitement of getting hands-on in a classroom can sometimes happen. In the Arduino Re... $30.00 4.0",
+      "imageKey": "/store-usa.arduino.cc/collections-accessories/blocks/m-05-product.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "store-usa.arduino.cc|https://store-usa.arduino.cc/|desktop|3",
+      "blockId": "9090b476-d300-4994-8ba6-bd0483404b35",
+      "host": "store-usa.arduino.cc",
+      "pageType": "home",
+      "pageUrl": "https://store-usa.arduino.cc/",
+      "viewport": "desktop",
+      "blockIndex": 3,
+      "typeHint": "dynamic-featured-product",
+      "headline": "Arduino® UNO™ Q 4GB",
+      "text": "Arduino® UNO™ Q 4GB SKU ABX00173 Barcode 7630049205727 Show more Current price $79.00 Quantity ADD TO CART ADD TO WISHLIST Availability: In stock, ready to be shipped",
+      "imageKey": "/store-usa.arduino.cc/home/blocks/d-03-dynamic-featured-product.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "store.dji.com|https://store.dji.com/|mobile|5",
+      "blockId": "48399f5b-8bd4-47ba-807a-7313b91424e9",
+      "host": "store.dji.com",
+      "pageType": "home",
+      "pageUrl": "https://store.dji.com/",
+      "viewport": "mobile",
+      "blockIndex": 5,
+      "typeHint": "unknown-part",
+      "headline": "Camera Drones",
+      "text": "Camera Drones DJI Flip All-in-One Vlog Camera Drone From USD $439 Buy Now 1 2 3 Advanced DJI Air 3S From USD $1,099 1 2 3 Advanced DJI Avata 2 From USD $849 1 2 3 Advanced DJI Mini 4 Pro From USD $759 Buying Guides Which Drone Is Right for Me? All Accessories",
+      "imageKey": "/store.dji.com/home/blocks/m-05-unknown-part.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "store.duolingo.com|https://store.duolingo.com/collections/accessories|desktop|2",
+      "blockId": "0640663b-d420-464a-b8fc-04450a4c335c",
+      "host": "store.duolingo.com",
+      "pageType": "collection",
+      "pageUrl": "https://store.duolingo.com/collections/accessories",
+      "viewport": "desktop",
+      "blockIndex": 2,
+      "typeHint": "collection-template-part",
+      "headline": null,
+      "text": "Duolingo Chess Set Regular Price €57,95 EUR Duolingo Chess Set Product Price€57,95 EUR Sleepy Duo Touch Light Regular Price €26,95 EUR Sleepy Duo Touch Light Product Price€26,95 EUR Duo & Lily BFF Mug Set Regular Price €35,95 EUR Duo & Lily BFF Mug Set Product Price€35,95 EUR Oscar’s Rose Plushie Keychain Regular Price €13,95 EUR Oscar’s Rose Plushie Keychain Product Price€13,95 EUR Together Forev",
+      "imageKey": "/store.duolingo.com/collections-accessories/blocks/d-02-collection-template-part.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "store.duolingo.com|https://store.duolingo.com/|mobile|15",
+      "blockId": "7d44d92e-bc64-4244-b043-008585d90251",
+      "host": "store.duolingo.com",
+      "pageType": "home",
+      "pageUrl": "https://store.duolingo.com/",
+      "viewport": "mobile",
+      "blockIndex": 15,
+      "typeHint": "feature",
+      "headline": null,
+      "text": "Lily Plushie Regular Price €28,95 EUR Lily Plushie Product Price€28,95 EUR",
+      "imageKey": "/store.duolingo.com/home/blocks/m-15-feature.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "typology.com|https://typology.com/|mobile|3",
+      "blockId": "1ac8c342-7687-4ee8-bf4e-85d63d42904e",
+      "host": "typology.com",
+      "pageType": "home",
+      "pageUrl": "https://typology.com/",
+      "viewport": "mobile",
+      "blockIndex": 3,
+      "typeHint": "unknown",
+      "headline": "Bestsellers",
+      "text": "BEST SELLERS BEST-SELLER Tinted Serum T10 — Vitamin C + Aloe Vera — 29,90 € BEST-SELLER Radiance Serum L32 — 15% Vitamin C Complex + 1% Vitami… — from 17,90 € RADIANCE Glow Drops T31 — 5% Vitamin C + Aloe Vera — 22,90 € VIEW MORE",
+      "imageKey": "/typology.com/home/blocks/m-03-unknown.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "anker.com|https://www.anker.com/collections/power-banks?ref=image_category_banner|desktop|3",
+      "blockId": "1a205d6f-a30d-447b-8234-458e39906b6e",
+      "host": "anker.com",
+      "pageType": "collection",
+      "pageUrl": "https://www.anker.com/collections/power-banks?ref=image_category_banner",
+      "viewport": "desktop",
+      "blockIndex": 3,
+      "typeHint": "unknown",
+      "headline": null,
+      "text": "Best Sellers Hot Anker Laptop Power Bank (25K, 165W, Built-In and Retractable Cables) $104.99 $119.99 Shop now New Anker Prime Power Bank (26K, 300W) $199.99 $229.99 Shop now Anker Nano Power Bank (5K, MagGo, Slim) $54.99 Shop now Hot Anker MagGo Power Bank (10K, Slim) $79.86 Shop now",
+      "imageKey": "/anker.com/collections-power-banks-ee151e/blocks/d-03-unknown.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "myzoobox.com|https://myzoobox.com/|desktop|7",
+      "blockId": "7c45c6a3-fbc1-48a6-aa85-5bd9889586af",
+      "host": "myzoobox.com",
+      "pageType": "home",
+      "pageUrl": "https://myzoobox.com/",
+      "viewport": "desktop",
+      "blockIndex": 7,
+      "typeHint": "zoo-home-part",
+      "headline": "Parents keep telling us the same thing",
+      "text": "Real families Parents keep telling us the same thing Over 200,000 boxes delivered, and the notes we love most are about the moment the box opens. Rated 5 out of 5 \"Our first box came! She loved it and asked to sleep with it tonight. We read the book and looked at all the cool activities we can do.\" Erika Benner Verified Cub Club Member Rated 5 out of 5 \"We just got our first zoo box and my kiddos",
+      "imageKey": "/myzoobox.com/home/blocks/d-07-zoo-home-part.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "nanit.com|https://nanit.com/|mobile|3",
+      "blockId": "1aca9fbb-2e31-4c82-bc0b-29d70f7a9671",
+      "host": "nanit.com",
+      "pageType": "home",
+      "pageUrl": "https://nanit.com/",
+      "viewport": "mobile",
+      "blockIndex": 3,
+      "typeHint": "featured-collection-enhanced",
+      "headline": "We’ve raised the bar for smart baby monitors",
+      "text": "We’ve raised the bar for smart baby monitors Bye bye, basic baby monitors: Nanit created one intelligent system to grow with your family through every age and stage. Smart Baby Monitor System From $289.99 Shop SAVE 15% The Best Sellers Bundle From $369.00 Shop Sound + Light From $99.99 Shop",
+      "imageKey": "/nanit.com/home/blocks/m-03-featured-collection-enhanced.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "store-usa.arduino.cc|https://store-usa.arduino.cc/collections/accessories|desktop|12",
+      "blockId": "68d94563-0b3f-46bb-b822-a284f1bf5255",
+      "host": "store-usa.arduino.cc",
+      "pageType": "collection",
+      "pageUrl": "https://store-usa.arduino.cc/collections/accessories",
+      "viewport": "desktop",
+      "blockIndex": 12,
+      "typeHint": "product",
+      "headline": "Grove - Button (P)",
+      "text": "Grove - Button (P) What does “P” mean? “P” is for “panel mount” in this product. This Grove – Button is a sister version of original Grove - Button. They are identical except the Grove connecter is moved to the back ... $1.50",
+      "imageKey": "/store-usa.arduino.cc/collections-accessories/blocks/d-12-product.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "store.dji.com|https://store.dji.com/|mobile|3",
+      "blockId": "8c19a080-ba44-471f-bbe8-23e3e8a82c53",
+      "host": "store.dji.com",
+      "pageType": "home",
+      "pageUrl": "https://store.dji.com/",
+      "viewport": "mobile",
+      "blockIndex": 3,
+      "typeHint": "unknown-part",
+      "headline": "Why shop with DJI Store",
+      "text": "Why shop with DJI Store 1% DJI Credit Reward Over USD $35 Ships Free Popular Drones In Stock Free Fast-Delivery Upgrade Official Refurbished Up to 30-Day Returns Get DJI Expert Help",
+      "imageKey": "/store.dji.com/home/blocks/m-03-unknown-part.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "store.duolingo.com|https://store.duolingo.com/collections/accessories|mobile|19",
+      "blockId": "1481dd44-a9a4-410b-8e68-7ae006875727",
+      "host": "store.duolingo.com",
+      "pageType": "collection",
+      "pageUrl": "https://store.duolingo.com/collections/accessories",
+      "viewport": "mobile",
+      "blockIndex": 19,
+      "typeHint": "collection",
+      "headline": null,
+      "text": "Duo's Mixed Emotions Pin Regular Price €13,95 EUR SOLD OUT Duo's Mixed Emotions Pin Product Price€13,95 EUR This Product Is Sold Out",
+      "imageKey": "/store.duolingo.com/collections-accessories/blocks/m-19-collection.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "store.duolingo.com|https://store.duolingo.com/|mobile|2",
+      "blockId": "a81c8d25-30dd-43c9-8b79-7b8f040b407d",
+      "host": "store.duolingo.com",
+      "pageType": "home",
+      "pageUrl": "https://store.duolingo.com/",
+      "viewport": "mobile",
+      "blockIndex": 2,
+      "typeHint": "slideshow-section",
+      "headline": null,
+      "text": "game on with oscar SHOP NOW",
+      "imageKey": "/store.duolingo.com/home/blocks/m-02-slideshow-section.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "typology.com|https://typology.com/|mobile|2",
+      "blockId": "aad50f59-bafb-405d-9c23-a5238c79c3af",
+      "host": "typology.com",
+      "pageType": "home",
+      "pageUrl": "https://typology.com/",
+      "viewport": "mobile",
+      "blockIndex": 2,
+      "typeHint": "unknown",
+      "headline": "Our formulations areVegan,Cruelty-free,Made in France",
+      "text": "OUR FORMULATIONS ARE VEGAN, CRUELTY-FREE, MADE IN FRANCE",
+      "imageKey": "/typology.com/home/blocks/m-02-unknown.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "anker.com|https://www.anker.com/collections/power-banks?ref=image_category_banner|desktop|2",
+      "blockId": "3be0fc72-d527-4c50-bc26-cd1b502cb263",
+      "host": "anker.com",
+      "pageType": "collection",
+      "pageUrl": "https://www.anker.com/collections/power-banks?ref=image_category_banner",
+      "viewport": "desktop",
+      "blockIndex": 2,
+      "typeHint": "banner",
+      "headline": "Power Banks",
+      "text": "Power Banks Experience portable power with Anker's high-capacity power banks. Featuring fast charging technology and smart displays, enjoy convenient power on the go. Certified Compatibility Hassle-Free Warranty Long-Lasting Quality 30-Day Money-Back Guarantee Super Fast Charging Certified Compatibility Hassle-Free Warranty Long-Lasting Quality 30-Day Money-Back Guarantee Super Fast Charging",
+      "imageKey": "/anker.com/collections-power-banks-ee151e/blocks/d-02-banner.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "myzoobox.com|https://myzoobox.com/|mobile|16",
+      "blockId": "e70d76bb-c5f1-4139-9bc0-6a52569dd036",
+      "host": "myzoobox.com",
+      "pageType": "home",
+      "pageUrl": "https://myzoobox.com/",
+      "viewport": "mobile",
+      "blockIndex": 16,
+      "typeHint": "pagefly-home-part",
+      "headline": "What's Inside Every My ZOO Box?",
+      "text": "What's Inside Every My ZOO Box? Both clubs include the core essentials below. Then we tailor the rest to your child's age. What is a Pangolin? Animal Ambassador A high-quality plush that helps kids feel connected to their animal and builds empathy. Educational Book A storybook for preschoolers or a science reader for older kids—chosen to match their age. Anatomy Poster A brightly illustrated diagr",
+      "imageKey": "/myzoobox.com/home/blocks/m-16-pagefly-home-part.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "nanit.com|https://nanit.com/|desktop|4",
+      "blockId": "575f46f4-08ac-42cb-a3f3-9537c4071d7e",
+      "host": "nanit.com",
+      "pageType": "home",
+      "pageUrl": "https://nanit.com/",
+      "viewport": "desktop",
+      "blockIndex": 4,
+      "typeHint": "logo-list",
+      "headline": "97% of Nanit parents recommend this monitor",
+      "text": "97% of Nanit parents recommend this monitor",
+      "imageKey": "/nanit.com/home/blocks/d-04-logo-list.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "store-usa.arduino.cc|https://store-usa.arduino.cc/collections/accessories|desktop|1",
+      "blockId": "82148f6a-c749-4c1d-822d-15ba6d9257b7",
+      "host": "store-usa.arduino.cc",
+      "pageType": "collection",
+      "pageUrl": "https://store-usa.arduino.cc/collections/accessories",
+      "viewport": "desktop",
+      "blockIndex": 1,
+      "typeHint": "product",
+      "headline": "Accessories",
+      "text": "Accessories Complete and customize your projects with our wide selection of Arduino accessories, designed to enhance usability, connectivity, and performance across all your builds. From everyday prototyping to advanced development setups, these accessories help you get the most out of your Arduino ecosystem. Our range includes practical add-ons such as adapters, headers, protective sleeves, and s",
+      "imageKey": "/store-usa.arduino.cc/collections-accessories/blocks/d-01-product.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "store.duolingo.com|https://store.duolingo.com/collections/accessories|mobile|26",
+      "blockId": "8494c453-436a-455a-a17c-1c79b3c2434d",
+      "host": "store.duolingo.com",
+      "pageType": "collection",
+      "pageUrl": "https://store.duolingo.com/collections/accessories",
+      "viewport": "mobile",
+      "blockIndex": 26,
+      "typeHint": "collection-template-part",
+      "headline": null,
+      "text": "PREVIOUS PAGE Page 1 of 2 NEXT PAGE",
+      "imageKey": "/store.duolingo.com/collections-accessories/blocks/m-26-collection-template-part.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "store.duolingo.com|https://store.duolingo.com/|mobile|3",
+      "blockId": "5456c75c-bff8-45ad-882a-dc46da37f7c2",
+      "host": "store.duolingo.com",
+      "pageType": "home",
+      "pageUrl": "https://store.duolingo.com/",
+      "viewport": "mobile",
+      "blockIndex": 3,
+      "typeHint": "feature",
+      "headline": null,
+      "text": "Oscar Plushie Regular Price €28,95 EUR Oscar Plushie Product Price€28,95 EUR",
+      "imageKey": "/store.duolingo.com/home/blocks/m-03-feature.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "typology.com|https://typology.com/|mobile|7",
+      "blockId": "d3cbde6b-413f-483f-ba65-c3ed14a08429",
+      "host": "typology.com",
+      "pageType": "home",
+      "pageUrl": "https://typology.com/",
+      "viewport": "mobile",
+      "blockIndex": 7,
+      "typeHint": "unknown",
+      "headline": "New Arrivals",
+      "text": "NEW ARRIVALS COMING SOON Advent Calendar 2026 — 179,90 € NEW SHADE Serum Mascara T50 — 1% Pea Peptides + Castor Oil — 23,50 € NEW SHADE Moisturizing Lip Oil T40 — 10% Squalane + Vitamin E — 25,50 € NEW Regenerating Micro-Spicules Serum A63 — 3% PDRN-EG… — from 29,90 € VIEW MORE",
+      "imageKey": "/typology.com/home/blocks/m-07-unknown.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "anker.com|https://www.anker.com/collections/all-products-charging|desktop|7",
+      "blockId": "d2d53d95-3660-422b-a8ab-4e30f02c30ae",
+      "host": "anker.com",
+      "pageType": "collection",
+      "pageUrl": "https://www.anker.com/collections/all-products-charging",
+      "viewport": "desktop",
+      "blockIndex": 7,
+      "typeHint": "footer",
+      "headline": null,
+      "text": "*Pay immediately or installments with Affirm. Rates from 0-36% APR. Payment options through Affirm are subject to an eligibility check and are provided by these lending partners: affirm.com/lenders. Options depend on your purchase amount, and a down payment may be required. CA residents: Loans by Affirm Loan Services, LLC are made or arranged pursuant to a California Finance Lenders Law license. F",
+      "imageKey": "/anker.com/collections-all-products-charging/blocks/d-07-footer.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "myzoobox.com|https://myzoobox.com/|desktop|15",
+      "blockId": "3270b8d1-1dfc-4450-8101-2c05749c5928",
+      "host": "myzoobox.com",
+      "pageType": "home",
+      "pageUrl": "https://myzoobox.com/",
+      "viewport": "desktop",
+      "blockIndex": 15,
+      "typeHint": "pagefly-home-part",
+      "headline": "Why Families Love My ZOO Box",
+      "text": "Why Families Love My ZOO Box Get started",
+      "imageKey": "/myzoobox.com/home/blocks/d-15-pagefly-home-part.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    },
+    {
+      "key": "nanit.com|https://nanit.com/|mobile|10",
+      "blockId": "755e14df-95fb-4650-9d36-d5ec0ffbf29d",
+      "host": "nanit.com",
+      "pageType": "home",
+      "pageUrl": "https://nanit.com/",
+      "viewport": "mobile",
+      "blockIndex": 10,
+      "typeHint": "faq",
+      "headline": "FAQs",
+      "text": "FAQs Does Nanit require a subscription? How much is Nanit Insights per month? Can I watch Nanit away from home? How is my Nanit video stream protected? How does Nanit know when my baby is asleep? How does Breathing Motion Monitoring work? Is the Nanit Smart Baby Monitor portable? What other features does the Nanit Sound + Light Machine contain, beyond functioning as a night light and sound machine",
+      "imageKey": "/nanit.com/home/blocks/m-10-faq.webp",
+      "gold": {
+        "block_type": null
+      },
+      "reviewedBy": null
+    }
+  ]
+}

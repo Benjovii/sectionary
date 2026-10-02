@@ -42,7 +42,9 @@ export const blocks = pgTable("blocks", {
   imageSlices: jsonb("image_slices"),
   aiDescription: text("ai_description"), aiResponse: jsonb("ai_response"), embedding: vector("embedding"),
   // search_tsv (generated, migration 0004) is left out: Drizzle never writes it and the API reads it in SQL.
-  embeddingModel: text("embedding_model"), embeddingHash: text("embedding_hash"), embeddedAt: timestamp("embedded_at", { withTimezone: true }), ...timestamps,
+  embeddingModel: text("embedding_model"), embeddingHash: text("embedding_hash"), embeddedAt: timestamp("embedded_at", { withTimezone: true }),
+  // What the current tags were made from (migration 0006), so only new or changed blocks are tagged again.
+  tagModel: text("tag_model"), tagInputHash: text("tag_input_hash"), taggedAt: timestamp("tagged_at", { withTimezone: true }), ...timestamps,
 }, (t) => [uniqueIndex("blocks_capture_vp_index_uidx").on(t.captureId, t.viewport, t.blockIndex), index("blocks_capture_idx").on(t.captureId), index("blocks_viewport_idx").on(t.viewport), index("blocks_type_hint_idx").on(t.typeHint), index("blocks_block_type_idx").on(t.blockType), index("blocks_tags_gin_idx").using("gin", t.tags)]);
 
 export const taxonomy = pgTable("taxonomy", {
