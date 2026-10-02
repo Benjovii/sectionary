@@ -25,6 +25,7 @@ export async function GET(request: Request) {
         "x-search-terms": search.terms.join(" "),
         "x-search-corrected": Object.entries(search.corrected).map(([from, to]) => `${from}>${to}`).join(" "),
         "x-search-semantic": String(search.semantic),
+        "x-search-intent": search.intents.join(" "),
       };
       return Response.json({ items, blocks: items, generatedAt: new Date().toISOString(), nextCursor, total, facets }, { headers });
     }
