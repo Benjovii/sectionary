@@ -1,6 +1,6 @@
 import type { Block } from "@/contracts/block";
 import { BLOCKS_SRC } from "@/lib/data-source";
-import { database } from "@/server/db";
+import { database, pgArray } from "@/server/db";
 
 type Sql = ReturnType<typeof database>;
 
@@ -42,7 +42,7 @@ export function readFilters(url: URL): BlockFilters {
  * a facet counts what its other values would add.
  */
 export function blockWhere(sql: Sql, f: BlockFilters, skip: TechFacet[] = []) {
-  const list = (values: string[] | undefined) => (values ? sql.array(values) : null);
+  const list = (values: string[] | undefined) => (values ? pgArray(values) : null);
   const tech = (key: TechFacet) => list(skip.includes(key) ? undefined : f[key]);
   return sql`c.id=(SELECT c2.id FROM captures c2 WHERE c2.page_id=p.id ORDER BY c2.captured_at DESC LIMIT 1)
     AND (${list(f.page)}::text[] IS NULL OR p.type=ANY(${list(f.page)}::text[]))

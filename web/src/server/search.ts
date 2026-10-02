@@ -1,5 +1,5 @@
 import type { Block } from "@/contracts/block";
-import { database } from "@/server/db";
+import { database, pgArray } from "@/server/db";
 import { blockColumns, blockJoins, blockWhere, toBlock, type BlockFilters, type TechFacet } from "@/server/blocks";
 
 type Sql = ReturnType<typeof database>;
@@ -55,7 +55,7 @@ async function expand(sql: Sql, words: string[]): Promise<{ groups: string[][]; 
           WHERE term % w AND term <> w AND (NOT known OR (left(term, 4) = left(w, 4) AND similarity(term, w) >= 0.5))
           ORDER BY similarity(term, w) DESC, docs DESC LIMIT CASE WHEN known THEN 3 ELSE 1 END
         ) AS near
-        FROM unnest(${sql.array(candidates)}::text[]) AS w,
+        FROM unnest(${pgArray(candidates)}::text[]) AS w,
           LATERAL (SELECT EXISTS (SELECT 1 FROM search_terms WHERE term = w) AS known) k
         WHERE to_tsvector('english', w) <> ''::tsvector`;
       for (const r of rows) {
@@ -122,7 +122,7 @@ async function candidates(sql: Sql, f: BlockFilters, groups: string[][], vector:
     if (vector) await tx`SET LOCAL hnsw.ef_search = ${sql.unsafe(String(CANDIDATES))}`;
     const rows = await tx`
       WITH words AS (
-        SELECT q FROM unnest(${sql.array(each)}::text[]) AS t, websearch_to_tsquery('english', t) AS q WHERE numnode(q) > 0
+        SELECT q FROM unnest(${pgArray(each)}::text[]) AS t, websearch_to_tsquery('english', t) AS q WHERE numnode(q) > 0
       ), fts AS (
         SELECT id, row_number() OVER (ORDER BY coverage DESC, weight DESC, id) AS r FROM (
           SELECT b.id,
@@ -187,7 +187,7 @@ export async function searchBlocks(q: string, f: BlockFilters, limit: number, of
     f.platform || f.theme || f.app ? candidates(sql, f, groups, vector, true) : null,
   ]);
   const page = ranked.slice(offset, offset + limit);
-  const rows = page.length ? await sql`SELECT ${blockColumns(sql)} FROM ${blockJoins(sql)} WHERE b.id = ANY(${sql.array(page.map((c) => c.id))}::uuid[])` : [];
+  const rows = page.length ? await sql`SELECT ${blockColumns(sql)} FROM ${blockJoins(sql)} WHERE b.id = ANY(${pgArray(page.map((c) => c.id))}::uuid[])` : [];
   const byId = new Map(rows.map((r) => [r.id as string, toBlock(r)]));
 
   return {
