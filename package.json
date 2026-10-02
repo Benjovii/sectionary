@@ -19,7 +19,8 @@
     "sample-seeds": "tsx src/sample-seeds.ts",
     "review-sheets": "tsx src/review-sheets.ts",
     "wall-check": "tsx src/wall-check.ts",
-    "prune-seeds": "tsx src/prune-seeds.ts"
+    "prune-seeds": "tsx src/prune-seeds.ts",
+    "test": "tsx --test src/*.test.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.679.0",

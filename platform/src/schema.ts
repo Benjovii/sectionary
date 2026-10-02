@@ -38,6 +38,8 @@ export const blocks = pgTable("blocks", {
   text: text("text").notNull(), textLength: integer("text_length").notNull(), headline: text("headline"), buttons: integer("buttons").notNull(),
   images: integer("images").notNull(), videos: integer("videos").notNull(), background: text("background").notNull(), imageKey: text("image_key"),
   thumbnailKey: text("thumbnail_key"), blurhash: text("blurhash"), imageWidth: integer("image_width"), imageHeight: integer("image_height"),
+  // Ordered slices when the image was taller than WebP allows (migration 0005), else null.
+  imageSlices: jsonb("image_slices"),
   aiDescription: text("ai_description"), aiResponse: jsonb("ai_response"), embedding: vector("embedding"),
   // search_tsv (generated, migration 0004) is left out: Drizzle never writes it and the API reads it in SQL.
   embeddingModel: text("embedding_model"), embeddingHash: text("embedding_hash"), embeddedAt: timestamp("embedded_at", { withTimezone: true }), ...timestamps,
