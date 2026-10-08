@@ -16,6 +16,15 @@ export function toStore(r: Record<string, unknown>, n = 1): Store {
   };
 }
 
+/**
+ * A full-page shot as the site can load it: the thumbnail the image pipeline
+ * uploaded (600px wide, the top of the page), which is what the previews show
+ * (object-cover, from the top). The viewport's `file` is a path on the capture
+ * machine ("desktop.jpg") and the full image may be split into slices, so
+ * neither is usable here. Null without an upload: the preview stacks the blocks.
+ */
+const shotOf = (viewport: { image?: { thumbnail?: string | null } | null } | null | undefined) => viewport?.image?.thumbnail ?? null;
+
 /** Every page of these sites at its latest capture, with full-page shots and block counts, keyed by site id. */
 export async function latestPages(sql: Sql, siteIds: string[]): Promise<Map<string, SiteProfile["pages"]>> {
   const rows = siteIds.length
@@ -28,7 +37,7 @@ export async function latestPages(sql: Sql, siteIds: string[]): Promise<Map<stri
   for (const p of rows) {
     const list = bySite.get(p.site_id) ?? [];
     list.push({ url: p.url, type: p.type, title: p.title, capturedAt: p.captured_at.toISOString(),
-      desktop: p.desktop?.file ?? null, mobile: p.mobile?.file ?? null, blocks: p.blocks });
+      desktop: shotOf(p.desktop), mobile: shotOf(p.mobile), blocks: p.blocks });
     bySite.set(p.site_id, list);
   }
   return bySite;
