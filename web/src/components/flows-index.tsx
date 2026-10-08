@@ -7,9 +7,9 @@ import { Button } from "@/components/ui/button";
 import { StoreIcon } from "@/components/store-icon";
 import { Stack } from "@/components/site-profile";
 import { cn } from "@/lib/utils";
-import { loadBlockIndex } from "@/lib/load-blocks";
+import { loadFlowSummaries } from "@/lib/load-blocks";
 import { PAGE_TYPE_LABEL } from "@/lib/blocks";
-import { flowCounts, flowSummaries, type FlowSummary } from "@/lib/flows";
+import { flowCounts, type FlowSummary } from "@/lib/flows";
 
 /** Rows rendered per step; more join as the end of the list scrolls into view. */
 const STEP = 40;
@@ -22,11 +22,9 @@ const THUMB_RATIO = 4 / 3;
  * stores whose home, collection and product pages are all captured. Complete
  * flows by default; "Show incomplete" lists the rest with what they lack.
  *
- * Counted from the block set (NEXT_PUBLIC_BLOCKS_SRC), which every store's
- * blocks pass through. A store's flow page reads NEXT_PUBLIC_SITES_SRC when
- * that is set, so with the API on the two agree only as far as the API and the
- * block export do. Until the API offers a flows summary, this count is the
- * block-based one, and the one SEC-20 is read from.
+ * Counted from /api/sites when NEXT_PUBLIC_SITES_SRC is set (SEC-47), the
+ * same source each store's flow page reads, so the two always agree. Without
+ * it, from the block set, which every store's blocks pass through.
  */
 export function FlowsIndex() {
   const [list, setList] = useState<FlowSummary[] | null>(null);
@@ -39,8 +37,8 @@ export function FlowsIndex() {
 
   useEffect(() => {
     let alive = true;
-    loadBlockIndex().then(
-      (index) => alive && setList(flowSummaries(index)),
+    loadFlowSummaries().then(
+      (summaries) => alive && setList(summaries),
       (e: Error) => alive && setError(e.message),
     );
     return () => {

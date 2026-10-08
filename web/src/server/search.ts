@@ -1,10 +1,9 @@
 import type { Block } from "@/contracts/block";
 import { database, pgArray } from "@/server/db";
-import { blockColumns, blockJoins, blockWhere, toBlock, type BlockFilters, type TechFacet } from "@/server/blocks";
+import { blockColumns, blockJoins, blockWhere, facetCounts, toBlock, type BlockFilters, type Facet } from "@/server/blocks";
 import { detectIntents, editDistance, intentTerms, maxEdits } from "@/server/search-intent";
 
 type Sql = ReturnType<typeof database>;
-type Facet = { value: string; count: number };
 /** One part of the query: OR-ed websearch terms, counted as `weight` query words when a block matches. */
 type Group = { terms: string[]; weight: number };
 
@@ -108,7 +107,7 @@ async function embedQuery(q: string): Promise<number[] | null> {
   }
 }
 
-type Candidate = { id: string; score: number; platform: string | null; theme: string | null; apps: string[] };
+type Candidate = { id: string; score: number };
 
 /**
  * Both lists, fused. Filters apply inside each list, so every candidate is a real result.
@@ -120,8 +119,8 @@ type Candidate = { id: string; score: number; platform: string | null; theme: st
  * header that says "Subscriptions" twice beats a block that says "subscribe
  * and save 20%".
  */
-async function candidates(sql: Sql, f: BlockFilters, groups: Group[], vector: string | null, skipTech: boolean): Promise<Candidate[]> {
-  const where = blockWhere(sql, f, skipTech ? ["platform", "theme", "app"] : []);
+async function candidates(sql: Sql, f: BlockFilters, groups: Group[], vector: string | null): Promise<Candidate[]> {
+  const where = blockWhere(sql, f);
   // websearch syntax with "or" between terms: nothing to escape, stop words drop out.
   const any = groups.flatMap((g) => g.terms).join(" or ");
   const each = groups.map((g) => g.terms.join(" or "));
@@ -153,35 +152,18 @@ async function candidates(sql: Sql, f: BlockFilters, groups: Group[], vector: st
       ), fused AS (
         SELECT id, sum(1.0 / (${RRF_K} + r)) AS score FROM (SELECT * FROM fts UNION ALL SELECT * FROM sem) lists GROUP BY id
       )
-      SELECT fused.id, fused.score::float8 AS score, s.platform, s.theme_name, s.apps
-      FROM fused JOIN blocks b ON b.id = fused.id JOIN captures c ON c.id = b.capture_id JOIN pages p ON p.id = c.page_id JOIN sites s ON s.id = p.site_id
-      ORDER BY fused.score DESC, fused.id`;
-    return rows.map((r) => ({ id: r.id, score: r.score, platform: r.platform, theme: r.theme_name, apps: r.apps ?? [] }));
+      SELECT id, score::float8 AS score FROM fused ORDER BY score DESC, id`;
+    return rows.map((r) => ({ id: r.id, score: r.score }));
   });
-}
-
-const valuesOf = (c: Candidate, key: TechFacet) => (key === "app" ? c.apps : key === "platform" ? (c.platform ? [c.platform] : []) : c.theme ? [c.theme] : []);
-const passes = (c: Candidate, f: BlockFilters, key: TechFacet) => !f[key] || valuesOf(c, key).some((v) => f[key]!.includes(v));
-
-/** Facet counts over the result set, each ignoring its own selection, as /api/blocks does without a query. */
-function facetsOf(all: Candidate[], f: BlockFilters): Record<TechFacet, Facet[]> {
-  const out = {} as Record<TechFacet, Facet[]>;
-  for (const key of ["platform", "theme", "app"] as TechFacet[]) {
-    const counts = new Map<string, number>();
-    for (const c of all) {
-      if (!(["platform", "theme", "app"] as TechFacet[]).every((k) => k === key || passes(c, f, k))) continue;
-      for (const v of valuesOf(c, key)) counts.set(v, (counts.get(v) ?? 0) + 1);
-    }
-    out[key] = [...counts].map(([value, count]) => ({ value, count })).sort((a, b) => b.count - a.count || a.value.localeCompare(b.value)).slice(0, key === "platform" ? 50 : 100);
-  }
-  return out;
 }
 
 export type SearchResult = {
   items: Block[];
   total: number;
   nextCursor: string | null;
-  facets: Record<TechFacet, Facet[]>;
+  /** First page only, see searchBlocks. */
+  facets?: Record<string, Facet[]>;
+  nearMiss?: Record<string, number>;
   /** How the query was read, for the UI and for debugging relevance. */
   search: { terms: string[]; corrected: Record<string, string>; semantic: boolean; intents: string[] };
 };
@@ -201,34 +183,55 @@ async function readQuery(sql: Sql, words: string[], intents: boolean): Promise<{
   };
 }
 
-export async function searchBlocks(q: string, f: BlockFilters, limit: number, offset: number): Promise<SearchResult> {
+/**
+ * One page of search results. With `withFacets` (the first page), facets and
+ * near misses too, counted by facetCounts over the candidates the query finds
+ * with no filters, plus the filtered ones, so a facet shows what its other
+ * values would add. Each list is capped at CANDIDATES, so on a broad query the
+ * counts describe the best matches rather than every match.
+ */
+export async function searchBlocks(q: string, f: BlockFilters, limit: number, offset: number, withFacets = true): Promise<SearchResult> {
   const sql = database();
   const words = queryWords(q);
   const [first, embedding] = await Promise.all([readQuery(sql, words, true), embedQuery(q.trim())]);
   const vector = embedding ? `[${embedding.join(",")}]` : null;
+  const filtered = Object.keys(f).length > 0;
   let query = first;
-  if (!query.groups.length && !vector) return { items: [], total: 0, nextCursor: null, facets: { platform: [], theme: [], app: [] }, search: { terms: [], corrected: query.corrected, semantic: false, intents: query.intents } };
+  if (!query.groups.length && !vector) {
+    return { items: [], total: 0, nextCursor: null, ...(withFacets && (await withoutQuery(sql, f))), search: { terms: [], corrected: query.corrected, semantic: false, intents: query.intents } };
+  }
 
   const rank = (groups: Group[]) => Promise.all([
-    candidates(sql, f, groups, vector, false),
-    f.platform || f.theme || f.app ? candidates(sql, f, groups, vector, true) : null,
+    candidates(sql, f, groups, vector),
+    withFacets && filtered ? candidates(sql, {}, groups, vector) : null,
   ]);
-  let [ranked, facetPool] = await rank(query.groups);
+  let [ranked, pool] = await rank(query.groups);
   // Nothing in the corpus looks like the block type the query names: search its words as typed instead of showing nothing.
   if (!ranked.length && query.intents.length) {
     query = await readQuery(sql, words, false);
-    [ranked, facetPool] = await rank(query.groups);
+    [ranked, pool] = await rank(query.groups);
   }
   const { groups, corrected, intents: types } = query;
   const page = ranked.slice(offset, offset + limit);
-  const rows = page.length ? await sql`SELECT ${blockColumns(sql)} FROM ${blockJoins(sql)} WHERE b.id = ANY(${pgArray(page.map((c) => c.id))}::uuid[])` : [];
+  const [rows, counts] = await Promise.all([
+    page.length ? sql`SELECT ${blockColumns(sql)} FROM ${blockJoins(sql)} WHERE b.id = ANY(${pgArray(page.map((c) => c.id))}::uuid[])` : [],
+    withFacets ? facetCounts(sql, f, [...new Set([...ranked, ...(pool ?? [])].map((c) => c.id))]) : null,
+  ]);
   const byId = new Map(rows.map((r) => [r.id as string, toBlock(r)]));
+  // Nothing found: say how many blocks these filters hold without the search.
+  const nearMiss = counts && ranked.length === 0 ? { ...counts.nearMiss, ...(await withoutQuery(sql, f)).nearMiss } : counts?.nearMiss;
 
   return {
     items: page.map((c) => byId.get(c.id)).filter((b): b is Block => Boolean(b)),
     total: ranked.length,
     nextCursor: offset + page.length < ranked.length ? String(offset + page.length) : null,
-    facets: facetsOf(facetPool ?? ranked, f),
+    ...(counts && { facets: counts.facets, nearMiss }),
     search: { terms: groups.flatMap((g) => g.terms), corrected, semantic: Boolean(vector), intents: types },
   };
+}
+
+/** Facets and the `q` near miss for a search that found nothing: the same filters, no query. */
+async function withoutQuery(sql: Sql, f: BlockFilters): Promise<{ facets: Record<string, Facet[]>; nearMiss: Record<string, number> }> {
+  const { facets, total } = await facetCounts(sql, f);
+  return { facets: Object.fromEntries(Object.keys(facets).map((key) => [key, [] as Facet[]])), nearMiss: total > 0 ? { q: total } : {} };
 }

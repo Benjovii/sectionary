@@ -1,8 +1,11 @@
 // Where the web app gets its data and its images.
 //
-// Data: the committed sample JSON by default. When the platform's API is up,
-// set NEXT_PUBLIC_BLOCKS_SRC=/api/blocks and NEXT_PUBLIC_STORES_SRC=/api/stores
-// in web/.env.local and nothing else changes: the item shapes are the contract.
+// Data: the committed sample JSON by default, loaded whole and queried in the
+// browser. On the API (SEC-47) set all three: NEXT_PUBLIC_BLOCKS_SRC=/api/blocks,
+// NEXT_PUBLIC_STORES_SRC=/api/stores and NEXT_PUBLIC_SITES_SRC=/api/sites, plus
+// the server's DATABASE_URL. The capture is too big to download, so the wall
+// then sends each query to /api/blocks a page at a time, and Sites and Flows
+// read /api/sites. See WallSource in lib/load-blocks.ts.
 //
 // Images: block screenshots are not in git. In development they load from the
 // deployed site, so a fresh clone shows a full wall. If you captured your own

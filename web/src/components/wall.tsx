@@ -8,10 +8,10 @@ import { BlockDialog } from "@/components/block-dialog";
 import { FilterBar, FilterBarSkeleton } from "@/components/filter-bar";
 import { TechFilters } from "@/components/tech-filters";
 import { techFromFacets } from "@/lib/tech";
-import { loadBlockIndex } from "@/lib/load-blocks";
+import { wallSource } from "@/lib/load-blocks";
 import { clearReturn, returnsFor } from "@/lib/return-to";
-import { queryBlocks, type BlockIndex, type WallQuery } from "@/lib/block-source";
-import { detailIndex } from "@/lib/block-detail";
+import { type WallQuery, type WallResponse } from "@/lib/block-source";
+import { type DetailIndex } from "@/lib/block-detail";
 import { layOut, visible, GAP, type Layout } from "@/lib/wall-layout";
 import { FILTERS, readSelected, writeSelected, toggleValue, toQuery, countSelected, SEARCH_KEY, type FilterKey } from "@/lib/filters";
 import { type Block } from "@/lib/blocks";
@@ -61,23 +61,15 @@ export function WallSkeleton() {
   );
 }
 
+/** The sample in the browser or /api/blocks, decided at build time (lib/data-source.ts). */
+const source = wallSource();
+
 export function Wall() {
-  const [index, setIndex] = useState<BlockIndex | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-
-  useEffect(() => {
-    let alive = true;
-    loadBlockIndex()
-      .then((i) => alive && setIndex(i))
-      .catch((e: Error) => alive && setError(e.message));
-    return () => {
-      alive = false;
-    };
-  }, []);
 
   // The URL is the filter state. Nothing else holds it, so every view is a link.
   const params = useMemo(() => new URLSearchParams(searchParams.toString()), [searchParams]);
@@ -115,21 +107,37 @@ export function Wall() {
     [params, replace],
   );
 
-  // The first page is derived, not stored: a filter change recomputes it and
-  // the appended pages below fall away with it. This is the same call that will
-  // travel to /api/blocks, cursor and all.
-  const first = useMemo(() => (index ? queryBlocks(index, { ...query, limit: PAGE_SIZE }) : null), [index, query]);
+  // The first page of the current query, tagged with its key. A filter change
+  // asks for a new one and the appended pages below fall away with it. Until it
+  // arrives the previous result stays up, marked busy, rather than flashing
+  // skeletons: on the API a query is a round trip.
+  const [result, setResult] = useState<{ key: string; response: WallResponse } | null>(null);
+  const first = result?.response ?? null;
+  const ready = result !== null;
+  const settled = result?.key === queryKey;
+
+  useEffect(() => {
+    const controller = new AbortController();
+    source.query({ ...query, limit: PAGE_SIZE }, { signal: controller.signal }).then(
+      (response) => {
+        setResult({ key: queryKey, response });
+        setError(null);
+      },
+      (e: Error) => !controller.signal.aborted && setError(e.message),
+    );
+    return () => controller.abort();
+  }, [query, queryKey]);
 
   // Pages fetched by scrolling, tagged with the query they belong to so a stale
   // set is ignored rather than cleared in an effect.
   const [extra, setExtra] = useState<{ key: string; items: Block[]; cursor: string | null }>({ key: "", items: [], cursor: null });
-  const current = extra.key === queryKey;
+  const current = settled && extra.key === queryKey;
 
   const items = useMemo(
     () => (current ? [...(first?.items ?? []), ...extra.items] : (first?.items ?? [])),
     [first, extra.items, current],
   );
-  const cursor = current ? extra.cursor : (first?.nextCursor ?? null);
+  const cursor = !settled ? null : current ? extra.cursor : (first?.nextCursor ?? null);
   const total = first?.total ?? 0;
   const facets = useMemo(() => first?.facets ?? {}, [first]);
 
@@ -139,14 +147,18 @@ export function Wall() {
   }, [queryKey]);
 
   const loadMore = useCallback(() => {
-    if (!index || !cursor) return;
-    const next = queryBlocks(index, { ...query, cursor, limit: PAGE_SIZE }, { facets: false });
-    setExtra((prev) => ({
-      key: queryKey,
-      items: prev.key === queryKey ? [...prev.items, ...next.items] : next.items,
-      cursor: next.nextCursor,
-    }));
-  }, [index, cursor, query, queryKey]);
+    if (!cursor) return;
+    source.query({ ...query, cursor, limit: PAGE_SIZE }, { facets: false }).then(
+      (next) =>
+        setExtra((prev) => ({
+          key: queryKey,
+          items: prev.key === queryKey ? [...prev.items, ...next.items] : next.items,
+          cursor: next.nextCursor,
+        })),
+      // A failed page leaves the cursor where it was; the next scroll asks again.
+      () => undefined,
+    );
+  }, [cursor, query, queryKey]);
 
   // Measure the wall's own box, and the window's scroll, separately: the box
   // changes on resize, the scroll changes constantly.
@@ -162,7 +174,7 @@ export function Wall() {
     const observer = new ResizeObserver(measure);
     observer.observe(element);
     return () => observer.disconnect();
-  }, [index, total]);
+  }, [ready, total]);
 
   // Refreshed every render so the scroll frame below always sees the current
   // layout and cursor without re-subscribing to the scroll event.
@@ -220,8 +232,28 @@ export function Wall() {
   // moving between blocks inside the view replaces it, so Back still closes
   // rather than stepping through everything seen.
   const openId = params.get(BLOCK_KEY);
-  const detail = useMemo(() => (index ? detailIndex(index) : null), [index]);
-  const open = openId && detail ? (detail.byId.get(openId) ?? null) : null;
+  // What the open block's view needs, fetched when the id changes. The wall's
+  // own copy of the block is handed over when it has one, read through a ref
+  // so scrolling more blocks in does not refetch.
+  const itemsRef = useRef(items);
+  useEffect(() => {
+    itemsRef.current = items;
+  });
+  const [opened, setOpened] = useState<{ id: string; block: Block | null; detail: DetailIndex } | null>(null);
+  useEffect(() => {
+    if (!openId) return;
+    let alive = true;
+    source.detail(openId, itemsRef.current.find((b) => b.id === openId)).then(
+      ({ block, detail }) => alive && setOpened({ id: openId, block, detail }),
+      () => alive && setOpened({ id: openId, block: null, detail: { byId: new Map(), byPage: new Map(), byType: new Map(), captures: new Map() } }),
+    );
+    return () => {
+      alive = false;
+    };
+  }, [openId]);
+  const loadedOpen = openId && opened?.id === openId ? opened : null;
+  const open = loadedOpen?.block ?? null;
+  const detail = loadedOpen?.detail ?? null;
   const pushed = useRef(false);
   // Opened from a flow or a site's page viewer, in this tab: closing goes back there.
   const [returnOnClose] = useState(() => returnsFor(openId));
@@ -274,7 +306,17 @@ export function Wall() {
   }, [open, items, onShow]);
 
   // The detail view's tech chips count the whole library, not the filtered wall.
-  const libraryCounts = useMemo(() => (index ? techFromFacets(queryBlocks(index, { limit: 1 }).facets) : null), [index]);
+  const [libraryCounts, setLibraryCounts] = useState<ReturnType<typeof techFromFacets> | null>(null);
+  useEffect(() => {
+    let alive = true;
+    source.query({ limit: 1 }).then(
+      (r) => alive && setLibraryCounts(techFromFacets(r.facets)),
+      () => undefined,
+    );
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   // A tech chip in the detail view: close it and show only that platform, theme or app.
   const onFilterTech = useCallback(
@@ -316,20 +358,20 @@ export function Wall() {
         selected={selected}
         search={search}
         total={total}
-        ready={Boolean(index)}
+        ready={ready}
         onToggle={onToggle}
         onClearAll={onClearAll}
         onSearch={onSearch}
       />
 
-      {index && <TechFilters facets={facets} selected={selected} onToggle={onToggle} />}
+      {ready && <TechFilters facets={facets} selected={selected} onToggle={onToggle} />}
 
       {error ? (
         <div className="rounded-lg border border-dashed p-8 text-center text-muted-foreground">
           <p>The block set could not be loaded ({error}).</p>
           <p className="mt-1 text-[12px]">Run the capture and export scripts, then reload.</p>
         </div>
-      ) : !index ? (
+      ) : !ready ? (
         <WallSkeleton />
       ) : total === 0 ? (
         <div className="rounded-lg border border-dashed p-8 text-center text-muted-foreground">
@@ -362,8 +404,9 @@ export function Wall() {
       ) : (
         <div
           ref={hostRef}
-          className="relative w-full"
-          style={{ height: (layout?.height ?? 0) + (cursor ? GAP + LOADING_STRIP : 0) }}
+          className="relative w-full transition-opacity duration-200"
+          style={{ height: (layout?.height ?? 0) + (cursor ? GAP + LOADING_STRIP : 0), opacity: settled ? 1 : 0.55 }}
+          aria-busy={!settled}
           role="list"
           aria-label={`${total.toLocaleString("en-US")} blocks`}
         >
@@ -400,7 +443,7 @@ export function Wall() {
 
       <BlockDialog
         block={open}
-        missing={Boolean(openId && detail && !open)}
+        missing={Boolean(loadedOpen && !open)}
         detail={detail}
         onClose={onCloseBlock}
         onOpen={onShow}

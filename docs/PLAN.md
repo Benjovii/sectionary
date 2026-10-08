@@ -1,7 +1,7 @@
 # Sectionary (working name) · Product and build plan
 
 Started 2026-09-16. Owner: Ben. Status: Phase 0 prototype built and tested.
-Code: `D:\dev\sectionary`. Names: see NAMES.md. Session log: PROGRESS.md.
+Code: `D:\dev\sectionary`. Names: see NAMES.md. Session log: docs/PROGRESS.md.
 
 ## 0. Scope update (2026-09-17, Ben's brief)
 

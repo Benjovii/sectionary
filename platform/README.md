@@ -22,8 +22,11 @@ other lanes depend on is only the contract in `web/src/contracts/`.
    directory). Imports are transactional and idempotent; a new `capturedAt`
    creates history, while replaying the same manifest updates the same rows.
 4. Set the same server-only `DATABASE_URL` in `web/.env.local`, plus
-   `NEXT_PUBLIC_BLOCKS_SRC=/api/blocks` and
-   `NEXT_PUBLIC_STORES_SRC=/api/stores`, to read the imported store in the app.
+   `NEXT_PUBLIC_BLOCKS_SRC=/api/blocks`,
+   `NEXT_PUBLIC_STORES_SRC=/api/stores` and
+   `NEXT_PUBLIC_SITES_SRC=/api/sites`, to read the imported stores in the app
+   (SEC-47: the wall queries `/api/blocks` a page at a time; Sites and Flows
+   read the store list from `GET /api/sites`).
 
 `S3_PUBLIC_BASE_URL` controls the prefix stored for screenshots. Without it,
 the importer records root-relative keys based on the imported directory.
