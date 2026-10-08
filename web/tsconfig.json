@@ -34,8 +34,11 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts"
   ],
-  // search-acceptance.mts loads platform/src/local-db.ts, which needs platform's
-  // packages (PGlite); the web project and its CI job do not install them. Node
-  // runs that script directly (npm run search:acceptance), so it is not type-checked here.
-  "exclude": ["node_modules", "scripts/search-acceptance.mts"]
+  // Files that import from outside web/ cannot be type-checked here: a production
+  // deploy (vercel deploy from web/) uploads web/ alone, so `next build` fails on them.
+  // - scripts/search-acceptance.mts loads platform/src/local-db.ts (and platform's
+  //   PGlite packages); node runs it directly (npm run search:acceptance).
+  // - src/server/search-intent.test.ts checks the intents against
+  //   platform/src/taxonomy.ts; run it from the repo: npx tsx --test src/server/*.test.ts
+  "exclude": ["node_modules", "scripts/search-acceptance.mts", "src/server/search-intent.test.ts"]
 }
