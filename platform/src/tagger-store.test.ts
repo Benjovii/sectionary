@@ -39,7 +39,7 @@ after(async () => { await sql.end(); await local.stop(); });
 test("every migration applies on a fresh Postgres 17, in order", () => {
   assert.deepEqual(local.migrations, [
     "0001_schema_v1.sql", "0002_image_pipeline_and_diffs.sql", "0002_waitlist.sql", "0003_boards_sharing.sql",
-    "0004_search.sql", "0005_image_slices.sql", "0006_tagger.sql", "0007_search_terms_taxonomy.sql",
+    "0004_search.sql", "0005_image_slices.sql", "0006_tagger.sql", "0007_search_terms_taxonomy.sql", "0008_rls_new_tables.sql",
   ]);
 });
 

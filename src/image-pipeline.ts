@@ -13,7 +13,7 @@
 
 import { mkdir, readdir, stat, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { S3Client, PutObjectCommand, type ObjectCannedACL } from "@aws-sdk/client-s3";
 import { DEFAULT_SLICE_HEIGHT, emptyAudit, processManifest, type Storage } from "./images.js";
 
 // Same S3_* names as platform/.env, so the importer's S3_PUBLIC_BASE_URL matches what was uploaded.
@@ -45,10 +45,13 @@ function s3Storage(): { storage: Storage; bucket: string; publicUrl: string } {
     maxAttempts: 4, // the SDK backs off and retries throttling and 5xx
     forcePathStyle: process.env.S3_FORCE_PATH_STYLE === "true", // MinIO and other local S3s
   });
+  // DigitalOcean Spaces (and S3) keep an upload private unless it says otherwise,
+  // so the site's <img> tags would get 403; R2 ignores ACLs and is public by bucket setting.
+  const ACL = (process.env.S3_ACL || undefined) as ObjectCannedACL | undefined;
   return {
     bucket,
     publicUrl: process.env.S3_PUBLIC_BASE_URL!.replace(/\/$/, ""),
-    storage: { put: async (Key, Body, ContentType) => { await s3.send(new PutObjectCommand({ Bucket: bucket, Key, Body, ContentType })); } },
+    storage: { put: async (Key, Body, ContentType) => { await s3.send(new PutObjectCommand({ Bucket: bucket, Key, Body, ContentType, ACL, CacheControl: "public, max-age=86400" })); } },
   };
 }
 
