@@ -1,7 +1,7 @@
 import type { Block } from "@/contracts/block";
 import { BLOCKS_SRC } from "@/lib/data-source";
 import { bucketFor } from "@/lib/colour";
-import { database } from "@/server/db";
+import { database, pgArray } from "@/server/db";
 
 type Sql = ReturnType<typeof database>;
 
@@ -74,12 +74,12 @@ function valueOf(sql: Sql, key: FilterKey) {
  */
 function condition(sql: Sql, f: BlockFilters, key: FilterKey) {
   if (!f[key]) return null;
-  if (key === "app") return sql`coalesce(s.apps && ${sql.array(f.app!)}::text[], false)`;
+  if (key === "app") return sql`coalesce(s.apps && ${pgArray(f.app!)}::text[], false)`;
   if (key === "color") {
     if (!f.bg) throw new Error("color filter used before withColours");
-    return sql`coalesce(b.background=ANY(${sql.array(f.bg)}::text[]), false)`;
+    return sql`coalesce(b.background=ANY(${pgArray(f.bg)}::text[]), false)`;
   }
-  return sql`coalesce(${valueOf(sql, key)}=ANY(${sql.array(f[key]!)}::text[]), false)`;
+  return sql`coalesce(${valueOf(sql, key)}=ANY(${pgArray(f[key]!)}::text[]), false)`;
 }
 
 const LATEST = (sql: Sql) => sql`c.id=(SELECT c2.id FROM captures c2 WHERE c2.page_id=p.id ORDER BY c2.captured_at DESC LIMIT 1)`;
@@ -148,7 +148,7 @@ export async function facetCounts(sql: Sql, f: BlockFilters, ids?: string[]): Pr
   const parts = [sql`SELECT '#total' AS key, NULL::text AS value, count(*)::int AS count FROM r WHERE ${others(null)}`, ...FILTER_KEYS.map(facet), ...near];
   const rows = await sql`WITH r AS MATERIALIZED (
       SELECT ${columns} FROM ${blockJoins(sql)}
-      WHERE ${LATEST(sql)} ${ids ? sql`AND b.id=ANY(${sql.array(ids)}::uuid[])` : sql``}
+      WHERE ${LATEST(sql)} ${ids ? sql`AND b.id=ANY(${pgArray(ids)}::uuid[])` : sql``}
     ) ${parts.reduce((all, next) => sql`${all} UNION ALL ${next}`)}`;
 
   const tallies = new Map<string, Map<string, number>>();

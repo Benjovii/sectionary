@@ -10,10 +10,11 @@
     "tag-blocks": "tsx src/tagger.ts",
     "embed": "tsx src/embed.ts",
     "search:eval": "tsx src/search-eval.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test src/*.test.ts"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.24.3",
+    "@anthropic-ai/sdk": "^0.131.0",
     "@aws-sdk/client-s3": "^3.679.0",
     "@aws-sdk/lib-storage": "^3.679.0",
     "blurhash": "^2.0.5",
@@ -22,6 +23,9 @@
     "sharp": "^0.33.5"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.5.8",
+    "@electric-sql/pglite-pgvector": "^0.0.9",
+    "@electric-sql/pglite-socket": "^0.2.11",
     "@types/node": "^24.0.0",
     "drizzle-kit": "^0.31.4",
     "tsx": "^4.20.5",

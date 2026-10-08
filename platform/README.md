@@ -70,9 +70,76 @@ npm run search:eval      # acceptance queries against http://localhost:3000
 Set `VOYAGE_API_KEY` in `platform/.env` for `embed` and in the web app's
 environment for queries. `VOYAGE_MODEL` defaults to `voyage-3.5` and must
 match on both sides. Blocks are embedded from their AI description. Until the
-tagger writes descriptions (its batch run is still a stub), blocks are
-embedded from type, headline and copy. They are embedded again automatically
-once a description lands.
+tagger has written one, a block is embedded from its type, headline and copy,
+and embedded again automatically once the description lands.
+
+Migration `0007_search_terms_taxonomy.sql` adds block types and tags to the
+typo vocabulary, so a tagged "subscription-picker" is found by "picker"
+rather than the word being corrected away.
+
+**Acceptance, deterministic.** `npm run search:acceptance` (in `web/`) needs no
+credentials: it starts a throwaway Postgres 17 (PGlite, `src/local-db.ts`),
+applies every migration, imports `fixtures/manifests` and
+`fixtures/search-corpus` with the real importer, and runs the app's own
+`searchBlocks()` in three modes: full text only (the gate, and the fallback),
+Voyage configured but failing (must give the same ranking), and full text fused
+with semantic neighbours from a local stand-in for Voyage (proves the fusion
+path, not Voyage's quality). Queries and relevance judges live in
+`src/search-queries.ts`, shared with `search:eval`. The latest output is in
+`docs/reviews/`.
+
+## Image pipeline (SEC-9)
+
+`npm run image-process -- <capture dir>` in the repo root turns every JPEG a
+manifest names into WebP, a 600px thumbnail (the top 1,200px of a tall image)
+and a blurhash, and uploads them with the root `.env`'s `S3_*` settings.
+WebP cannot hold more than 16,383px, so a taller full-page screenshot is cut
+into slices of `IMAGE_SLICE_HEIGHT` (default 8,192) instead of failing:
+`desktop_s000.webp`, `desktop_s001.webp`, … top to bottom. Each page gets an
+`images.json` next to its manifest (also uploaded) listing every image, its
+slices and their offsets. The importer reads it: viewport screenshots carry
+`image.slices` inside `captures.desktop` / `.mobile`, and a sliced block image
+fills `blocks.image_slices` (migration 0005) with `image_key` as its top slice.
+Each run writes `_audit-<time>.json` with per-image and per-upload results and
+exits 1 if anything failed. Tests: `npm test` in the repo root.
+
+## AI tagger (SEC-12)
+
+```bash
+npm run tag-blocks -- run            # submit, wait, collect, report; safe to re-run
+npm run tag-blocks -- submit --dry-run   # what would be sent, and its estimated cost
+npm run tag-blocks -- report --out report.md
+```
+
+Each block's screenshot (read from object storage, fitted to 1,024px) and its
+DOM context go to Claude through the Message Batches API with a JSON schema
+built from the taxonomy (`src/taxonomy.ts`, docs/PLAN.md section 8):
+`block_type`, `page_role`, `style_tags`, `industry`, a one-line description,
+`patterns` and `has_price` / `has_reviews` / `has_video`. Answers are
+validated again before they are stored on the block (`block_type`, `tags`,
+`ai_description`, `ai_response`); anything outside the taxonomy is recorded as
+an invalid request and retried by the next run.
+
+- **Model:** Sonnet by default, `TAGGER_MODEL=haiku` for the cheaper run; the
+  ids are `TAGGER_SONNET_MODEL` / `TAGGER_HAIKU_MODEL` in `.env`.
+- **Cost cap:** `TAGGER_MAX_COST_USD` (default 150). Before submitting, each
+  request's cost is estimated on the high side (uncached prompt, at least 300
+  output tokens, raised to the observed average once answers come back), and
+  submission stops before spent + in flight + new would pass the cap. Actual
+  cost is computed from every answer's token usage.
+- **Resumable:** migration `0006_tagger.sql` keeps a ledger (`tag_batches`,
+  `tag_requests`). Batches are recorded as soon as they are created; a block is
+  submitted again only if its inputs, the model or the prompt changed, or its
+  last answer failed. Results are stored idempotently.
+- **Evaluation:** `eval-create` picks 200 distinct blocks into
+  `eval/tagger-eval-set.json`; `eval-sheet` writes an HTML page to label them
+  by hand (screenshot, context, the taxonomy as menus); `eval` tags all 200
+  under the run label `eval` and fails below 90% `block_type` agreement,
+  writing a report to `eval/reports/`. It refuses to score a set that is not
+  fully hand-labelled.
+
+`npm test` covers parsing, validation, the cost cap, partial failures and
+idempotent storage (against PGlite with every migration applied).
 
 ## Suggested first week (M1)
 
@@ -88,10 +155,6 @@ once a description lands.
 
 ## Later
 
-- AI tagger (SEC-12): Claude through the Batch API, structured JSON per block,
-  a 200-block hand-checked evaluation set before the big run. The block
-  taxonomy v1 is in `docs/PLAN.md` section 8.
-- Search (SEC-17): Postgres full-text plus pgvector.
 - Auth (SEC-27), Paddle billing (SEC-28), MCP server (SEC-31).
 
 ## Rules that involve you

@@ -1,6 +1,6 @@
 import type { Store } from "@/contracts/store";
 import type { SiteProfile } from "@/contracts/api";
-import { database } from "@/server/db";
+import { database, pgArray } from "@/server/db";
 
 type Sql = ReturnType<typeof database>;
 
@@ -22,7 +22,7 @@ export async function latestPages(sql: Sql, siteIds: string[]): Promise<Map<stri
     ? await sql`SELECT p.site_id,p.url,p.type,p.title,c.captured_at,c.desktop,c.mobile,
         (SELECT count(*)::int FROM blocks b WHERE b.capture_id=c.id) AS blocks
         FROM pages p JOIN LATERAL (SELECT * FROM captures WHERE page_id=p.id ORDER BY captured_at DESC LIMIT 1) c ON true
-        WHERE p.site_id=ANY(${sql.array(siteIds)}::uuid[]) ORDER BY p.type,p.url`
+        WHERE p.site_id=ANY(${pgArray(siteIds)}::uuid[]) ORDER BY p.type,p.url`
     : [];
   const bySite = new Map<string, SiteProfile["pages"]>();
   for (const p of rows) {

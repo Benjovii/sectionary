@@ -1,6 +1,6 @@
 import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
 import type { Board, BoardPatch, SharedBoard } from "@/contracts/api";
-import { database } from "@/server/db";
+import { database, pgArray } from "@/server/db";
 import { blockColumns, blockJoins, toBlock, UUID } from "@/server/blocks";
 
 // Boards before accounts (SEC-27): whoever holds a board's edit token owns it.
@@ -85,8 +85,8 @@ export async function updateBoard(id: string, token: string, patch: BoardPatch) 
       const order = patch.order.filter((x): x is string => typeof x === "string" && UUID.test(x));
       // Positions follow the given order; anything the client did not list keeps its place after them.
       await tx`UPDATE board_items i SET position=o.ord::int - 1, updated_at=now()
-        FROM unnest(${tx.array(order)}::uuid[]) WITH ORDINALITY AS o(block_id, ord) WHERE i.board_id=${id} AND i.block_id=o.block_id`;
-      await tx`UPDATE board_items SET position=${order.length} + position WHERE board_id=${id} AND NOT (block_id = ANY(${tx.array(order)}::uuid[]))`;
+        FROM unnest(${pgArray(order)}::uuid[]) WITH ORDINALITY AS o(block_id, ord) WHERE i.board_id=${id} AND i.block_id=o.block_id`;
+      await tx`UPDATE board_items SET position=${order.length} + position WHERE board_id=${id} AND NOT (block_id = ANY(${pgArray(order)}::uuid[]))`;
     }
     await tx`UPDATE boards SET updated_at=now() WHERE id=${id}`;
   });

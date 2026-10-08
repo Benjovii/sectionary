@@ -9,7 +9,9 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "mock": "node scripts/mock-blocks.mjs",
-    "flow-check": "node scripts/flow-check.mts"
+    "flow-check": "node scripts/flow-check.mts",
+    "search:acceptance": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --import ./scripts/server-alias.mjs scripts/search-acceptance.mts",
+    "test": "node --test --disable-warning=MODULE_TYPELESS_PACKAGE_JSON src/server/*.test.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.127.0",

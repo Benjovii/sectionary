@@ -1,14 +1,20 @@
 import type { Block } from "@/contracts/block";
-import { database } from "@/server/db";
+import { database, pgArray } from "@/server/db";
 import { blockColumns, blockJoins, blockWhere, facetCounts, toBlock, type BlockFilters, type Facet } from "@/server/blocks";
+import { detectIntents, editDistance, intentTerms, maxEdits } from "@/server/search-intent";
 
 type Sql = ReturnType<typeof database>;
+/** One part of the query: OR-ed websearch terms, counted as `weight` query words when a block matches. */
+type Group = { terms: string[]; weight: number };
 
 // Search (SEC-17): full text and semantic, fused.
 //
-// 1. Typo tolerance. Each query word the corpus has never seen gets its closest
-//    word in search_terms (trigram similarity), so "subscripton savngs"
-//    searches for "subscription savings"; known words pick up close forms.
+// 0. Block types. Words that name a type from the taxonomy, typos included
+//    ("subscripton pickr"), become one group: the type as tagged, or the copy
+//    that marks it ("subscribe & save", "deliver every"). See search-intent.ts.
+// 1. Typo tolerance. Each other query word the corpus has never seen gets its
+//    closest word in search_terms (trigram similarity) if it is a typo away, so
+//    "savngs" searches for "savings"; known words pick up close forms.
 // 2. Full text over headline (A), AI description, type and tags (B) and copy
 //    (C), any word matching, ranked by how many of the query's words a block
 //    has, then by where they sit.
@@ -36,7 +42,9 @@ export function queryWords(q: string): string[] {
 
 /**
  * One group per query word: the word, plus what the corpus vocabulary adds.
- * - A word the corpus has never seen gets its closest word ("savngs" -> "savings").
+ * - A word the corpus has never seen gets its closest word ("savngs" -> "savings"),
+ *   but only one a typo away (one edit, two from eight letters): a real word the
+ *   corpus lacks ("badge") is searched as typed, never swapped for "bad".
  * - A word it knows gets up to three close forms sharing its first four letters
  *   ("subscription" -> "subscribe", "subscriptions"), because the English stemmer
  *   keeps "subscript" and "subscrib" apart and people mean both.
@@ -52,16 +60,17 @@ async function expand(sql: Sql, words: string[]): Promise<{ groups: string[][]; 
         SELECT w, known, array(
           SELECT term FROM search_terms
           WHERE term % w AND term <> w AND (NOT known OR (left(term, 4) = left(w, 4) AND similarity(term, w) >= 0.5))
-          ORDER BY similarity(term, w) DESC, docs DESC LIMIT CASE WHEN known THEN 3 ELSE 1 END
+          ORDER BY similarity(term, w) DESC, docs DESC LIMIT CASE WHEN known THEN 3 ELSE 5 END
         ) AS near
-        FROM unnest(${sql.array(candidates)}::text[]) AS w,
+        FROM unnest(${pgArray(candidates)}::text[]) AS w,
           LATERAL (SELECT EXISTS (SELECT 1 FROM search_terms WHERE term = w) AS known) k
         WHERE to_tsvector('english', w) <> ''::tsvector`;
       for (const r of rows) {
-        const near = r.near as string[];
+        const w = r.w as string;
+        const near = r.known ? (r.near as string[]) : (r.near as string[]).filter((t) => editDistance(w, t, maxEdits(w)) <= maxEdits(w)).slice(0, 1);
         if (!near.length) continue;
-        extra.set(r.w as string, near);
-        if (!r.known) corrected[r.w as string] = near[0];
+        extra.set(w, near);
+        if (!r.known) corrected[w] = near[0];
       }
     } catch (error) {
       // Before migration 0004 there is no vocabulary: search the words as typed.
@@ -104,16 +113,18 @@ type Candidate = { id: string; score: number };
  * Both lists, fused. Filters apply inside each list, so every candidate is a real result.
  *
  * The full-text list ranks by how many of the query's words a block has (each
- * word group counts once, however often it repeats), then by where they are:
+ * word group counts once, however often it repeats, and a block-type group as
+ * many words as it stands for), then by where they are:
  * ts_rank weighs headline and description above copy. Without the first key a
  * header that says "Subscriptions" twice beats a block that says "subscribe
  * and save 20%".
  */
-async function candidates(sql: Sql, f: BlockFilters, groups: string[][], vector: string | null): Promise<Candidate[]> {
+async function candidates(sql: Sql, f: BlockFilters, groups: Group[], vector: string | null): Promise<Candidate[]> {
   const where = blockWhere(sql, f);
   // websearch syntax with "or" between terms: nothing to escape, stop words drop out.
-  const any = groups.flat().join(" or ");
-  const each = groups.map((g) => g.join(" or "));
+  const any = groups.flatMap((g) => g.terms).join(" or ");
+  const each = groups.map((g) => g.terms.join(" or "));
+  const weights = groups.map((g) => String(g.weight));
   return sql.begin(async (tx) => {
     // A stop word ("with") makes an empty query; Postgres says so as a NOTICE on every row.
     await tx`SET LOCAL client_min_messages = warning`;
@@ -121,11 +132,11 @@ async function candidates(sql: Sql, f: BlockFilters, groups: string[][], vector:
     if (vector) await tx`SET LOCAL hnsw.ef_search = ${sql.unsafe(String(CANDIDATES))}`;
     const rows = await tx`
       WITH words AS (
-        SELECT q FROM unnest(${sql.array(each)}::text[]) AS t, websearch_to_tsquery('english', t) AS q WHERE numnode(q) > 0
+        SELECT q, w FROM unnest(${pgArray(each)}::text[], ${pgArray(weights)}::int[]) AS t(term, w), websearch_to_tsquery('english', term) AS q WHERE numnode(q) > 0
       ), fts AS (
         SELECT id, row_number() OVER (ORDER BY coverage DESC, weight DESC, id) AS r FROM (
           SELECT b.id,
-            (SELECT count(*) FROM words WHERE b.search_tsv @@ words.q) AS coverage,
+            (SELECT coalesce(sum(w), 0) FROM words WHERE b.search_tsv @@ words.q) AS coverage,
             ts_rank(b.search_tsv, query, 1) AS weight
           FROM ${blockJoins(sql)}, websearch_to_tsquery('english', ${any}) AS query
           WHERE ${where} AND b.search_tsv @@ query
@@ -154,8 +165,23 @@ export type SearchResult = {
   facets?: Record<string, Facet[]>;
   nearMiss?: Record<string, number>;
   /** How the query was read, for the UI and for debugging relevance. */
-  search: { terms: string[]; corrected: Record<string, string>; semantic: boolean };
+  search: { terms: string[]; corrected: Record<string, string>; semantic: boolean; intents: string[] };
 };
+
+/** The query as groups: words naming a block type become that type's group (when `intents`); the rest are corrected and expanded one by one. */
+async function readQuery(sql: Sql, words: string[], intents: boolean): Promise<{ groups: Group[]; corrected: Record<string, string>; intents: string[] }> {
+  const found = intents ? detectIntents(words) : [];
+  const named = new Set(found.flatMap((i) => i.words));
+  const expanded = await expand(sql, words.filter((w) => !named.has(w)));
+  return {
+    groups: [
+      ...found.map((i) => ({ terms: intentTerms(i.type), weight: i.words.length })),
+      ...expanded.groups.map((terms) => ({ terms, weight: 1 })),
+    ],
+    corrected: expanded.corrected,
+    intents: found.map((i) => i.type),
+  };
+}
 
 /**
  * One page of search results. With `withFacets` (the first page), facets and
@@ -167,20 +193,28 @@ export type SearchResult = {
 export async function searchBlocks(q: string, f: BlockFilters, limit: number, offset: number, withFacets = true): Promise<SearchResult> {
   const sql = database();
   const words = queryWords(q);
-  const [{ groups, corrected }, embedding] = await Promise.all([expand(sql, words), embedQuery(q.trim())]);
+  const [first, embedding] = await Promise.all([readQuery(sql, words, true), embedQuery(q.trim())]);
   const vector = embedding ? `[${embedding.join(",")}]` : null;
   const filtered = Object.keys(f).length > 0;
-  if (!groups.length && !vector) {
-    return { items: [], total: 0, nextCursor: null, ...(withFacets && (await withoutQuery(sql, f))), search: { terms: [], corrected, semantic: false } };
+  let query = first;
+  if (!query.groups.length && !vector) {
+    return { items: [], total: 0, nextCursor: null, ...(withFacets && (await withoutQuery(sql, f))), search: { terms: [], corrected: query.corrected, semantic: false, intents: query.intents } };
   }
 
-  const [ranked, pool] = await Promise.all([
+  const rank = (groups: Group[]) => Promise.all([
     candidates(sql, f, groups, vector),
     withFacets && filtered ? candidates(sql, {}, groups, vector) : null,
   ]);
+  let [ranked, pool] = await rank(query.groups);
+  // Nothing in the corpus looks like the block type the query names: search its words as typed instead of showing nothing.
+  if (!ranked.length && query.intents.length) {
+    query = await readQuery(sql, words, false);
+    [ranked, pool] = await rank(query.groups);
+  }
+  const { groups, corrected, intents: types } = query;
   const page = ranked.slice(offset, offset + limit);
   const [rows, counts] = await Promise.all([
-    page.length ? sql`SELECT ${blockColumns(sql)} FROM ${blockJoins(sql)} WHERE b.id = ANY(${sql.array(page.map((c) => c.id))}::uuid[])` : [],
+    page.length ? sql`SELECT ${blockColumns(sql)} FROM ${blockJoins(sql)} WHERE b.id = ANY(${pgArray(page.map((c) => c.id))}::uuid[])` : [],
     withFacets ? facetCounts(sql, f, [...new Set([...ranked, ...(pool ?? [])].map((c) => c.id))]) : null,
   ]);
   const byId = new Map(rows.map((r) => [r.id as string, toBlock(r)]));
@@ -192,7 +226,7 @@ export async function searchBlocks(q: string, f: BlockFilters, limit: number, of
     total: ranked.length,
     nextCursor: offset + page.length < ranked.length ? String(offset + page.length) : null,
     ...(counts && { facets: counts.facets, nearMiss }),
-    search: { terms: groups.flat(), corrected, semantic: Boolean(vector) },
+    search: { terms: groups.flatMap((g) => g.terms), corrected, semantic: Boolean(vector), intents: types },
   };
 }
 

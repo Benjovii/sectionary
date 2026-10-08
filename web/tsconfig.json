@@ -34,5 +34,8 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts"
   ],
-  "exclude": ["node_modules"]
+  // search-acceptance.mts loads platform/src/local-db.ts, which needs platform's
+  // packages (PGlite); the web project and its CI job do not install them. Node
+  // runs that script directly (npm run search:acceptance), so it is not type-checked here.
+  "exclude": ["node_modules", "scripts/search-acceptance.mts"]
 }

@@ -66,14 +66,44 @@ async function getImageMetadata(jpegPath: string): Promise<{ width: number; heig
   }
 }
 
+/** A storage key as the app loads it: under S3_PUBLIC_BASE_URL, else root-relative. */
+function publicSrc(key: string): string {
+  const base = process.env.S3_PUBLIC_BASE_URL?.replace(/\/$/, "");
+  return base ? `${base}/${key}` : `/${key}`;
+}
+
 function imageKey(manifestPath: string, root: string, file: string | null): string | null {
   if (!file) return null;
-  const local = relative(root, resolve(dirname(manifestPath), file))
+  return publicSrc(relative(root, resolve(dirname(manifestPath), file))
     .split(sep)
     .join("/")
-    .replace(/\.(jpg|jpeg)$/i, ".webp");
-  const base = process.env.S3_PUBLIC_BASE_URL?.replace(/\/$/, "");
-  return base ? `${base}/${local}` : `/${local}`;
+    .replace(/\.(jpg|jpeg)$/i, ".webp"));
+}
+
+// images.json, written next to the manifest by the image pipeline (src/images.ts):
+// what was actually uploaded for each image, including the slices of one taller
+// than WebP allows. Without it (pipeline not run yet) keys are derived as before.
+type UploadedImage = {
+  width: number; height: number; webpKey: string | null; thumbnailKey: string; blurhash: string;
+  slices: { index: number; key: string; top: number; width: number; height: number }[];
+};
+async function uploadedImages(manifestPath: string): Promise<Record<string, UploadedImage>> {
+  try {
+    return (JSON.parse(await readFile(resolve(dirname(manifestPath), "images.json"), "utf8")) as { images: Record<string, UploadedImage> }).images;
+  } catch (e) {
+    if ((e as { code?: string }).code === "ENOENT") return {};
+    throw e;
+  }
+}
+const slicesOf = (img: UploadedImage) => img.slices.length
+  ? img.slices.map((s) => ({ index: s.index, src: publicSrc(s.key), top: s.top, width: s.width, height: s.height }))
+  : null;
+/** A viewport as stored on the capture, plus where its screenshot went when the pipeline ran. */
+function viewportWithImage<V extends object>(viewport: V | undefined, images: Record<string, UploadedImage>): V | null {
+  if (!viewport) return null;
+  const img = "file" in viewport && typeof viewport.file === "string" ? images[viewport.file] : undefined;
+  if (!img) return viewport;
+  return { ...viewport, image: { src: img.webpKey ? publicSrc(img.webpKey) : null, thumbnail: publicSrc(img.thumbnailKey), blurhash: img.blurhash, width: img.width, height: img.height, slices: slicesOf(img) } };
 }
 
 function thumbnailKey(imageKey: string | null): string | null {
@@ -81,7 +111,16 @@ function thumbnailKey(imageKey: string | null): string | null {
   return imageKey.replace(/\.webp$/, "_thumb.webp");
 }
 
-async function blockRow(captureId: string, block: ManifestBlock, manifestPath: string, root: string) {
+async function blockRow(captureId: string, block: ManifestBlock, manifestPath: string, root: string, images: Record<string, UploadedImage>) {
+  const uploaded = block.file ? images[block.file] : undefined;
+  if (uploaded) {
+    return {
+      ...blockFields(captureId, block),
+      imageKey: publicSrc(uploaded.webpKey ?? uploaded.slices[0].key), thumbnailKey: publicSrc(uploaded.thumbnailKey),
+      blurhash: uploaded.blurhash, imageWidth: uploaded.width, imageHeight: uploaded.height, imageSlices: slicesOf(uploaded),
+    };
+  }
+
   let imageWidth: number | null = null;
   let imageHeight: number | null = null;
   let blurhash: string | null = null;
@@ -99,13 +138,16 @@ async function blockRow(captureId: string, block: ManifestBlock, manifestPath: s
   const iKey = imageKey(manifestPath, root, block.file);
   const tKey = thumbnailKey(iKey);
 
+  return { ...blockFields(captureId, block), imageKey: iKey, thumbnailKey: tKey, blurhash, imageWidth, imageHeight, imageSlices: null };
+}
+
+function blockFields(captureId: string, block: ManifestBlock) {
   return {
     captureId, ref: block.ref, blockIndex: block.index, viewport: block.viewport, typeHint: block.typeHint,
     parentType: block.parentType, tag: block.tag, elementId: block.id, classes: block.classes,
     top: Math.round(block.top), height: Math.round(block.height), width: Math.round(block.width),
     text: block.text, textLength: block.textLength, headline: block.headline || null,
-    buttons: block.buttons, images: block.images, videos: block.videos, background: block.bg,
-    imageKey: iKey, thumbnailKey: tKey, blurhash, imageWidth, imageHeight, updatedAt: new Date(),
+    buttons: block.buttons, images: block.images, videos: block.videos, background: block.bg, updatedAt: new Date(),
   };
 }
 
@@ -148,6 +190,7 @@ const failed: string[] = [];
 try {
   for (const manifestPath of manifestPaths) try {
     const manifest = JSON.parse(await readFile(manifestPath, "utf8"), withoutNul) as Manifest;
+    const images = await uploadedImages(manifestPath);
     await db.transaction(async (tx) => {
       const tf = themeFields(manifest.site.theme);
       const [site] = await tx.insert(sites).values({
@@ -182,14 +225,14 @@ try {
 
       const [capture] = await tx.insert(captures).values({
         pageId: page.id, capturedAt: new Date(manifest.page.capturedAt),
-        desktop: manifest.viewports.desktop ?? null, mobile: manifest.viewports.mobile ?? null,
+        desktop: viewportWithImage(manifest.viewports.desktop, images), mobile: viewportWithImage(manifest.viewports.mobile, images),
       }).onConflictDoUpdate({ target: [captures.pageId, captures.capturedAt], set: {
-        desktop: manifest.viewports.desktop ?? null, mobile: manifest.viewports.mobile ?? null, updatedAt: new Date(),
+        desktop: viewportWithImage(manifest.viewports.desktop, images), mobile: viewportWithImage(manifest.viewports.mobile, images), updatedAt: new Date(),
       }}).returning({ id: captures.id });
 
       // Insert/update blocks
       for (const block of manifest.blocks) {
-        const row = await blockRow(capture.id, block, manifestPath, root);
+        const row = await blockRow(capture.id, block, manifestPath, root, images);
         await tx.insert(blocks).values(row).onConflictDoUpdate({
           target: [blocks.captureId, blocks.viewport, blocks.blockIndex], set: row,
         });

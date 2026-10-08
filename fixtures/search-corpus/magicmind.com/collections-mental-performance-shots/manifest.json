@@ -1,0 +1,124 @@
+{
+  "site": {
+    "host": "magicmind.com",
+    "origin": "https://magicmind.com",
+    "platform": "shopify",
+    "theme": {
+      "name": "magicmind/main",
+      "id": 122358530182,
+      "schema_name": "Magic Mind Theme",
+      "schema_version": "2.0.0",
+      "theme_store_id": null,
+      "role": "main"
+    },
+    "builder": null,
+    "apps": [
+      "Klaviyo",
+      "Skio",
+      "Hotjar",
+      "Microsoft Clarity",
+      "Google Tag Manager",
+      "Google Analytics",
+      "TikTok Pixel",
+      "Snap Pixel",
+      "Intelligems",
+      "Northbeam",
+      "Elevar",
+      "Shop Pay",
+      "PayPal"
+    ],
+    "currency": "USD",
+    "locale": "en"
+  },
+  "page": {
+    "url": "https://magicmind.com/collections/mental-performance-shots",
+    "type": "collection",
+    "slug": "collections-mental-performance-shots",
+    "capturedAt": "2026-10-02T11:16:00.370Z",
+    "title": "Mental Performance Shots – Magic Mind",
+    "description": null,
+    "canonical": "https://magicmind.com/collections/mental-performance-shots",
+    "ogImage": "https://magicmind.com/cdn/shop/files/5pkmaxx.png?v=1788399508&width=1200",
+    "lang": "en",
+    "h1": "Mental Performance Shots"
+  },
+  "viewports": {
+    "desktop": {
+      "file": "desktop.jpg",
+      "width": 1440,
+      "fullHeight": 1729,
+      "strategy": "shopify-sections",
+      "status": 200,
+      "ms": 24979
+    },
+    "mobile": {
+      "error": "wall:location-gate: \"Skip to content BOOST MENTAL PERFORMANCE — CLINICALLY-BACKED INGREDIENTS 0 MENTAL PERFORMANCE SHOTS ON SALE MENTAL PERFO\"",
+      "status": 200
+    }
+  },
+  "blocks": [
+    {
+      "ref": "b1",
+      "index": 1,
+      "typeHint": "new-header-v",
+      "parentType": null,
+      "tag": "div",
+      "id": "shopify-section-new-header-v4",
+      "classes": "shopify-section",
+      "top": 50,
+      "height": 100,
+      "width": 1440,
+      "text": "Shop Science Reviews Cart 0",
+      "textLength": 27,
+      "headline": null,
+      "buttons": 3,
+      "images": 10,
+      "videos": 0,
+      "bg": "rgba(0, 0, 0, 0)",
+      "viewport": "desktop",
+      "file": "blocks/d-01-new-header-v.jpg"
+    },
+    {
+      "ref": "b2",
+      "index": 2,
+      "typeHint": "collection",
+      "parentType": null,
+      "tag": "div",
+      "id": "shopify-section-collection-template",
+      "classes": "shopify-section shopify-section--bordered",
+      "top": 200,
+      "height": 716,
+      "width": 1440,
+      "text": "MENTAL PERFORMANCE SHOTS black_crow_do_not_cross_sell black_crow_do_not_replenish black_crow_do_not_subscribe exclude_gwp_campaign exclude_rebuy noidex noindex smart-cart-shipping-excluded FILTERS black_crow_do_not_cross_sell black_crow_do_not_replenish black_crow_do_not_subscribe exclude_gwp_campaign exclude_rebuy noidex noindex smart-cart-shipping-excluded ON SALE MENTAL PERFORMANCE SHOT: MAXX | 5-TO-15 $19.75 $29.22 MAGIC MIND MAXX (90 PACK) $535.50 MAGIC MIND ORIGINAL (90 PACK) $535.50 SORT",
+      "textLength": 499,
+      "headline": "Mental Performance Shots",
+      "buttons": 34,
+      "images": 3,
+      "videos": 0,
+      "bg": "rgba(0, 0, 0, 0)",
+      "viewport": "desktop",
+      "file": "blocks/d-02-collection.jpg"
+    },
+    {
+      "ref": "b3",
+      "index": 3,
+      "typeHint": "custom-footer",
+      "parentType": null,
+      "tag": "div",
+      "id": "shopify-section-custom-footer",
+      "classes": "shopify-section",
+      "top": 917,
+      "height": 812,
+      "width": 1440,
+      "text": "The world’s first mental performance shots™ Become a magic insider. Get science-backed insights for better sleep, sharper focus, and peak mental performance — plus exclusive product drops, discounts, and early event access. SUBSCRIBE Support Help center Account Terms Refunds Accessibility FAQ Sales & Wholesale Order Wholesale Request a Store Visit Store Locator Collaborations HSA/FSA Eligible Partnerships Magic Merch Blog Creator Community Application Contact hello@magicmind.com 24/7 10,000 Inc 1291 Electric Ave Venice, CA 90291 © 2026 Magic Mind and the Magic Mind logo are registered trademarks of 10000 Inc. *These statements have not been evaluated by the FDA. Not intended to diagnose, treat, cure, or prevent any disease. Consult your physician before use. Read Full Disclaimer",
+      "textLength": 789,
+      "headline": "Become a magic insider.",
+      "buttons": 1,
+      "images": 1,
+      "videos": 0,
+      "bg": "rgba(0, 0, 0, 0)",
+      "viewport": "desktop",
+      "file": "blocks/d-03-custom-footer.jpg"
+    }
+  ]
+}
