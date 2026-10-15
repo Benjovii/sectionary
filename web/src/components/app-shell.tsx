@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { CircleUser } from "lucide-react";
 import { Logo } from "@/components/logo";
 import { NavLinks } from "@/components/nav-links";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -25,6 +26,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <div className="ml-auto flex items-center gap-1">
             <span className="hidden font-mono text-[11px] tabular-nums text-muted-foreground md:inline">preview · sample data</span>
             <ThemeToggle />
+            <Link
+              href="/account"
+              aria-label="Account"
+              title="Account"
+              className="inline-flex size-8 items-center justify-center rounded-lg text-muted-foreground transition-colors duration-150 outline-none hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring touch:size-11"
+            >
+              <CircleUser className="size-4" />
+            </Link>
           </div>
         </div>
       </header>

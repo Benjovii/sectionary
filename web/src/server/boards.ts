@@ -2,16 +2,28 @@ import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
 import type { Board, BoardPatch, SharedBoard } from "@/contracts/api";
 import { database, pgArray } from "@/server/db";
 import { blockColumns, blockJoins, toBlock, UUID } from "@/server/blocks";
+import { userForRequest, type SessionUser } from "@/server/accounts";
+import { canUseBoards } from "@/server/plans";
 
-// Boards before accounts (SEC-27): whoever holds a board's edit token owns it.
-// The token is returned once, at creation; only its SHA-256 is stored.
+// Who may touch a board. A board with an owner (owner_id, SEC-27) belongs to
+// that signed-in account and nobody else. A board from before accounts belongs
+// to whoever holds its edit token, returned once at creation and stored only as
+// its SHA-256; the first signed-in request that carries the token claims it.
+//
+// Plan gate (SEC-28, with PLAN_GATES=on): creating boards and adding to them
+// needs Pro or Team. Reading, sharing, reordering and deleting what you already
+// have keeps working after a downgrade, so nobody loses a client link.
 
 const hash = (token: string) => createHash("sha256").update(token).digest("hex");
 const iso = (d: unknown) => (d instanceof Date ? d.toISOString() : String(d));
 
 export class BoardError extends Error {
-  constructor(message: string, readonly status: number, readonly code: string) {
+  readonly status: number;
+  readonly code: string;
+  constructor(message: string, status: number, code: string) {
     super(message);
+    this.status = status;
+    this.code = code;
   }
 }
 
@@ -20,7 +32,16 @@ export function boardErrorResponse(error: unknown) {
   return null;
 }
 
-export const tokenFrom = (request: Request) => request.headers.get("x-board-token")?.trim() ?? "";
+export type Actor = { token: string; user: SessionUser | null };
+
+export const actorFrom = async (request: Request): Promise<Actor> =>
+  ({ token: request.headers.get("x-board-token")?.trim() ?? "", user: await userForRequest(request) });
+
+function requirePlan(actor: Actor) {
+  if (canUseBoards(actor.user?.plan)) return;
+  if (!actor.user) throw new BoardError("Sign in to make boards", 401, "SIGN_IN_REQUIRED");
+  throw new BoardError("Boards come with Pro and Team", 402, "PLAN_REQUIRED");
+}
 
 const clean = (s: unknown, max: number) => (typeof s === "string" ? s.trim().slice(0, max) : "");
 
@@ -40,38 +61,52 @@ async function load(id: string): Promise<Board> {
     createdAt: iso(b.created_at), updatedAt: iso(b.updated_at), items: await items(b.id) };
 }
 
-/** Throws 404 for an unknown board and 403 for a wrong token; the hashes are compared in constant time. */
-async function authorize(id: string, token: string) {
+/** Throws 404 for an unknown board and 403 for someone else's; token hashes are compared in constant time. */
+async function authorize(id: string, actor: Actor) {
   if (!UUID.test(id)) throw new BoardError("Board not found", 404, "NOT_FOUND");
   const sql = database();
-  const [row] = await sql`SELECT edit_token_hash FROM boards WHERE id=${id}`;
+  const [row] = await sql`SELECT edit_token_hash, owner_id FROM boards WHERE id=${id}`;
   if (!row) throw new BoardError("Board not found", 404, "NOT_FOUND");
-  const expected = Buffer.from(row.edit_token_hash ?? "", "hex"), given = Buffer.from(hash(token), "hex");
-  if (!token || expected.length !== given.length || !timingSafeEqual(expected, given)) {
+  if (row.owner_id) {
+    if (row.owner_id === actor.user?.id) return;
     throw new BoardError("This board belongs to someone else", 403, "FORBIDDEN");
   }
+  const expected = Buffer.from(row.edit_token_hash ?? "", "hex"), given = Buffer.from(hash(actor.token), "hex");
+  if (!actor.token || expected.length !== given.length || !timingSafeEqual(expected, given)) {
+    throw new BoardError("This board belongs to someone else", 403, "FORBIDDEN");
+  }
+  if (actor.user) await sql`UPDATE boards SET owner_id=${actor.user.id}, created_by=coalesce(created_by, ${actor.user.id}) WHERE id=${id} AND owner_id IS NULL`;
 }
 
 const touch = (id: string) => database()`UPDATE boards SET updated_at=now() WHERE id=${id}`;
 
-export async function createBoard(input: { name?: unknown; description?: unknown }) {
+export async function createBoard(actor: Actor, input: { name?: unknown; description?: unknown }) {
+  requirePlan(actor);
   const name = clean(input.name, 120);
   if (!name) throw new BoardError("A board needs a name", 400, "INVALID");
   const description = clean(input.description, 2000) || null;
   const token = randomBytes(24).toString("base64url");
   const sql = database();
-  const [row] = await sql`INSERT INTO boards (name, description, share_slug, edit_token_hash)
-    VALUES (${name}, ${description}, ${randomBytes(8).toString("base64url")}, ${hash(token)}) RETURNING id`;
+  const owner = actor.user?.id ?? null;
+  const [row] = await sql`INSERT INTO boards (name, description, share_slug, edit_token_hash, owner_id, created_by)
+    VALUES (${name}, ${description}, ${randomBytes(8).toString("base64url")}, ${hash(token)}, ${owner}, ${owner}) RETURNING id`;
   return { board: await load(row.id), token };
 }
 
-export async function getBoard(id: string, token: string) {
-  await authorize(id, token);
+/** The signed-in account's boards, newest change first. */
+export async function listBoards(actor: Actor): Promise<Board[]> {
+  if (!actor.user) throw new BoardError("Sign in to see your boards", 401, "SIGN_IN_REQUIRED");
+  const rows = await database()`SELECT id FROM boards WHERE owner_id=${actor.user.id} ORDER BY updated_at DESC LIMIT 200`;
+  return Promise.all(rows.map((r) => load(r.id)));
+}
+
+export async function getBoard(id: string, actor: Actor) {
+  await authorize(id, actor);
   return load(id);
 }
 
-export async function updateBoard(id: string, token: string, patch: BoardPatch) {
-  await authorize(id, token);
+export async function updateBoard(id: string, actor: Actor, patch: BoardPatch) {
+  await authorize(id, actor);
   const sql = database();
   await sql.begin(async (tx) => {
     if (patch.name !== undefined) {
@@ -93,34 +128,35 @@ export async function updateBoard(id: string, token: string, patch: BoardPatch) 
   return load(id);
 }
 
-export async function deleteBoard(id: string, token: string) {
-  await authorize(id, token);
+export async function deleteBoard(id: string, actor: Actor) {
+  await authorize(id, actor);
   await database()`DELETE FROM boards WHERE id=${id}`;
 }
 
-export async function addItem(id: string, token: string, input: { blockId?: unknown; note?: unknown }) {
-  await authorize(id, token);
+export async function addItem(id: string, actor: Actor, input: { blockId?: unknown; note?: unknown }) {
+  await authorize(id, actor);
+  requirePlan(actor);
   const blockId = typeof input.blockId === "string" ? input.blockId : "";
   if (!UUID.test(blockId)) throw new BoardError("Unknown block", 400, "INVALID");
   const sql = database();
   const [exists] = await sql`SELECT 1 FROM blocks WHERE id=${blockId}`;
   if (!exists) throw new BoardError("Unknown block", 404, "NOT_FOUND");
-  await sql`INSERT INTO board_items (board_id, block_id, note, position)
-    VALUES (${id}, ${blockId}, ${clean(input.note, 2000) || null}, (SELECT coalesce(max(position) + 1, 0) FROM board_items WHERE board_id=${id}))
+  await sql`INSERT INTO board_items (board_id, block_id, note, position, added_by)
+    VALUES (${id}, ${blockId}, ${clean(input.note, 2000) || null}, (SELECT coalesce(max(position) + 1, 0) FROM board_items WHERE board_id=${id}), ${actor.user?.id ?? null})
     ON CONFLICT (board_id, block_id) DO NOTHING`;
   await touch(id);
   return load(id);
 }
 
-export async function setItemNote(id: string, token: string, blockId: string, note: unknown) {
-  await authorize(id, token);
+export async function setItemNote(id: string, actor: Actor, blockId: string, note: unknown) {
+  await authorize(id, actor);
   await database()`UPDATE board_items SET note=${clean(note, 2000) || null}, updated_at=now() WHERE board_id=${id} AND block_id=${UUID.test(blockId) ? blockId : null}`;
   await touch(id);
   return load(id);
 }
 
-export async function removeItem(id: string, token: string, blockId: string) {
-  await authorize(id, token);
+export async function removeItem(id: string, actor: Actor, blockId: string) {
+  await authorize(id, actor);
   await database()`DELETE FROM board_items WHERE board_id=${id} AND block_id=${UUID.test(blockId) ? blockId : null}`;
   await touch(id);
   return load(id);

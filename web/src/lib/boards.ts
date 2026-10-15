@@ -6,9 +6,11 @@ import { API_MODE } from "@/lib/data-source";
 
 // Boards on the client. Two stores behind one interface:
 //
-// - API mode (blocks from /api/blocks): boards live in the database. Until
-//   accounts exist, this browser keeps each board's edit token, and the share
-//   link (/b/<slug>) is live: edits show up for the client on reload.
+// - API mode (blocks from /api/blocks): boards live in the database and the
+//   share link (/b/<slug>) is live: edits show up for the client on reload.
+//   Signed in, boards belong to the account (the session cookie goes with
+//   every request). Signed out, this browser keeps each board's edit token;
+//   the first signed-in visit claims those boards for the account.
 // - Sample mode (the committed sample JSON, as on the preview deploy): boards
 //   live in this browser, and the share link (/share#...) carries the whole
 //   board, so it works with no database. It is a snapshot: copy it again after
@@ -80,8 +82,8 @@ async function call<T>(path: string, init: RequestInit & { token?: string } = {}
   if (init.token) headers.set("x-board-token", init.token);
   const res = await fetch(path, { ...init, headers });
   if (!res.ok) {
-    const err = (await res.json().catch(() => null)) as { error?: string } | null;
-    throw Object.assign(new Error(err?.error ?? `HTTP ${res.status}`), { status: res.status });
+    const err = (await res.json().catch(() => null)) as { error?: string; code?: string } | null;
+    throw Object.assign(new Error(err?.error ?? `HTTP ${res.status}`), { status: res.status, code: err?.code });
   }
   return (res.status === 204 ? undefined : await res.json()) as T;
 }
@@ -89,8 +91,10 @@ async function call<T>(path: string, init: RequestInit & { token?: string } = {}
 const apiStore: BoardStore = {
   linkKind: "live",
   async list() {
-    const ids = Object.keys(tokens());
-    const boards = await Promise.all(ids.map((id) => this.get(id).catch((e: { status?: number }) => {
+    // The account's boards (none when signed out), then any token boards this browser still holds.
+    const owned = await call<{ items: Board[] }>("/api/boards").then((r) => r.items, (e: { status?: number }) => (e.status === 401 ? [] : Promise.reject(e)));
+    const ids = Object.keys(tokens()).filter((id) => !owned.some((b) => b.id === id));
+    const held = await Promise.all(ids.map((id) => this.get(id).catch((e: { status?: number }) => {
       // Deleted elsewhere: forget it. Anything else (offline, 503): keep the token.
       if (e.status === 404 || e.status === 403) {
         const t = tokens();
@@ -99,7 +103,7 @@ const apiStore: BoardStore = {
       }
       return null;
     })));
-    return boards.filter((b): b is Board => b !== null).map(summary).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+    return [...owned, ...held.filter((b): b is Board => b !== null)].map(summary).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
   },
   get: (id) => call<Board>(`/api/boards/${id}`, { token: tokens()[id] }),
   async create(name, description) {

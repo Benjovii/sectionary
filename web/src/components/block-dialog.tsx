@@ -17,6 +17,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { BriefPanel } from "@/components/brief-panel";
 import { SaveToBoard } from "@/components/save-to-board";
+import { useViewCheck, ViewLimitPanel } from "@/components/view-limit";
 import { TimeMachineControls, TimeMachineStage, useTimeMachine } from "@/components/time-machine";
 import { cn } from "@/lib/utils";
 import { assetUrl } from "@/lib/data-source";
@@ -74,6 +75,9 @@ export function BlockDialog({
 } & TechProps) {
   const ref = useRef<HTMLDialogElement>(null);
   const show = Boolean(block || missing);
+  // Free plan daily cap (SEC-28); null until the count answers, and in sample mode.
+  const check = useViewCheck(block?.id ?? null);
+  const limited = check?.allowed === false;
 
   useEffect(() => {
     const d = ref.current;
@@ -112,7 +116,9 @@ export function BlockDialog({
       }}
       className="m-0 h-dvh max-h-dvh w-screen max-w-none bg-transparent p-0 backdrop:bg-black/70 open:flex open:items-stretch open:justify-center min-[900px]:open:items-center min-[900px]:p-6"
     >
-      {block && detail ? (
+      {block && limited && check ? (
+        <ViewLimitPanel check={check} onClose={onClose} />
+      ) : block && detail ? (
         <Detail key={block.id} block={block} detail={detail} onClose={onClose} onOpen={onOpen} onStep={onStep} counts={counts} onFilter={onFilter} />
       ) : missing ? (
         <div className="m-auto flex max-w-sm flex-col items-center gap-3 rounded-xl border bg-card p-8 text-center text-card-foreground">
