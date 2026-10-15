@@ -85,16 +85,6 @@ function condition(sql: Sql, f: BlockFilters, key: FilterKey) {
 const LATEST = (sql: Sql) => sql`c.id=(SELECT c2.id FROM captures c2 WHERE c2.page_id=p.id ORDER BY c2.captured_at DESC LIMIT 1)`;
 
 /**
- * Cart blocks: Sectionary does not offer them, so the site never shows them.
- * That is every block on a cart page, and every block whose type is a cart
- * ("cart-items", "main-cart", "cart-drawer", "mini-cart-part") wherever it
- * was captured. An add-to-cart button belongs to a product page, not a cart.
- * Same rule as isCart in lib/blocks.ts.
- */
-const CART = (sql: Sql) =>
-  sql`(p.type='cart' OR (coalesce(b.block_type,b.type_hint) ~* 'cart($|[^a-z]|items)' AND coalesce(b.block_type,b.type_hint) !~* 'add-to-cart'))`;
-
-/**
  * One block per screenshot. A store's header, footer and announcement bar are
  * captured on every page we visit, so the same shot would otherwise appear
  * once per page. Blocks are the same shot when they come from the same store
@@ -104,15 +94,15 @@ const CART = (sql: Sql) =>
  */
 const SHOWN = (sql: Sql) => sql`b.id IN (
   SELECT DISTINCT ON (s.host, b.viewport, coalesce(b.block_type,b.type_hint), b.width, b.height, b.background, md5(b.text)) b.id
-  FROM ${blockJoins(sql)} WHERE ${LATEST(sql)} AND NOT ${CART(sql)}
+  FROM ${blockJoins(sql)} WHERE ${LATEST(sql)}
   ORDER BY s.host, b.viewport, coalesce(b.block_type,b.type_hint), b.width, b.height, b.background, md5(b.text),
     array_position(ARRAY['home','collection','product']::text[], p.type) NULLS LAST, p.url, b.block_index, b.id)`;
 
 /**
  * The WHERE clause for a BlocksQuery over blockJoins: the latest capture of
- * each page, one block per screenshot and no cart blocks, then every filter
- * given. `skip` leaves filters out, which is how a facet counts what its
- * other values would add.
+ * each page, one block per screenshot, then every filter given. `skip`
+ * leaves filters out, which is how a facet counts what its other values
+ * would add.
  */
 export function blockWhere(sql: Sql, f: BlockFilters, skip: FilterKey[] = []) {
   return FILTER_KEYS.filter((key) => !skip.includes(key))

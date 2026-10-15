@@ -1,10 +1,11 @@
 // A store's flow (SEC-20): its captured pages in the order a shopper walks a
-// store, home to checkout.
+// store, home to cart.
 //
-// Complete means home, collection and product are all there. There is no cart
-// step: Sectionary does not offer cart blocks (isCart in lib/blocks.ts).
-// Checkout is never captured at all (see docs/bot-page.md), so it is always a
-// gap, and the view says why.
+// Complete means home, collection and product are all there. Cart counts when
+// it was captured, which is rare: Shopify's default robots.txt keeps bots out
+// of /cart and the crawler obeys it. There is no checkout step: Sectionary
+// does not offer checkout blocks, and checkout is never captured anyway (see
+// docs/bot-page.md).
 //
 // Pure: no React, no DOM, no fetch. Relative imports, so
 // `npm run flow-check` runs it under Node's type stripping.
@@ -15,7 +16,7 @@ import type { BlockIndex } from "./block-source.ts";
 import { isMock } from "./mock-blocks.ts";
 import { pagesFromBlocks, storeFromBlocks, summaryPages, type ProfilePage, type SiteSummary } from "./site-profile.ts";
 
-export const FLOW_STEPS = ["home", "collection", "product", "checkout"] as const;
+export const FLOW_STEPS = ["home", "collection", "product", "cart"] as const;
 export type FlowStepType = (typeof FLOW_STEPS)[number];
 
 /** What a flow needs to count as complete toward the SEC-20 target. */
@@ -25,8 +26,8 @@ export type FlowStep = {
   type: FlowStepType;
   /** The captured pages of this type, by URL. Empty for a gap. */
   pages: ProfilePage[];
-  /** Why a step is empty: "never" is policy (checkout), "missing" is this store. Null when captured. */
-  gap: "never" | "missing" | null;
+  /** "missing" when this store has no page for the step. Null when captured. */
+  gap: "missing" | null;
 };
 
 export type Flow = {
@@ -47,7 +48,7 @@ const hasContent = (p: ProfilePage) => Boolean(p.desktop || p.mobile || p.deskto
 export function flowOf(pages: ProfilePage[]): Flow {
   const steps = FLOW_STEPS.map((type): FlowStep => {
     const list = pages.filter((p) => p.type === type && hasContent(p)).sort((a, b) => a.url.localeCompare(b.url));
-    return { type, pages: list, gap: list.length ? null : type === "checkout" ? "never" : "missing" };
+    return { type, pages: list, gap: list.length ? null : "missing" };
   });
   const missing = REQUIRED_STEPS.filter((type) => steps.find((s) => s.type === type)!.pages.length === 0);
   return { steps, complete: missing.length === 0, missing, captured: steps.filter((s) => s.pages.length > 0).length };
@@ -95,8 +96,13 @@ function byFlow(a: FlowSummary, b: FlowSummary): number {
 }
 
 /** The numbers the SEC-20 Done when is read from. */
-export function flowCounts(summaries: FlowSummary[]): { complete: number; captured: number } {
-  return { complete: summaries.filter((s) => s.flow.complete).length, captured: summaries.length };
+export function flowCounts(summaries: FlowSummary[]): { complete: number; withCart: number; captured: number } {
+  const complete = summaries.filter((s) => s.flow.complete);
+  return {
+    complete: complete.length,
+    withCart: complete.filter((s) => s.flow.steps[FLOW_STEPS.indexOf("cart")].pages.length > 0).length,
+    captured: summaries.length,
+  };
 }
 
 export type Viewport = "desktop" | "mobile";

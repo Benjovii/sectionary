@@ -40,7 +40,7 @@ export type SiteView = {
 };
 
 /** Home first, then the way a shopper walks a store. */
-const PAGE_ORDER = ["home", "collection", "product", "checkout", "page", "blog", "article", "other"];
+const PAGE_ORDER = ["home", "collection", "product", "cart", "checkout", "page", "blog", "article", "other"];
 
 function byPageOrder(a: { type: string; url: string }, b: { type: string; url: string }): number {
   const rank = (t: string) => {

@@ -6,23 +6,13 @@ export const PAGE_TYPE_LABEL: Record<string, string> = {
   home: "Home",
   collection: "Collection",
   product: "Product",
+  cart: "Cart",
   checkout: "Checkout",
   page: "Page",
   blog: "Blog",
   article: "Article",
   other: "Other",
 };
-
-/**
- * Cart blocks: Sectionary does not offer them, so the site never shows them.
- * Every block on a cart page, and every block whose type is a cart
- * ("cart-items", "main-cart", "cart-drawer") wherever it was captured. An
- * add-to-cart button belongs to a product page, not a cart. The API applies
- * the same rule in SQL (CART in server/blocks.ts).
- */
-export function isCart(block: Pick<Block, "pageType" | "typeHint">): boolean {
-  return block.pageType === "cart" || (/cart($|[^a-z]|items)/i.test(block.typeHint) && !/add-to-cart/i.test(block.typeHint));
-}
 
 /**
  * What makes two blocks the same screenshot: a store's header or footer is
@@ -38,11 +28,10 @@ export function shotKey(block: Block): string {
 const PAGE_RANK = ["home", "collection", "product"];
 const pageRank = (b: Block) => (PAGE_RANK.indexOf(b.pageType) + PAGE_RANK.length + 1) % (PAGE_RANK.length + 1);
 
-/** `blocks` without cart blocks and with one block per screenshot, in their original order. */
+/** `blocks` with one block per screenshot, in their original order. */
 export function shownBlocks(blocks: Block[]): Block[] {
   const keep = new Map<string, Block>();
   for (const b of blocks) {
-    if (isCart(b)) continue;
     const key = shotKey(b), kept = keep.get(key);
     if (!kept || pageRank(b) < pageRank(kept) || (pageRank(b) === pageRank(kept) && b.pageUrl < kept.pageUrl)) keep.set(key, b);
   }

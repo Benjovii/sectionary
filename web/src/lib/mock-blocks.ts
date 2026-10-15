@@ -22,10 +22,10 @@ import type { Block } from "@/contracts/block";
 import type { Store } from "@/contracts/store";
 
 /** Page types in the order a crawl walks them. */
-const PAGE_ORDER = ["home", "product", "collection"] as const;
+const PAGE_ORDER = ["home", "product", "collection", "cart"] as const;
 
 /** How often a store has each page type. Every store has a home page. */
-const PAGE_ODDS: Record<string, number> = { home: 1, product: 0.85, collection: 0.7 };
+const PAGE_ODDS: Record<string, number> = { home: 1, product: 0.85, collection: 0.7, cart: 0.45 };
 
 /** Heights move by up to a quarter either way, so the wall never packs a uniform grid. */
 const JITTER = 0.25;
@@ -74,12 +74,12 @@ function rng(seed: number): () => number {
 
 /**
  * A stable URL slug for a store's page, unique within the host. A store has one
- * home, so it keeps its plain name on the first pass; a later pass over the
- * store list suffixes it, which reads as a second capture of
+ * home and one cart, so those keep their plain names on the first pass; a later
+ * pass over the store list suffixes them, which reads as a second capture of
  * the same site and keeps block ids unique.
  */
 function slugFor(pageType: string, nth: number, round: number): string {
-  const base = pageType === "home" ? pageType : `${pageType}s-${nth.toString(36)}`;
+  const base = pageType === "home" || pageType === "cart" ? pageType : `${pageType}s-${nth.toString(36)}`;
   return round === 0 ? base : `${base}-${round + 1}`;
 }
 

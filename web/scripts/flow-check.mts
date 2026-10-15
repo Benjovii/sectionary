@@ -36,18 +36,20 @@ const mockOnly = shop("mock.test", [["home", "/"], ["collection", "/collections/
 
 // 1. One store's flow.
 const fullFlow = flowOf(pagesFromBlocks(full));
-check("steps are always the four, in order, with no cart", fullFlow.steps.map((s) => s.type).join() === "home,collection,product,checkout");
-check("home+collection+product is complete", fullFlow.complete && fullFlow.missing.length === 0);
-check("captured counts steps with pages, the cart page not among them", fullFlow.captured === 3, String(fullFlow.captured));
-check("checkout is a 'never' gap", fullFlow.steps[3].gap === "never" && fullFlow.steps[3].pages.length === 0);
+check("steps are always the four, in order, with no checkout", fullFlow.steps.map((s) => s.type).join() === FLOW_STEPS.join());
+check("home+collection+product+cart is complete", fullFlow.complete && fullFlow.missing.length === 0);
+check("captured counts steps with pages", fullFlow.captured === 4, String(fullFlow.captured));
+check("cart captured has no gap", fullFlow.steps[3].gap === null);
+check("no checkout step", !fullFlow.steps.some((s) => (s.type as string) === "checkout"));
 
 const noProductFlow = flowOf(pagesFromBlocks(noProduct));
 check("missing product is incomplete", !noProductFlow.complete && noProductFlow.missing.join() === "product", noProductFlow.missing.join());
 check("missing product is a 'missing' gap", noProductFlow.steps[2].gap === "missing");
+check("missing cart is a 'missing' gap", noProductFlow.steps[3].gap === "missing");
 
 const twoFlow = flowOf(pagesFromBlocks(twoProducts));
 check("two products both on the step, by URL", twoFlow.steps[2].pages.map((p) => p.url).join() === "https://two.test/products/a,https://two.test/products/z");
-check("two products is complete", twoFlow.complete);
+check("complete without cart", twoFlow.complete);
 
 const extrasFlow = flowOf(pagesFromBlocks(extras));
 check("blog and page types stay out of the flow", extrasFlow.steps.every((s) => s.pages.every((p) => FLOW_STEPS.includes(p.type as never))));
@@ -62,17 +64,17 @@ const index = buildIndex([...full, ...noProduct, ...twoProducts, ...extras, ...m
 const all = flowSummaries(index);
 check("one summary per captured store, mock-only and uncaptured left out", all.map((s) => s.store.host).sort().join() === "extras.test,full.test,noproduct.test,two.test", all.map((s) => s.store.host).join());
 check("complete stores first", all.slice(0, 3).every((s) => s.flow.complete) && !all[3].flow.complete);
-check("cart blocks never reach a flow", all.every((s) => s.flow.steps.every((step) => step.pages.every((p) => p.type !== "cart"))));
+check("most steps first among complete", all[0].store.host === "full.test", all[0].store.host);
 check("listed store keeps its validated record", all.find((s) => s.store.host === "noproduct.test")?.listed === true);
 const counts = flowCounts(all);
-check("counts", counts.complete === 3 && counts.captured === 4, JSON.stringify(counts));
+check("counts", counts.complete === 3 && counts.withCart === 1 && counts.captured === 4, JSON.stringify(counts));
 
-// 3. The committed sample: myzoobox has home, two collections and two products (its cart page is left out).
+// 3. The committed sample: myzoobox has home, two collections, two products and the cart.
 const sample = JSON.parse(readFileSync(new URL("../public/sample/blocks.json", import.meta.url), "utf8")).blocks as Block[];
 const stores = JSON.parse(readFileSync(new URL("../public/sample/stores.json", import.meta.url), "utf8")).stores as Store[];
 const real = flowSummaries(buildIndex(sample, stores));
 const zoo = real.find((s) => s.store.host === "myzoobox.com");
-check("sample: myzoobox has a complete flow", Boolean(zoo?.flow.complete));
+check("sample: myzoobox has a complete flow with cart", Boolean(zoo?.flow.complete && zoo.flow.steps[3].pages.length === 1));
 check("sample: collections and products are two each", zoo?.flow.steps[1].pages.length === 2 && zoo.flow.steps[2].pages.length === 2);
 
 // 4. Drawing a page.
