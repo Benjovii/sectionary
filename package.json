@@ -20,7 +20,8 @@
     "review-sheets": "tsx src/review-sheets.ts",
     "wall-check": "tsx src/wall-check.ts",
     "prune-seeds": "tsx src/prune-seeds.ts",
-    "test": "tsx --test src/*.test.ts"
+    "test": "tsx --test src/*.test.ts",
+    "hello-capture": "tsx ops/hello-capture.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.679.0",
