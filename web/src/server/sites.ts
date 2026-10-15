@@ -25,13 +25,13 @@ export function toStore(r: Record<string, unknown>, n = 1): Store {
  */
 const shotOf = (viewport: { image?: { thumbnail?: string | null } | null } | null | undefined) => viewport?.image?.thumbnail ?? null;
 
-/** Every page of these sites at its latest capture, with full-page shots and block counts, keyed by site id. */
+/** Every page of these sites at its latest capture, with full-page shots and block counts, keyed by site id. Cart pages are left out: the site never shows cart blocks (CART in server/blocks.ts). */
 export async function latestPages(sql: Sql, siteIds: string[]): Promise<Map<string, SiteProfile["pages"]>> {
   const rows = siteIds.length
     ? await sql`SELECT p.site_id,p.url,p.type,p.title,c.captured_at,c.desktop,c.mobile,
         (SELECT count(*)::int FROM blocks b WHERE b.capture_id=c.id) AS blocks
         FROM pages p JOIN LATERAL (SELECT * FROM captures WHERE page_id=p.id ORDER BY captured_at DESC LIMIT 1) c ON true
-        WHERE p.site_id=ANY(${pgArray(siteIds)}::uuid[]) ORDER BY p.type,p.url`
+        WHERE p.site_id=ANY(${pgArray(siteIds)}::uuid[]) AND p.type<>'cart' ORDER BY p.type,p.url`
     : [];
   const bySite = new Map<string, SiteProfile["pages"]>();
   for (const p of rows) {

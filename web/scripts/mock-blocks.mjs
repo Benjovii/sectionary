@@ -14,6 +14,7 @@ import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
 import { expandBlocks } from "../src/lib/mock-blocks.ts";
 import { buildIndex, queryBlocks } from "../src/lib/block-source.ts";
+import { isCart, shotKey } from "../src/lib/blocks.ts";
 import { layOut, visible, columnsFor } from "../src/lib/wall-layout.ts";
 import { COLOUR_BUCKETS, bucketFor } from "../src/lib/colour.ts";
 
@@ -60,7 +61,7 @@ if (flag("--verify")) {
   const typeHints = new Set(blocks.map((b) => b.typeHint));
   const heights = new Set(blocks.map((b) => b.h));
   check("varied hosts", hosts.size >= stores.length * 0.98, `${hosts.size} of ${stores.length} stores represented`);
-  check("varied types", pageTypes.size >= 4 && typeHints.size >= 10, `${pageTypes.size} page types, ${typeHints.size} block types`);
+  check("varied types", pageTypes.size >= 3 && typeHints.size >= 10, `${pageTypes.size} page types, ${typeHints.size} block types`);
   check("varied sizes", heights.size > 200, `${heights.size} distinct heights`);
 
   // The wall reserves each block's aspect ratio before the image loads, so
@@ -76,6 +77,8 @@ if (flag("--verify")) {
   const index = buildIndex(blocks, stores);
   const indexMs = performance.now() - indexStarted;
   check("index builds", index.blocks.length === blocks.length, `${indexMs.toFixed(0)} ms`);
+  check("the wall shows each screenshot once", new Set(index.wall.map(shotKey)).size === index.wall.length, `${index.wall.length.toLocaleString("en-US")} of ${blocks.length.toLocaleString("en-US")}`);
+  check("no cart blocks anywhere", !index.blocks.some(isCart) && !blocks.some(isCart));
 
   const time = (label, query) => {
     const t = performance.now();
@@ -118,7 +121,7 @@ if (flag("--verify")) {
     cursor = page.nextCursor;
     pages += 1;
   } while (cursor && pages < 1000);
-  check("cursor walks the whole set once", walked === blocks.length && seen.size === blocks.length, `${pages} pages, ${walked} items`);
+  check("cursor walks the whole wall once", walked === index.wall.length && seen.size === index.wall.length, `${pages} pages, ${walked} items`);
 
   // SEC-15 and SEC-46 share one exit test: 30,000 blocks scrolling smoothly on
   // a mid-range phone. Smooth means a frame budget of 16.7 ms at 60fps, and the
@@ -135,7 +138,7 @@ if (flag("--verify")) {
   check("video facet splits the set", videoFacet.length === 2 && videoFacet.every((f) => f.count > 0), videoFacet.map((f) => `${f.value} ${f.count}`).join(", "));
 
   const colourFacet = unfiltered.facets?.color ?? [];
-  check("colour facet counts every block", colourFacet.reduce((n, f) => n + f.count, 0) === blocks.length, colourFacet.slice(0, 5).map((f) => `${f.value} ${f.count}`).join(", "));
+  check("colour facet counts every block", colourFacet.reduce((n, f) => n + f.count, 0) === index.wall.length, colourFacet.slice(0, 5).map((f) => `${f.value} ${f.count}`).join(", "));
 
   // Multi-select must widen within a dimension and narrow across dimensions.
   const topColours = colourFacet.slice(0, 2).map((f) => f.value);

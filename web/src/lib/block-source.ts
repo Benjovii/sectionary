@@ -16,6 +16,7 @@ import type { BlocksQuery, BlocksResponse } from "@/contracts/api";
 // Relative, not "@/lib/colour": this is a value import, so Node cannot strip
 // it the way it strips the type imports above, and it does not know the alias.
 import { bucketFor } from "./colour.ts";
+import { isCart, shownBlocks } from "./blocks.ts";
 
 /**
  * BlocksQuery as SEC-16 needs it. Three gaps against contract v1, all of them
@@ -53,10 +54,16 @@ export const MAX_LIMIT = 200;
 export type WallResponse = BlocksResponse & { nearMiss?: Record<string, number> };
 
 /** Blocks plus the store lookup the industry and country filters need. */
-export type BlockIndex = { blocks: Block[]; storeByHost: Map<string, Store> };
+/**
+ * `blocks` is every block but cart blocks, which the site never shows; site
+ * profiles and flows draw whole pages from it. `wall` is what the wall
+ * queries: one block per screenshot, so a store's header is not repeated
+ * once per captured page (see shownBlocks in lib/blocks.ts).
+ */
+export type BlockIndex = { blocks: Block[]; wall: Block[]; storeByHost: Map<string, Store> };
 
 export function buildIndex(blocks: Block[], stores: Store[]): BlockIndex {
-  return { blocks, storeByHost: new Map(stores.map((s) => [s.host, s])) };
+  return { blocks: blocks.filter((b) => !isCart(b)), wall: shownBlocks(blocks), storeByHost: new Map(stores.map((s) => [s.host, s])) };
 }
 
 /** "shopify,woocommerce" -> ["shopify", "woocommerce"]; empty means no filter. */
@@ -137,7 +144,7 @@ export function queryBlocks(index: BlockIndex, query: WallQuery = {}, options: {
   const nearMissTallies = new Array<number>(dims.length).fill(0);
 
   const matched: Block[] = [];
-  for (const block of index.blocks) {
+  for (const block of index.wall) {
     const store = index.storeByHost.get(block.host);
 
     let mask = 0;

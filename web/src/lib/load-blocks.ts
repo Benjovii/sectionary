@@ -8,6 +8,7 @@ import type { StoreSet } from "@/contracts/store";
 import { buildIndex, queryBlocks, MAX_LIMIT, type BlockIndex, type WallQuery, type WallResponse } from "@/lib/block-source";
 import { baseType, detailIndex, type DetailIndex } from "@/lib/block-detail";
 import { expandBlocks } from "@/lib/mock-blocks";
+import { isCart } from "@/lib/blocks";
 import { profileFromApi, profileFromIndex, siteCardFromApi, siteCards, type SiteCard, type SiteSummary, type SiteView } from "@/lib/site-profile";
 import { flowSummaries, flowSummariesFromApi, type FlowSummary } from "@/lib/flows";
 import type { SiteProfile } from "@/contracts/api";
@@ -137,7 +138,7 @@ async function load(blocksSrc: string, storesSrc: string): Promise<BlockIndex> {
   const [blockSet, storeSet] = await Promise.all([getJson<BlockSet>(blocksSrc), getJson<StoreSet>(storesSrc)]);
   // The mock tops the real sample up to the target rather than replacing it,
   // so the stores we actually captured stay in the set at every scale.
-  const real = blockSet.blocks;
+  const real = blockSet.blocks.filter((b) => !isCart(b));
   const blocks = MOCK_BLOCKS > 0 ? [...real, ...expandBlocks(real, storeSet.stores, Math.max(0, MOCK_BLOCKS - real.length))] : real;
   return buildIndex(blocks, storeSet.stores);
 }
@@ -190,7 +191,7 @@ export async function loadSitesDirectory(): Promise<SitesDirectory> {
   }
   const index = await loadBlockIndex();
   const counts = new Map<string, number>();
-  for (const b of index.blocks) counts.set(b.typeHint, (counts.get(b.typeHint) ?? 0) + 1);
+  for (const b of index.wall) counts.set(b.typeHint, (counts.get(b.typeHint) ?? 0) + 1);
   return { cards: siteCards(index), blockTypes: namedTypes([...counts].map(([value, count]) => ({ value, count }))) };
 }
 

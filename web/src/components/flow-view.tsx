@@ -63,7 +63,7 @@ function takePlace(host: string): Place | null {
 }
 
 /**
- * A store's flow (SEC-20): home, collection, product, cart and checkout, each
+ * A store's flow (SEC-20): home, collection, product and checkout, each
  * a full page. Side by side from 900px, each column scrolling on its own so
  * any part of two pages can be compared; stacked on phones, each page cut to
  * a screen and a half until opened. Every block is a link to its detail view.

@@ -83,7 +83,7 @@ export function FlowsIndex() {
                 {counts.complete === 1 ? "store has" : "stores have"} a complete flow
                 <span className="text-muted-foreground">
                   {" "}
-                  · {counts.withCart.toLocaleString("en-US")} with cart · {counts.captured.toLocaleString("en-US")} captured
+                  · {counts.captured.toLocaleString("en-US")} captured
                 </span>
               </>
             ) : (
@@ -91,8 +91,8 @@ export function FlowsIndex() {
             )}
           </p>
           <p className="mt-1 max-w-2xl text-[12px] text-muted-foreground">
-            A flow is complete when a store&apos;s home, collection and product pages are captured. Cart joins when the
-            store&apos;s robots.txt lets us in; checkout is never captured.
+            A flow is complete when a store&apos;s home, collection and product pages are captured;
+            checkout is never captured.
           </p>
         </div>
         {list && incomplete > 0 && (

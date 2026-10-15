@@ -1,10 +1,10 @@
 // A store's flow (SEC-20): its captured pages in the order a shopper walks a
 // store, home to checkout.
 //
-// Complete means home, collection and product are all there. Cart counts when
-// it was captured, which is rare: Shopify's default robots.txt keeps bots out
-// of /cart and the crawler obeys it. Checkout is never captured at all (see
-// docs/bot-page.md), so it is always a gap, and the view says why.
+// Complete means home, collection and product are all there. There is no cart
+// step: Sectionary does not offer cart blocks (isCart in lib/blocks.ts).
+// Checkout is never captured at all (see docs/bot-page.md), so it is always a
+// gap, and the view says why.
 //
 // Pure: no React, no DOM, no fetch. Relative imports, so
 // `npm run flow-check` runs it under Node's type stripping.
@@ -15,7 +15,7 @@ import type { BlockIndex } from "./block-source.ts";
 import { isMock } from "./mock-blocks.ts";
 import { pagesFromBlocks, storeFromBlocks, summaryPages, type ProfilePage, type SiteSummary } from "./site-profile.ts";
 
-export const FLOW_STEPS = ["home", "collection", "product", "cart", "checkout"] as const;
+export const FLOW_STEPS = ["home", "collection", "product", "checkout"] as const;
 export type FlowStepType = (typeof FLOW_STEPS)[number];
 
 /** What a flow needs to count as complete toward the SEC-20 target. */
@@ -30,7 +30,7 @@ export type FlowStep = {
 };
 
 export type Flow = {
-  /** Always the five steps, in FLOW_STEPS order. */
+  /** Always every step, in FLOW_STEPS order. */
   steps: FlowStep[];
   complete: boolean;
   /** Required steps not captured. */
@@ -95,13 +95,8 @@ function byFlow(a: FlowSummary, b: FlowSummary): number {
 }
 
 /** The numbers the SEC-20 Done when is read from. */
-export function flowCounts(summaries: FlowSummary[]): { complete: number; withCart: number; captured: number } {
-  const complete = summaries.filter((s) => s.flow.complete);
-  return {
-    complete: complete.length,
-    withCart: complete.filter((s) => s.flow.steps[FLOW_STEPS.indexOf("cart")].pages.length > 0).length,
-    captured: summaries.length,
-  };
+export function flowCounts(summaries: FlowSummary[]): { complete: number; captured: number } {
+  return { complete: summaries.filter((s) => s.flow.complete).length, captured: summaries.length };
 }
 
 export type Viewport = "desktop" | "mobile";
