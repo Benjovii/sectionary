@@ -190,7 +190,7 @@ export async function loadSitesDirectory(): Promise<SitesDirectory> {
   }
   const index = await loadBlockIndex();
   const counts = new Map<string, number>();
-  for (const b of index.blocks) counts.set(b.typeHint, (counts.get(b.typeHint) ?? 0) + 1);
+  for (const b of index.wall) counts.set(b.typeHint, (counts.get(b.typeHint) ?? 0) + 1);
   return { cards: siteCards(index), blockTypes: namedTypes([...counts].map(([value, count]) => ({ value, count }))) };
 }
 

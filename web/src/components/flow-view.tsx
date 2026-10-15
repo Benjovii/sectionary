@@ -63,7 +63,7 @@ function takePlace(host: string): Place | null {
 }
 
 /**
- * A store's flow (SEC-20): home, collection, product, cart and checkout, each
+ * A store's flow (SEC-20): home, collection, product and cart, each
  * a full page. Side by side from 900px, each column scrolling on its own so
  * any part of two pages can be compared; stacked on phones, each page cut to
  * a screen and a half until opened. Every block is a link to its detail view.
@@ -179,7 +179,7 @@ export function FlowView({ host }: { host: string }) {
         <Empty>Nothing has been captured from this store yet, so it has no flow to show.</Empty>
       ) : (
         <ol
-          aria-label="Flow, home to checkout"
+          aria-label="Flow, home to cart"
           className="flex flex-col gap-8 min-[900px]:-mx-4 min-[900px]:flex-row min-[900px]:gap-4 min-[900px]:overflow-x-auto min-[900px]:px-4 min-[900px]:pb-3"
         >
           {flow.steps.map((step, i) => {
@@ -326,7 +326,7 @@ function StepColumn({
       {!page || !shown ? (
         <div className={cn(FRAME, "flex aspect-[4/3] items-center justify-center border-dashed bg-transparent p-6 text-center min-[900px]:aspect-auto")}>
           <p className="max-w-56 text-[12px] text-muted-foreground">
-            {step.gap === "never" ? "Not captured: we never capture checkout." : "Not captured for this store."}
+            Not captured for this store.
           </p>
         </div>
       ) : (

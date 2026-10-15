@@ -36,11 +36,11 @@ const mockOnly = shop("mock.test", [["home", "/"], ["collection", "/collections/
 
 // 1. One store's flow.
 const fullFlow = flowOf(pagesFromBlocks(full));
-check("steps are always the five, in order", fullFlow.steps.map((s) => s.type).join() === FLOW_STEPS.join());
+check("steps are always the four, in order, with no checkout", fullFlow.steps.map((s) => s.type).join() === FLOW_STEPS.join());
 check("home+collection+product+cart is complete", fullFlow.complete && fullFlow.missing.length === 0);
 check("captured counts steps with pages", fullFlow.captured === 4, String(fullFlow.captured));
 check("cart captured has no gap", fullFlow.steps[3].gap === null);
-check("checkout is a 'never' gap", fullFlow.steps[4].gap === "never" && fullFlow.steps[4].pages.length === 0);
+check("no checkout step", !fullFlow.steps.some((s) => (s.type as string) === "checkout"));
 
 const noProductFlow = flowOf(pagesFromBlocks(noProduct));
 check("missing product is incomplete", !noProductFlow.complete && noProductFlow.missing.join() === "product", noProductFlow.missing.join());

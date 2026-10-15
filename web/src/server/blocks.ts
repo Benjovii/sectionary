@@ -85,14 +85,29 @@ function condition(sql: Sql, f: BlockFilters, key: FilterKey) {
 const LATEST = (sql: Sql) => sql`c.id=(SELECT c2.id FROM captures c2 WHERE c2.page_id=p.id ORDER BY c2.captured_at DESC LIMIT 1)`;
 
 /**
+ * One block per screenshot. A store's header, footer and announcement bar are
+ * captured on every page we visit, so the same shot would otherwise appear
+ * once per page. Blocks are the same shot when they come from the same store
+ * and viewport with the same type, size, background and text; the copy kept
+ * is the one from the page a visitor meets first (home, then collection, then
+ * product). Same rule as shotKey in lib/blocks.ts.
+ */
+const SHOWN = (sql: Sql) => sql`b.id IN (
+  SELECT DISTINCT ON (s.host, b.viewport, coalesce(b.block_type,b.type_hint), b.width, b.height, b.background, md5(b.text)) b.id
+  FROM ${blockJoins(sql)} WHERE ${LATEST(sql)}
+  ORDER BY s.host, b.viewport, coalesce(b.block_type,b.type_hint), b.width, b.height, b.background, md5(b.text),
+    array_position(ARRAY['home','collection','product']::text[], p.type) NULLS LAST, p.url, b.block_index, b.id)`;
+
+/**
  * The WHERE clause for a BlocksQuery over blockJoins: the latest capture of
- * each page, then every filter given. `skip` leaves filters out, which is how
- * a facet counts what its other values would add.
+ * each page, one block per screenshot, then every filter given. `skip`
+ * leaves filters out, which is how a facet counts what its other values
+ * would add.
  */
 export function blockWhere(sql: Sql, f: BlockFilters, skip: FilterKey[] = []) {
   return FILTER_KEYS.filter((key) => !skip.includes(key))
     .map((key) => condition(sql, f, key))
-    .reduce((where, next) => (next ? sql`${where} AND ${next}` : where), LATEST(sql));
+    .reduce((where, next) => (next ? sql`${where} AND ${next}` : where), SHOWN(sql));
 }
 
 // The colour filter buckets Block.bg in lib/colour.ts. Postgres cannot run
@@ -148,7 +163,7 @@ export async function facetCounts(sql: Sql, f: BlockFilters, ids?: string[]): Pr
   const parts = [sql`SELECT '#total' AS key, NULL::text AS value, count(*)::int AS count FROM r WHERE ${others(null)}`, ...FILTER_KEYS.map(facet), ...near];
   const rows = await sql`WITH r AS MATERIALIZED (
       SELECT ${columns} FROM ${blockJoins(sql)}
-      WHERE ${LATEST(sql)} ${ids ? sql`AND b.id=ANY(${pgArray(ids)}::uuid[])` : sql``}
+      WHERE ${SHOWN(sql)} ${ids ? sql`AND b.id=ANY(${pgArray(ids)}::uuid[])` : sql``}
     ) ${parts.reduce((all, next) => sql`${all} UNION ALL ${next}`)}`;
 
   const tallies = new Map<string, Map<string, number>>();
