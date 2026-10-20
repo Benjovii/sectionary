@@ -14,7 +14,7 @@ import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
 import { expandBlocks } from "../src/lib/mock-blocks.ts";
 import { buildIndex, queryBlocks } from "../src/lib/block-source.ts";
-import { shotKey } from "../src/lib/blocks.ts";
+import { sectionKey, shownBlocks } from "../src/lib/blocks.ts";
 import { layOut, visible, columnsFor } from "../src/lib/wall-layout.ts";
 import { COLOUR_BUCKETS, bucketFor } from "../src/lib/colour.ts";
 
@@ -77,7 +77,9 @@ if (flag("--verify")) {
   const index = buildIndex(blocks, stores);
   const indexMs = performance.now() - indexStarted;
   check("index builds", index.blocks.length === blocks.length, `${indexMs.toFixed(0)} ms`);
-  check("the wall shows each screenshot once", new Set(index.wall.map(shotKey)).size === index.wall.length, `${index.wall.length.toLocaleString("en-US")} of ${blocks.length.toLocaleString("en-US")}`);
+  check("the mock stays whole on the wall", index.wall.length === blocks.length, `${index.wall.length.toLocaleString("en-US")} of ${blocks.length.toLocaleString("en-US")}`);
+  const real = shownBlocks(samples);
+  check("real captures show each section of a store once", new Set(real.map(sectionKey)).size === real.length, `${real.length} of ${samples.length} samples`);
 
   const time = (label, query) => {
     const t = performance.now();

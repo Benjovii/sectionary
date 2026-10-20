@@ -21,6 +21,15 @@ export function pgArray(values: readonly string[]): string {
   return `{${values.map((v) => `"${v.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`).join(",")}}`;
 }
 
+/**
+ * Headers for a public read that every visitor gets alike, like the wall's
+ * first page. Vercel's CDN keeps it for ten minutes and then serves the old
+ * copy while it fetches a fresh one, so a visitor almost never waits on the
+ * database (/api/blocks takes two seconds or more to build). Blocks only
+ * change when a capture is imported, so ten minutes stale is fine.
+ */
+export const PUBLIC_CACHE = { "Cache-Control": "public, s-maxage=600, stale-while-revalidate=86400" };
+
 export function apiError(error: unknown) {
   console.error(error);
   const message = error instanceof Error && error.message.includes("DATABASE_URL") ? error.message : "Database request failed";

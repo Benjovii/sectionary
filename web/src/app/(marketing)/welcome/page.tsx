@@ -10,6 +10,7 @@ import { assetUrl } from "@/lib/data-source";
 import { WaitlistForm } from "@/components/waitlist-form";
 import { Reveal } from "@/components/reveal";
 import { cn } from "@/lib/utils";
+import showcase from "./showcase.json";
 
 export const metadata: Metadata = {
   title: { absolute: "Sectionary · Every storefront, cut into blocks" },
@@ -19,23 +20,26 @@ export const metadata: Metadata = {
   twitter: { card: "summary_large_image", title: "Every storefront, cut into blocks" },
 };
 
-// Everything on this page comes from the committed sample: the one store we
-// have captured end to end (our own client, myzoobox.com) and the validated
-// seed list. Nothing is invented, so the numbers move when the data does.
+// Everything on this page is real. The pictures are one store from the
+// library (arcticfoxandco.com, captured 24 Sep 2026): its blocks as /api/blocks
+// served them and its pages' full-page thumbnails as /api/sites served them,
+// kept in showcase.json, so the page needs no database. Their
+// screenshots are on the image CDN, so every deploy has them; the sample
+// screenshots this page used before live only on the machine that captured
+// them. The numbers come from the validated seed list and move when it does.
 async function sample() {
   const dir = join(process.cwd(), "public/sample");
-  const [blocks, stores] = await Promise.all([
-    readFile(join(dir, "blocks.json"), "utf8").then((t) => JSON.parse(t) as BlockSet),
-    readFile(join(dir, "stores.json"), "utf8").then((t) => JSON.parse(t) as { stores: Store[] }),
-  ]);
+  const blocks = showcase as BlockSet & { pages: FlowStep[] };
+  const stores = await readFile(join(dir, "stores.json"), "utf8").then((t) => JSON.parse(t) as { stores: Store[] });
   const pick = (src: string) => {
     const b = blocks.blocks.find((x) => x.src.endsWith(src));
-    if (!b) throw new Error(`Landing page: sample block ${src} is missing`);
+    if (!b) throw new Error(`Landing page: showcase block ${src} is missing`);
     return b;
   };
   const s = stores.stores;
   const distinct = (values: (string | null | undefined)[]) => new Set(values.filter(Boolean)).size;
   return {
+    host: blocks.blocks[0].host,
     capturedAt: blocks.generatedAt,
     stats: {
       stores: s.length,
@@ -46,25 +50,24 @@ async function sample() {
     },
     hero: {
       page: [
-        { block: pick("home/blocks/d-01-header.jpg"), label: "Header" },
-        { block: pick("home/blocks/d-02-hero.jpg"), label: "Hero" },
-        { block: pick("home/blocks/d-08-zoo-home-part.jpg"), label: "How it works", crop: 0.62 },
-        { block: pick("home/blocks/d-11-faq.jpg"), label: "FAQ", crop: 0.5 },
+        { block: pick("home/blocks/d-01-header.webp"), label: "Header" },
+        { block: pick("home/blocks/d-02-featured-video.webp"), label: "Hero" },
+        { block: pick("home/blocks/d-03-list-collections.webp"), label: "Collection list", crop: 0.8 },
+        { block: pick("home/blocks/d-05-hero.webp"), label: "Banner" },
       ],
-      phone: pick("home/blocks/m-02-hero.jpg"),
+      phone: pick("home/blocks/m-02-featured-video.webp"),
     },
     buyBox: {
-      desktop: pick("products-zoologist-club-sibling-kit-easy-reader-3-month-plan/blocks/d-02-product.jpg"),
-      mobile: pick("products-zoologist-club-sibling-kit-easy-reader-3-month-plan/blocks/m-02-product.jpg"),
+      desktop: pick("products-the-birthstone-bracelet-december/blocks/d-02-product.webp"),
+      mobile: pick("products-the-birthstone-bracelet-december/blocks/m-02-main.webp"),
     },
-    flow: [
-      { step: "Home", block: pick("home/blocks/d-02-hero.jpg") },
-      { step: "Collection", block: pick("collections-edventures/blocks/d-03-product-grid.jpg") },
-      { step: "Product", block: pick("products-zoologist-club-sibling-kit-easy-reader-3-month-plan/blocks/d-02-product.jpg") },
-      { step: "Cart", block: pick("cart/blocks/d-02-cart-items.jpg") },
-    ],
+    // Whole pages rather than blocks: a flow is the path through them.
+    flow: blocks.pages,
   };
 }
+
+/** A page of the flow: the top of its desktop capture, as the Flows view shows it. */
+type FlowStep = { step: string; url: string; src: string; w: number; h: number; bg: string };
 
 /** Delay for the hero's load-in (see .hero-rise in globals.css). */
 const rise = (ms: number) => ({ "--rise-delay": `${ms}ms` }) as React.CSSProperties;
@@ -135,7 +138,7 @@ export default async function Welcome() {
               <p className="mt-3 text-[13px] text-muted-foreground">Free during the beta. One email, when your invite is ready.</p>
             </div>
           </div>
-          <HeroCut page={data.hero.page} phone={data.hero.phone} />
+          <HeroCut page={data.hero.page} phone={data.hero.phone} host={data.host} />
         </div>
       </section>
 
@@ -248,18 +251,18 @@ export default async function Welcome() {
             </Link>
           </div>
           <ol data-reveal-stagger className="-mx-4 mt-12 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 sm:mx-0 sm:grid sm:grid-cols-4 sm:overflow-visible sm:px-0 sm:pb-0">
-            {data.flow.map(({ step, block }, i) => (
+            {data.flow.map(({ step, ...page }, i) => (
               <li key={step} className="w-[70%] shrink-0 snap-start sm:w-auto">
                 <div className="flex items-center gap-2 pb-2.5">
                   <span className="font-mono text-[12px] text-link">{String(i + 1).padStart(2, "0")}</span>
                   <span className="text-[13px] font-medium">{step}</span>
                   {i < data.flow.length - 1 && <ArrowRight aria-hidden className="ml-auto hidden size-3.5 text-muted-foreground sm:block" />}
                 </div>
-                <Shot block={block} className="aspect-[4/3] rounded-lg border" alt={`${step} page of myzoobox.com`} />
+                <Shot block={page} className="aspect-[4/3] rounded-lg border" alt={`${step} page of ${data.host}`} />
               </li>
             ))}
           </ol>
-          <p className="mt-4 font-mono text-[11px] text-muted-foreground">myzoobox.com · captured {captured}</p>
+          <p className="mt-4 font-mono text-[11px] text-muted-foreground">{data.host} · captured {captured}</p>
         </div>
       </section>
 
@@ -307,7 +310,7 @@ function Stat({ n, children }: { n: number; children: React.ReactNode }) {
 }
 
 /** A screenshot, top-aligned, painted with the block's own background while it loads. */
-function Shot({ block, className, alt, ratio, eager = false }: { block: Block; className?: string; alt: string; ratio?: string; eager?: boolean }) {
+function Shot({ block, className, alt, ratio, eager = false }: { block: Pick<Block, "src" | "bg" | "w" | "h">; className?: string; alt: string; ratio?: string; eager?: boolean }) {
   return (
     <div className={cn("overflow-hidden", className)} style={{ backgroundColor: block.bg, aspectRatio: ratio }}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -330,7 +333,7 @@ function Shot({ block, className, alt, ratio, eager = false }: { block: Block; c
  * version of the hero sits in front. Transforms only (no layout animation),
  * and the global reduced-motion rule makes it land instantly.
  */
-function HeroCut({ page, phone }: { page: { block: Block; label: string; crop?: number }[]; phone: Block }) {
+function HeroCut({ page, phone, host }: { page: { block: Block; label: string; crop?: number }[]; phone: Block; host: string }) {
   return (
     <figure className="relative mx-auto w-full max-w-[600px] lg:mr-0" aria-label="A store's home page, cut into blocks">
       <div className="space-y-2 pr-8 sm:pr-14">
@@ -359,7 +362,9 @@ function HeroCut({ page, phone }: { page: { block: Block; label: string; crop?: 
       >
         <Shot block={phone} eager alt="The same hero on a phone" ratio="390 / 620" className="rounded-[13px]" />
       </div>
-      <figcaption className="sr-only">myzoobox.com home page: header, hero, how it works and FAQ blocks, with the phone hero.</figcaption>
+      <figcaption className="sr-only">
+        {host} home page: {page.map(({ label }) => label.toLowerCase()).join(", ")} blocks, with the phone hero.
+      </figcaption>
     </figure>
   );
 }
