@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Check, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -17,6 +18,11 @@ export type SelectOption = { value: string; label: string; count?: number };
  * Keyboard follows the WAI-ARIA select-only combobox pattern: Up/Down/Enter/
  * Space open it, arrows, Home/End and type-ahead move, Enter or Space picks,
  * Escape and Tab close. Opens upward when there is no room below.
+ *
+ * The list is portalled and fixed-positioned under the trigger, so a sticky
+ * bar's stacking context or a scrolling side panel can't clip or cover it. It
+ * goes into the nearest open <dialog> when there is one, because a modal
+ * dialog sits in the top layer and would hide anything rendered in <body>.
  */
 export function Select({
   value,
@@ -42,18 +48,36 @@ export function Select({
   const trigger = useRef<HTMLButtonElement>(null);
   const list = useRef<HTMLUListElement>(null);
   const [open, setOpen] = useState(false);
-  const [up, setUp] = useState(false);
-  const selectedIndex = Math.max(0, options.findIndex((o) => o.value === value));
+  const [place, setPlace] = useState<{
+    host: Element;
+    left: number;
+    top?: number;
+    bottom?: number;
+    minWidth: number;
+  } | null>(null);
+  const selectedIndex = Math.max(
+    0,
+    options.findIndex((o) => o.value === value),
+  );
   const [cursor, setCursor] = useState(selectedIndex);
   const typed = useRef({ text: "", at: 0 });
   const selected = options[selectedIndex];
 
+  function measure() {
+    const el = trigger.current;
+    if (!el) return;
+    const box = el.getBoundingClientRect();
+    const below = window.innerHeight - box.bottom;
+    const up = below < 260 && box.top > below;
+    setPlace({
+      host: el.closest("dialog") ?? document.body,
+      left: Math.max(8, Math.min(box.left, window.innerWidth - 8 - Math.max(box.width, 160))),
+      minWidth: box.width,
+      ...(up ? { bottom: window.innerHeight - box.top + 6 } : { top: box.bottom + 6 }),
+    });
+  }
   function show(at = selectedIndex) {
-    const box = trigger.current?.getBoundingClientRect();
-    if (box) {
-      const below = window.innerHeight - box.bottom;
-      setUp(below < 260 && box.top > below);
-    }
+    measure();
     setCursor(at);
     setOpen(true);
   }
@@ -76,14 +100,26 @@ export function Select({
     list.current?.querySelector<HTMLElement>(`[data-index="${cursor}"]`)?.scrollIntoView({ block: "nearest" });
   }, [open, cursor]);
 
-  // Close on a press anywhere else.
+  // Close on a press anywhere else; follow the trigger when the page or a
+  // panel scrolls, or the window resizes.
   useEffect(() => {
     if (!open) return;
     const away = (e: PointerEvent) => {
-      if (!root.current?.contains(e.target as Node)) hide(false);
+      const t = e.target as Node;
+      if (!root.current?.contains(t) && !list.current?.contains(t)) hide(false);
+    };
+    const follow = (e: Event) => {
+      if (e.target instanceof Node && list.current?.contains(e.target)) return;
+      measure();
     };
     document.addEventListener("pointerdown", away);
-    return () => document.removeEventListener("pointerdown", away);
+    window.addEventListener("scroll", follow, true);
+    window.addEventListener("resize", follow);
+    return () => {
+      document.removeEventListener("pointerdown", away);
+      window.removeEventListener("scroll", follow, true);
+      window.removeEventListener("resize", follow);
+    };
   }, [open]);
 
   function typeAhead(key: string, now: number) {
@@ -135,47 +171,51 @@ export function Select({
         <span className="truncate">{selected?.label ?? label}</span>
         <ChevronDown className={cn("size-3 shrink-0 transition-transform duration-150", open && "rotate-180")} />
       </Button>
-      {open && (
-        <ul
-          ref={list}
-          id={`${id}-list`}
-          role="listbox"
-          aria-label={label}
-          tabIndex={-1}
-          aria-activedescendant={`${id}-${cursor}`}
-          onKeyDown={onListKey}
-          className={cn(
-            "absolute left-0 z-30 max-h-72 min-w-full overflow-auto rounded-lg border bg-popover p-1 text-popover-foreground shadow-[0_12px_32px_-8px_rgb(0_0_0/0.35)] outline-none",
-            up ? "bottom-full mb-1.5" : "top-full mt-1.5",
-          )}
-        >
-          {options.map((option, i) => {
-            const on = i === selectedIndex;
-            return (
-              <li
-                key={option.value}
-                id={`${id}-${i}`}
-                data-index={i}
-                role="option"
-                aria-selected={on}
-                onPointerMove={() => setCursor(i)}
-                onClick={() => pick(i)}
-                className={cn(
-                  "flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-[13px] whitespace-nowrap select-none touch:min-h-11",
-                  i === cursor && "bg-muted",
-                  on && "font-medium",
-                )}
-              >
-                <Check aria-hidden className={cn("size-3.5 shrink-0 text-primary", !on && "invisible")} />
-                <span className="truncate">{option.label}</span>
-                {option.count != null && (
-                  <span className="ml-auto pl-4 font-mono text-[11px] text-muted-foreground tabular-nums">{option.count.toLocaleString("en-US")}</span>
-                )}
-              </li>
-            );
-          })}
-        </ul>
-      )}
+      {open &&
+        place &&
+        createPortal(
+          <ul
+            ref={list}
+            id={`${id}-list`}
+            role="listbox"
+            aria-label={label}
+            tabIndex={-1}
+            aria-activedescendant={`${id}-${cursor}`}
+            onKeyDown={onListKey}
+            style={{
+              left: place.left,
+              top: place.top,
+              bottom: place.bottom,
+              minWidth: place.minWidth,
+            }}
+            className="fixed z-50 max-h-72 max-w-[calc(100vw-16px)] overflow-auto rounded-lg border bg-popover p-1 text-popover-foreground shadow-[0_12px_32px_-8px_rgb(0_0_0/0.35)] outline-none"
+          >
+            {options.map((option, i) => {
+              const on = i === selectedIndex;
+              return (
+                <li
+                  key={option.value}
+                  id={`${id}-${i}`}
+                  data-index={i}
+                  role="option"
+                  aria-selected={on}
+                  onPointerMove={() => setCursor(i)}
+                  onClick={() => pick(i)}
+                  className={cn(
+                    "flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-[13px] whitespace-nowrap select-none touch:min-h-11",
+                    i === cursor && "bg-muted",
+                    on && "font-medium",
+                  )}
+                >
+                  <Check aria-hidden className={cn("size-3.5 shrink-0 text-primary", !on && "invisible")} />
+                  <span className="truncate">{option.label}</span>
+                  {option.count != null && <span className="ml-auto pl-4 font-mono text-[11px] text-muted-foreground tabular-nums">{option.count.toLocaleString("en-US")}</span>}
+                </li>
+              );
+            })}
+          </ul>,
+          place.host,
+        )}
     </div>
   );
 }
