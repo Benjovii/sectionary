@@ -17,6 +17,7 @@ const fonts = Promise.all([
 const INK = "#0f0f0f";
 const SURFACE = "#1b1b1b";
 const RUST = "#e4502a";
+const ON_RUST = "#1a0d08";
 const MUTED = "#a1a1a1";
 
 // A page pulled apart at its seams, echoing the mark: [height, label, highlighted].
@@ -37,7 +38,7 @@ export default async function Image() {
         <div style={{ display: "flex", flexDirection: "column", justifyContent: "space-between", width: 640 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
             <div style={{ display: "flex", width: 48, height: 48, borderRadius: 10, background: RUST, alignItems: "center", justifyContent: "center" }}>
-              <svg viewBox="0 0 16 16" width="28" height="28" fill="#fff">
+              <svg viewBox="0 0 16 16" width="28" height="28" fill={ON_RUST}>
                 <rect x="2" y="2" width="12" height="4.5" rx="1" />
                 <rect x="2" y="8.25" width="7.5" height="5.75" rx="1" />
                 <rect x="10.75" y="8.25" width="3.25" height="5.75" rx="1" />
@@ -65,7 +66,7 @@ export default async function Image() {
                 padding: "8px 10px",
                 fontFamily: "Mono",
                 fontSize: 15,
-                color: on ? INK : MUTED,
+                color: on ? ON_RUST : MUTED,
                 marginLeft: on ? -28 : 0,
                 marginRight: on ? 28 : 0,
               }}

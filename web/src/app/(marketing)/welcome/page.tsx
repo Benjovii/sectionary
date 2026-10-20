@@ -210,7 +210,7 @@ export default async function Welcome() {
               </figcaption>
               <div className="mt-4 flex flex-wrap gap-1.5" aria-label="The same question as filters">
                 {["Page: Product", "Theme: Impact", "App: Skio", "Phone"].map((f) => (
-                  <span key={f} className="inline-flex h-7 items-center rounded-lg bg-foreground px-2.5 text-[12px] font-medium text-background">
+                  <span key={f} className="inline-flex h-7 items-center rounded-lg bg-primary px-2.5 text-[12px] font-medium text-primary-foreground">
                     {f}
                   </span>
                 ))}

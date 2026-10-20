@@ -339,7 +339,7 @@ function Toolbar({
               className={cn(
                 "inline-flex h-7 items-center gap-1.5 rounded-md px-2.5 text-[12px] font-medium transition-colors duration-150 outline-none focus-visible:ring-2 focus-visible:ring-ring touch:h-11 disabled:opacity-40",
                 option.wideOnly && "hidden min-[900px]:inline-flex",
-                view === option.value ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground",
+                view === option.value ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground",
               )}
             >
               {Icon && <Icon className="size-3.5" />}
@@ -573,7 +573,7 @@ function Expanded({
                   onClick={() => setViewport(v)}
                   className={cn(
                     "inline-flex h-7 items-center gap-1.5 rounded-md px-2.5 text-[12px] font-medium transition-colors duration-150 outline-none focus-visible:ring-2 focus-visible:ring-ring touch:h-11",
-                    viewport === v ? "bg-white text-black" : "text-white/70 hover:text-white",
+                    viewport === v ? "bg-primary text-primary-foreground" : "text-white/70 hover:text-white",
                   )}
                 >
                   <Icon className="size-3.5" />

@@ -9,7 +9,7 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default: "bg-primary text-primary-foreground hover:bg-primary/80",
-        outline: "border-border bg-background hover:bg-muted hover:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50",
+        outline: "border-border bg-card hover:bg-muted hover:text-foreground",
         secondary: "bg-secondary text-secondary-foreground hover:bg-[color-mix(in_oklch,var(--secondary),var(--foreground)_5%)]",
         ghost: "hover:bg-muted hover:text-foreground dark:hover:bg-muted/50",
         link: "text-link underline-offset-4 hover:underline",
@@ -24,9 +24,8 @@ const buttonVariants = cva(
         "icon-sm": "size-7 touch:size-11",
       },
       active: {
-        // Selected filter: inverted, in both themes. The dark: pairs are needed
-        // because the outline variant sets its own dark background and hover.
-        true: "bg-foreground text-background border-foreground hover:bg-foreground/90 hover:text-background dark:bg-foreground dark:border-foreground dark:hover:bg-foreground/90",
+        // Selected filter or option: rust, with the button text colour on it.
+        true: "border-primary bg-primary text-primary-foreground hover:bg-primary/85 hover:text-primary-foreground",
       },
     },
     defaultVariants: { variant: "default", size: "default" },
