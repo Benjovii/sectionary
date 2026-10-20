@@ -10,17 +10,19 @@ type Sql = ReturnType<typeof database>;
  * so /api/blocks, boards, share links and the time machine return the same shape.
  */
 export const blockColumns = (sql: Sql) => sql`b.id, s.host, p.type AS page_type, p.url AS page_url, p.title AS page_title,
-  b.viewport, b.type_hint, b.headline, b.background, b.width, b.height, b.image_key,
+  b.viewport, b.type_hint, b.headline, b.background, b.width, b.height, b.image_key, b.thumbnail_key,
   s.platform, s.theme_name, s.apps, b.buttons, b.images, b.videos, left(b.text, 400) AS text`;
 export const blockJoins = (sql: Sql) => sql`blocks b JOIN captures c ON c.id=b.capture_id JOIN pages p ON p.id=c.page_id JOIN sites s ON s.id=p.site_id`;
 
-export function toBlock(r: Record<string, unknown>): Block {
+/** A row as a Block, plus `thumb` (the 600px thumbnail, see thumbOf in lib/blocks.ts), which contract v1 does not have yet. */
+export function toBlock(r: Record<string, unknown>): Block & { thumb?: string } {
   return {
     id: r.id as string, host: r.host as string, pageType: r.page_type as string, pageUrl: r.page_url as string,
     pageTitle: (r.page_title as string | null) ?? null, viewport: r.viewport as Block["viewport"], typeHint: r.type_hint as string,
     headline: (r.headline as string | null) ?? null, bg: r.background as string, w: r.width as number, h: r.height as number,
     src: (r.image_key as string | null) ?? "", platform: (r.platform as string | null) ?? null, theme: (r.theme_name as string | null) ?? null,
     apps: (r.apps as string[]) ?? [], buttons: r.buttons as number, images: r.images as number, videos: r.videos as number, text: r.text as string,
+    ...(r.thumbnail_key ? { thumb: r.thumbnail_key as string } : {}),
   };
 }
 
@@ -85,22 +87,27 @@ function condition(sql: Sql, f: BlockFilters, key: FilterKey) {
 const LATEST = (sql: Sql) => sql`c.id=(SELECT c2.id FROM captures c2 WHERE c2.page_id=p.id ORDER BY c2.captured_at DESC LIMIT 1)`;
 
 /**
- * One block per screenshot. A store's header, footer and announcement bar are
- * captured on every page we visit, so the same shot would otherwise appear
- * once per page. Blocks are the same shot when they come from the same store
- * and viewport with the same type, size, background and text; the copy kept
- * is the one from the page a visitor meets first (home, then collection, then
- * product). Same rule as shotKey in lib/blocks.ts.
+ * One block per section of a store: a store's product grid is captured as a
+ * block per product card, its header once per page, so without this one
+ * store fills the wall with the same section. Blocks are the same section
+ * when they come from the same store and viewport with the same type, a
+ * "-part" slice counting as its section ("product-grid-part" is a
+ * "product-grid"). The copy kept is from the page a visitor meets first
+ * (home, then collection, then product), a whole section before a slice,
+ * then the first on its page. Desktop and phone each keep their own, so the
+ * pair still opens together. Same rule as sectionKey in lib/blocks.ts.
  */
+const SECTION = (sql: Sql) => sql`regexp_replace(coalesce(b.block_type,b.type_hint), '-part$', '')`;
 const SHOWN = (sql: Sql) => sql`b.id IN (
-  SELECT DISTINCT ON (s.host, b.viewport, coalesce(b.block_type,b.type_hint), b.width, b.height, b.background, md5(b.text)) b.id
+  SELECT DISTINCT ON (s.host, b.viewport, ${SECTION(sql)}) b.id
   FROM ${blockJoins(sql)} WHERE ${LATEST(sql)}
-  ORDER BY s.host, b.viewport, coalesce(b.block_type,b.type_hint), b.width, b.height, b.background, md5(b.text),
-    array_position(ARRAY['home','collection','product']::text[], p.type) NULLS LAST, p.url, b.block_index, b.id)`;
+  ORDER BY s.host, b.viewport, ${SECTION(sql)},
+    array_position(ARRAY['home','collection','product']::text[], p.type) NULLS LAST,
+    coalesce(b.block_type,b.type_hint) LIKE '%-part', p.url, b.block_index, b.id)`;
 
 /**
  * The WHERE clause for a BlocksQuery over blockJoins: the latest capture of
- * each page, one block per screenshot, then every filter given. `skip`
+ * each page, one block per section of a store, then every filter given. `skip`
  * leaves filters out, which is how a facet counts what its other values
  * would add.
  */

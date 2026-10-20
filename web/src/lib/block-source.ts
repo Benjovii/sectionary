@@ -56,9 +56,9 @@ export type WallResponse = BlocksResponse & { nearMiss?: Record<string, number> 
 /** Blocks plus the store lookup the industry and country filters need. */
 /**
  * `blocks` is every block; site profiles and flows draw whole pages from
- * it. `wall` is what the wall queries: one block per screenshot, so a
- * store's header is not repeated once per captured page (see shownBlocks
- * in lib/blocks.ts).
+ * it. `wall` is what the wall queries: one block per section of each
+ * store, so a product grid is not repeated once per product card (see
+ * shownBlocks in lib/blocks.ts).
  */
 export type BlockIndex = { blocks: Block[]; wall: Block[]; storeByHost: Map<string, Store> };
 

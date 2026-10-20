@@ -116,6 +116,15 @@
   button:not(:disabled) {
     cursor: pointer;
   }
+  /* A native select's list is drawn by the browser. Chrome on Windows and
+     Linux paints it from the select's own background, which is translucent
+     in dark mode (bg-input/30), so the list came out white with white text.
+     Options get the popover colours outright, in both themes. */
+  select option,
+  select optgroup {
+    background-color: var(--popover);
+    color: var(--popover-foreground);
+  }
   @media (prefers-reduced-motion: reduce) {
     *,
     *::before,

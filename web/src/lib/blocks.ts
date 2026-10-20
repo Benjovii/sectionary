@@ -15,28 +15,43 @@ export const PAGE_TYPE_LABEL: Record<string, string> = {
 };
 
 /**
- * What makes two blocks the same screenshot: a store's header or footer is
- * captured on every page, so the same shot recurs once per page. Same store,
- * viewport, type, size, background and text. The API applies the same rule in
- * SQL (SHOWN in server/blocks.ts).
+ * What makes two blocks the same section of a store: a product grid is
+ * captured as a block per product card and a header once per page, so one
+ * store would otherwise show the same section many times. Same store,
+ * viewport and type, a "-part" slice counting as its section. The API
+ * applies the same rule in SQL (SHOWN in server/blocks.ts).
  */
-export function shotKey(block: Block): string {
-  return [block.host, block.viewport, block.typeHint, block.w, block.h, block.bg, block.text ?? ""].join("\u0000");
+export function sectionKey(block: Block): string {
+  return [block.host, block.viewport, block.typeHint.replace(/-part$/, "")].join("\u0000");
 }
 
-/** Pages in the order a visitor meets them: of a repeated shot, the copy from the earliest is the one kept. */
+/** Pages in the order a visitor meets them: of a repeated section, the copy from the earliest is the one kept. */
 const PAGE_RANK = ["home", "collection", "product"];
 const pageRank = (b: Block) => (PAGE_RANK.indexOf(b.pageType) + PAGE_RANK.length + 1) % (PAGE_RANK.length + 1);
+const isPart = (b: Block) => b.typeHint.endsWith("-part");
 
-/** `blocks` with one block per screenshot, in their original order. */
+/** Which of two copies of a section to keep: earlier page, then a whole section over a slice, then page URL. */
+function keepsOver(b: Block, kept: Block): boolean {
+  if (pageRank(b) !== pageRank(kept)) return pageRank(b) < pageRank(kept);
+  if (isPart(b) !== isPart(kept)) return !isPart(b);
+  return b.pageUrl < kept.pageUrl;
+}
+
+/**
+ * `blocks` with one block per section of each store, in their original order.
+ * The first on its page wins a tie. The scale fixture's blocks (`mock`, see
+ * lib/mock-blocks.ts) all stay: they are the sample re-hosted on purpose, and
+ * the wall preview is meant to hold all 30,000 of them.
+ */
 export function shownBlocks(blocks: Block[]): Block[] {
   const keep = new Map<string, Block>();
   for (const b of blocks) {
-    const key = shotKey(b), kept = keep.get(key);
-    if (!kept || pageRank(b) < pageRank(kept) || (pageRank(b) === pageRank(kept) && b.pageUrl < kept.pageUrl)) keep.set(key, b);
+    if ((b as Block & { mock?: boolean }).mock) continue;
+    const key = sectionKey(b), kept = keep.get(key);
+    if (!kept || keepsOver(b, kept)) keep.set(key, b);
   }
   const shown = new Set(keep.values());
-  return blocks.filter((b) => shown.has(b));
+  return blocks.filter((b) => shown.has(b) || (b as Block & { mock?: boolean }).mock);
 }
 
 /** "featured-collection" -> "Featured collection" */
@@ -56,4 +71,20 @@ export function labelFor(typeHint: string): string {
  */
 export function blurOf(block: Block): string | undefined {
   return (block as Block & { blur?: string }).blur;
+}
+
+/**
+ * The block's 600px thumbnail, when it shows the whole block. The wall's
+ * cards are at most a few hundred pixels wide, and the full screenshot is
+ * 2,880 pixels wide on desktop, often ten times the bytes, so the wall loads
+ * this and the detail view the full one.
+ *
+ * /api/blocks sends `thumb` ahead of the contract, the way `blur` is meant to
+ * arrive. The image pipeline (src/images.ts) crops a thumbnail at 1,200 pixels
+ * tall, so a block more than twice as tall as it is wide gets the full image:
+ * its thumbnail would stop partway down. The sample has no thumbnails.
+ */
+export function thumbOf(block: Block): string | undefined {
+  const thumb = (block as Block & { thumb?: string }).thumb;
+  return thumb && block.h <= block.w * 2 ? thumb : undefined;
 }

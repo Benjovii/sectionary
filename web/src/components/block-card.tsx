@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Monitor, Smartphone } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { assetUrl } from "@/lib/data-source";
-import { blurOf, labelFor, type Block } from "@/lib/blocks";
+import { blurOf, labelFor, thumbOf, type Block } from "@/lib/blocks";
 
 /**
  * A block on the wall. The frame reserves the block's exact aspect ratio and
@@ -18,6 +18,9 @@ import { blurOf, labelFor, type Block } from "@/lib/blocks";
  */
 export function BlockCard({ block, onOpen, height }: { block: Block; onOpen: (b: Block) => void; height?: number }) {
   const [loaded, setLoaded] = useState(false);
+  // The thumbnail first (see thumbOf); the full screenshot if it will not load.
+  const [full, setFull] = useState(false);
+  const thumb = full ? undefined : thumbOf(block);
   const mobile = block.viewport === "mobile";
   const fixed = height != null;
   const blur = blurOf(block);
@@ -58,13 +61,14 @@ export function BlockCard({ block, onOpen, height }: { block: Block; onOpen: (b:
           )}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={assetUrl(block.src)}
+            src={assetUrl(thumb ?? block.src)}
             alt=""
             width={block.w}
             height={block.h}
             loading="lazy"
             decoding="async"
             onLoad={() => setLoaded(true)}
+            onError={thumb ? () => setFull(true) : undefined}
             className={cn(
               // Blur to sharp rather than a plain fade, so the screenshot
               // resolves into place. Filter and opacity only: no layout.

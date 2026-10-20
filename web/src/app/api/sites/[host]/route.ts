@@ -1,4 +1,4 @@
-import { apiError, database } from "@/server/db";
+import { apiError, database, PUBLIC_CACHE } from "@/server/db";
 import { latestPages, toStore } from "@/server/sites";
 
 export const runtime = "nodejs";
@@ -15,6 +15,6 @@ export async function GET(_request: Request, { params }: { params: Promise<{ hos
         WHERE p.site_id=${site.id} GROUP BY c.captured_at ORDER BY c.captured_at DESC`,
     ]);
     return Response.json({ store: toStore(site), pages: pages.get(site.id) ?? [],
-      captures: captureRows.map((c) => ({ capturedAt: c.captured_at.toISOString(), pages: c.pages })) });
+      captures: captureRows.map((c) => ({ capturedAt: c.captured_at.toISOString(), pages: c.pages })) }, { headers: PUBLIC_CACHE });
   } catch (error) { return apiError(error); }
 }

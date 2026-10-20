@@ -1,4 +1,4 @@
-import { apiError, database } from "@/server/db";
+import { apiError, database, PUBLIC_CACHE } from "@/server/db";
 import { blockColumns, blockJoins, blockWhere, facetCounts, readFilters, toBlock, withColours } from "@/server/blocks";
 import { searchBlocks } from "@/server/search";
 
@@ -28,6 +28,7 @@ export async function GET(request: Request) {
       const { items, total, nextCursor, facets, nearMiss, search } = await searchBlocks(q, f, limit, offset, first);
       // How the query was read goes in headers, so the body stays exactly BlocksResponse.
       const headers = {
+        ...PUBLIC_CACHE,
         "x-search-terms": search.terms.join(" "),
         "x-search-corrected": Object.entries(search.corrected).map(([from, to]) => `${from}>${to}`).join(" "),
         "x-search-semantic": String(search.semantic),
@@ -49,6 +50,6 @@ export async function GET(request: Request) {
       items, blocks: items, generatedAt: new Date().toISOString(),
       nextCursor: offset + items.length < total ? String(offset + items.length) : null, total,
       ...(counts && { facets: counts.facets, nearMiss: counts.nearMiss }),
-    });
+    }, { headers: PUBLIC_CACHE });
   } catch (error) { return apiError(error); }
 }
