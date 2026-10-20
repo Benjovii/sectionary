@@ -243,7 +243,7 @@ function ViewportSwitch({ value, onChange }: { value: Viewport; onChange: (v: Vi
             onClick={() => onChange(v)}
             className={cn(
               "inline-flex h-7 items-center gap-1.5 rounded-md px-2.5 text-[12px] font-medium transition-colors duration-150 outline-none focus-visible:ring-2 focus-visible:ring-ring touch:h-11",
-              value === v ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground",
+              value === v ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground",
             )}
           >
             <Icon className="size-3.5" />

@@ -308,7 +308,7 @@ function PageViewer({ page, onClose }: { page: ProfilePage | null; onClose: () =
                       onClick={() => setViewport(v)}
                       className={cn(
                         "inline-flex h-7 items-center gap-1.5 rounded-md px-2 text-[12px] font-medium transition-colors duration-150 outline-none focus-visible:ring-2 focus-visible:ring-ring sm:px-2.5 touch:h-11 touch:min-w-11 touch:justify-center touch:px-3",
-                        current === v ? "bg-white text-black" : "text-white/70 hover:text-white",
+                        current === v ? "bg-primary text-primary-foreground" : "text-white/70 hover:text-white",
                       )}
                     >
                       <Icon className="size-3.5" />

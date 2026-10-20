@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { ArrowRight, History } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Select } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { API_MODE, assetUrl } from "@/lib/data-source";
 import type { BlockHistory } from "@/contracts/api";
@@ -128,18 +129,10 @@ export function TimeMachineStage({ tm }: { tm: TimeMachine }) {
   );
 }
 
-const selectClass =
-  "h-7 min-w-0 flex-1 rounded-lg border bg-background px-2 text-[12px] outline-none focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30";
-
 /** The side panel: pick two dates, how to compare them, and see what changed on each recapture. */
 export function TimeMachineControls({ tm }: { tm: TimeMachine }) {
   const { status, captures, before, setBefore, after, setAfter, mode, setMode, view, setView } = tm;
-  const options = captures.map((c, i) => (
-    <option key={c.capturedAt} value={i}>
-      {date(c.capturedAt)}
-      {c.block ? "" : " (not on page)"}
-    </option>
-  ));
+  const options = captures.map((c, i) => ({ value: String(i), label: `${date(c.capturedAt)}${c.block ? "" : " (not on page)"}` }));
 
   return (
     <div className="flex flex-col gap-3 overflow-auto px-4 py-3 text-[13px]">
@@ -151,13 +144,9 @@ export function TimeMachineControls({ tm }: { tm: TimeMachine }) {
       {status === "ready" && captures.length >= 2 && (
         <>
           <div className="flex items-center gap-1.5">
-            <select aria-label="Before" value={before} onChange={(e) => setBefore(Number(e.target.value))} className={selectClass}>
-              {options}
-            </select>
+            <Select label="Before" value={String(before)} onChange={(v) => setBefore(Number(v))} options={options} className="flex-1" />
             <ArrowRight className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />
-            <select aria-label="After" value={after} onChange={(e) => setAfter(Number(e.target.value))} className={selectClass}>
-              {options}
-            </select>
+            <Select label="After" value={String(after)} onChange={(v) => setAfter(Number(v))} options={options} className="flex-1" />
           </div>
           <div className="flex flex-wrap gap-1">
             <div className="flex gap-1" role="group" aria-label="Compare as">

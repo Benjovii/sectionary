@@ -29,6 +29,7 @@
   --font-heading: var(--font-bricolage);
   --color-ring: var(--ring);
   --color-link: var(--link);
+  --color-signal: var(--signal);
   --color-input: var(--input);
   --color-border: var(--border);
   --color-destructive: var(--destructive);
@@ -73,6 +74,8 @@
      take it one step darker (6.4:1) so running text reads comfortably. */
   --ring: #c54120;
   --link: #a8361a;
+  /* Live dots and "new" markers. */
+  --signal: #c54120;
   --radius: 0.5rem;
 }
 
@@ -98,6 +101,7 @@
   --input: #2e2e2e;
   --ring: #ff6a3d;
   --link: #ff8a63;
+  --signal: #e4502a;
 }
 
 @layer base {
@@ -107,6 +111,11 @@
   html {
     @apply font-sans;
     color-scheme: light;
+    /* Native checkboxes, radios and sliders take the rust, not the OS blue. */
+    accent-color: var(--primary);
+  }
+  ::selection {
+    background-color: color-mix(in oklch, var(--primary) 32%, transparent);
   }
   html.dark {
     color-scheme: dark;
