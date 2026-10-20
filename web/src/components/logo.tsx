@@ -1,8 +1,8 @@
 import { cn } from "@/lib/utils";
 
 /**
- * The mark: a page cut into three blocks, white on the orange chip, the same
- * lockup family as Next Level's white mark on an orange chip.
+ * The mark: a page cut into three blocks, white on the rust chip. White holds
+ * at least 4:1 on both themes' rust, enough for a graphic.
  */
 export function Logo({ className, spinning = false }: { className?: string; spinning?: boolean }) {
   return (

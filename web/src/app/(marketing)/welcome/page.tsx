@@ -357,7 +357,7 @@ function HeroCut({ page, phone, host }: { page: { block: Block; label: string; c
         ))}
       </div>
       <div
-        className="cut-in absolute right-0 -bottom-6 w-[26%] min-w-[92px] rounded-[18px] border-[5px] border-[#2a2622] bg-[#2a2622] shadow-2xl ring-1 ring-white/10 sm:-bottom-8"
+        className="cut-in absolute right-0 -bottom-6 w-[26%] min-w-[92px] rounded-[18px] border-[5px] border-[#262626] bg-[#262626] shadow-2xl ring-1 ring-white/10 sm:-bottom-8"
         style={{ "--cut-from": "24px", "--cut-delay": "900ms" } as React.CSSProperties}
       >
         <Shot block={phone} eager alt="The same hero on a phone" ratio="390 / 620" className="rounded-[13px]" />
@@ -394,7 +394,7 @@ function Anatomy({ desktop, mobile, captured }: { desktop: Block; mobile: Block;
       <div className="relative pb-10 sm:pb-0">
         <Shot block={desktop} alt="A buy box on desktop" ratio="1400 / 695" className="rounded-lg border" />
         {/* Bottom left, over the product photo, so the buy box itself stays readable. */}
-        <div className="absolute -bottom-2 left-3 w-[24%] min-w-[96px] rounded-[16px] border-[4px] border-[#2a2622] bg-[#2a2622] shadow-2xl ring-1 ring-white/10 sm:-bottom-10 sm:left-6">
+        <div className="absolute -bottom-2 left-3 w-[24%] min-w-[96px] rounded-[16px] border-[4px] border-[#262626] bg-[#262626] shadow-2xl ring-1 ring-white/10 sm:-bottom-10 sm:left-6">
           <Shot block={mobile} alt="The same buy box on a phone" ratio="375 / 700" className="rounded-[12px]" />
         </div>
       </div>

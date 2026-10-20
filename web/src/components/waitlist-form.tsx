@@ -13,8 +13,9 @@ const initial: WaitlistState = { status: "idle" };
  * form in place and is announced to screen readers.
  */
 export function WaitlistForm({ source, tone = "default", className }: { source: string; tone?: "default" | "accent"; className?: string }) {
-  // On the orange band the orange button would vanish: the button goes dark
-  // and the field goes light, in both themes.
+  // On the rust band a rust button would vanish: the button goes near-black
+  // and the field goes white, in both themes. The error takes the band's own
+  // text colour, because no red reads on rust.
   const accent = tone === "accent";
   const [state, action, pending] = useActionState(joinWaitlist, initial);
   const id = useId();
@@ -23,7 +24,7 @@ export function WaitlistForm({ source, tone = "default", className }: { source: 
     return (
       <div
         role="status"
-        className={cn("flex items-start gap-3 rounded-xl border px-4 py-3.5", accent ? "border-transparent bg-[#110f0e] text-white" : "bg-card", className)}
+        className={cn("flex items-start gap-3 rounded-xl border px-4 py-3.5", accent ? "border-transparent bg-[#0f0f0f] text-white" : "bg-card", className)}
       >
         <span className="mt-0.5 inline-flex size-5 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
           <Check className="size-3.5" strokeWidth={3} />
@@ -67,7 +68,7 @@ export function WaitlistForm({ source, tone = "default", className }: { source: 
           className={cn(
             "h-11 w-full min-w-0 rounded-lg min-[420px]:flex-1 border px-3.5 text-[15px] outline-none transition-colors",
             accent
-              ? "border-[#110f0e]/15 bg-[#fffaf3] text-[#1d1a17] placeholder:text-[#1d1a17]/50 focus-visible:border-[#110f0e] focus-visible:ring-2 focus-visible:ring-[#110f0e]/30 aria-invalid:border-[#7a1d0c]"
+              ? "border-[#0f0f0f]/15 bg-white text-[#1a1a1a] placeholder:text-[#1a1a1a]/50 focus-visible:border-[#0f0f0f] focus-visible:ring-2 focus-visible:ring-[#0f0f0f]/30 aria-invalid:border-[#0f0f0f]"
               : "border-input bg-background placeholder:text-muted-foreground/70 focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40 aria-invalid:border-destructive dark:bg-input/30",
           )}
         />
@@ -77,7 +78,7 @@ export function WaitlistForm({ source, tone = "default", className }: { source: 
           className={cn(
             "group inline-flex h-11 shrink-0 items-center justify-center gap-1.5 rounded-lg px-4 text-[14px] font-semibold outline-none transition-[background-color,opacity] duration-150 focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-60",
             accent
-              ? "bg-[#110f0e] text-white hover:bg-[#2a2622] focus-visible:ring-[#110f0e] focus-visible:ring-offset-primary"
+              ? "bg-[#0f0f0f] text-white hover:bg-[#262626] focus-visible:ring-[#0f0f0f] focus-visible:ring-offset-primary"
               : "bg-primary text-primary-foreground hover:bg-primary/85 focus-visible:ring-ring focus-visible:ring-offset-background",
           )}
         >
@@ -87,7 +88,7 @@ export function WaitlistForm({ source, tone = "default", className }: { source: 
           )}
         </button>
       </div>
-      <p id={`${id}-error`} aria-live="polite" className={cn("mt-2 text-[13px]", !error ? "sr-only" : accent ? "font-medium text-[#5c1608]" : "text-destructive")}>
+      <p id={`${id}-error`} aria-live="polite" className={cn("mt-2 text-[13px]", !error ? "sr-only" : accent ? "font-semibold text-primary-foreground" : "text-destructive")}>
         {error}
       </p>
     </form>

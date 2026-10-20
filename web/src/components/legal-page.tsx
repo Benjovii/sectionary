@@ -6,7 +6,7 @@ export type LegalSection = { id: string; title: string; body: React.ReactNode };
 
 /**
  * The frame Terms, Privacy and /bot share (SEC-29): the landing page's type
- * (Bricolage titles, mono labels, the orange for links), a reading column of
+ * (Bricolage titles, mono labels, the rust for links), a reading column of
  * about 68 characters, and the section list pinned beside it on wide screens.
  */
 export function LegalPage({

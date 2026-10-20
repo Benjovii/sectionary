@@ -2,8 +2,8 @@ import { ImageResponse } from "next/og";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 
-// The share card for every page (SEC-25). Same ground, orange and faces as
-// the app. Fonts are static cuts committed in web/assets/og (both SIL OFL),
+// The share card for every page (SEC-25). Same ground, rust and faces as
+// the app's dark theme. Fonts are static cuts committed in web/assets/og (both SIL OFL),
 // because the image renderer cannot read variable fonts.
 export const alt = "Sectionary: every storefront, cut into blocks";
 export const size = { width: 1200, height: 630 };
@@ -14,10 +14,10 @@ const fonts = Promise.all([
   readFile(join(process.cwd(), "assets/og/geist-mono-400.ttf")),
 ]);
 
-const INK = "#110f0e";
-const SURFACE = "#1a1816";
-const ORANGE = "#faa038";
-const MUTED = "#a39d96";
+const INK = "#0f0f0f";
+const SURFACE = "#1b1b1b";
+const RUST = "#e4502a";
+const MUTED = "#a1a1a1";
 
 // A page pulled apart at its seams, echoing the mark: [height, label, highlighted].
 const PAGE: [number, string, boolean][] = [
@@ -33,10 +33,10 @@ export default async function Image() {
   const [bricolage, mono] = await fonts;
   return new ImageResponse(
     (
-      <div style={{ display: "flex", width: "100%", height: "100%", background: INK, padding: "64px 72px", color: "#fff" }}>
+      <div style={{ display: "flex", width: "100%", height: "100%", background: INK, padding: "64px 72px", color: "#e8e8e8" }}>
         <div style={{ display: "flex", flexDirection: "column", justifyContent: "space-between", width: 640 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-            <div style={{ display: "flex", width: 48, height: 48, borderRadius: 10, background: ORANGE, alignItems: "center", justifyContent: "center" }}>
+            <div style={{ display: "flex", width: 48, height: 48, borderRadius: 10, background: RUST, alignItems: "center", justifyContent: "center" }}>
               <svg viewBox="0 0 16 16" width="28" height="28" fill="#fff">
                 <rect x="2" y="2" width="12" height="4.5" rx="1" />
                 <rect x="2" y="8.25" width="7.5" height="5.75" rx="1" />
@@ -60,7 +60,7 @@ export default async function Image() {
                 display: "flex",
                 height: h,
                 borderRadius: 8,
-                background: on ? ORANGE : SURFACE,
+                background: on ? RUST : SURFACE,
                 border: on ? "none" : "1px solid rgba(255,255,255,0.09)",
                 padding: "8px 10px",
                 fontFamily: "Mono",

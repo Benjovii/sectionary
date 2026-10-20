@@ -11,7 +11,7 @@ const NAV = [
 
 /**
  * The landing page's frame (SEC-25): the app bar's wordmark and hairline, a
- * little taller, with the waitlist as the one orange action. The legal pages
+ * little taller, with the waitlist as the one rust action. The legal pages
  * (SEC-29) share it.
  */
 export default function MarketingLayout({ children }: { children: React.ReactNode }) {
