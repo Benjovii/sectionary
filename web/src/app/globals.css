@@ -14,11 +14,12 @@
 }
 
 /*
- * Sectionary runs on Next Level's design language (DESIGN.md in the NL repo):
- * warm near-neutral grays, one orange accent for actions, focus and selection,
- * Bricolage Grotesque for titles, Inter for the UI, Geist Mono for ids.
- * Tokens below are copied from Next Level's globals.css so both products read
- * as one family; anything Sectionary-specific sits at the bottom.
+ * Sectionary's palette is "Rust": true-grey neutrals with one rust accent for
+ * actions, focus and selection, so the chrome stays quiet around the store
+ * screenshots. The rust is Curated's (curated.design), 5.1:1 on white, so one
+ * colour serves as button, ring and link in light mode. Type is unchanged from
+ * Next Level: Bricolage Grotesque for titles, Inter for the UI, Geist Mono for
+ * ids. Anything Sectionary-specific sits at the bottom.
  */
 @theme inline {
   --color-background: var(--background);
@@ -51,52 +52,52 @@
 }
 
 :root {
-  --background: oklch(0.99 0.003 75);
-  --foreground: oklch(0.18 0.006 65);
-  --card: oklch(1 0.001 75);
-  --card-foreground: oklch(0.18 0.006 65);
-  --popover: oklch(1 0.001 75);
-  --popover-foreground: oklch(0.18 0.006 65);
-  --primary: #faa038;
-  --primary-foreground: oklch(0.22 0.02 65);
-  --secondary: oklch(0.96 0.004 75);
-  --secondary-foreground: oklch(0.25 0.006 65);
-  --muted: oklch(0.96 0.004 75);
-  --muted-foreground: oklch(0.55 0.018 60);
-  --accent: oklch(0.95 0.008 70);
-  --accent-foreground: oklch(0.18 0.006 65);
-  --destructive: oklch(0.577 0.215 27);
-  --border: oklch(0.92 0.006 70);
-  --input: oklch(0.92 0.006 70);
-  /* The accent is 2:1 on white, too faint for a focus ring or for text.
-     These are the same orange taken darker: 3.7:1 for the ring, which is
-     graphics, and 5:1 for link text. Dark theme keeps the accent itself. */
-  --ring: #c96a0a;
-  --link: #b45309;
+  --background: #fbfaf9;
+  --foreground: #1a1a1a;
+  --card: #ffffff;
+  --card-foreground: #1a1a1a;
+  --popover: #ffffff;
+  --popover-foreground: #1a1a1a;
+  --primary: #c54120;
+  --primary-foreground: #ffffff;
+  --secondary: #f3f1ef;
+  --secondary-foreground: #1a1a1a;
+  --muted: #f3f1ef;
+  --muted-foreground: #6f6a66;
+  --accent: #f3f1ef;
+  --accent-foreground: #1a1a1a;
+  --destructive: #b3122e;
+  --border: #e7e3df;
+  --input: #e7e3df;
+  /* The rust passes 5.1:1 on the ground, so it is the ring as it is. Links
+     take it one step darker (6.4:1) so running text reads comfortably. */
+  --ring: #c54120;
+  --link: #a8361a;
   --radius: 0.5rem;
 }
 
 .dark {
-  /* Ben's palette: #110F0E ground, #1A1816 surface, #FAA038 accent, #FFFFFF text. */
-  --background: #110f0e;
-  --foreground: #ffffff;
-  --card: #1a1816;
-  --card-foreground: #ffffff;
-  --popover: #1a1816;
-  --popover-foreground: #ffffff;
-  --primary: #faa038;
-  --primary-foreground: oklch(0.2 0.02 65);
-  --secondary: oklch(0.25 0.005 65);
-  --secondary-foreground: oklch(0.94 0.003 75);
-  --muted: oklch(0.25 0.005 65);
-  --muted-foreground: oklch(0.67 0.012 62);
-  --accent: oklch(0.27 0.008 65);
-  --accent-foreground: oklch(0.94 0.003 75);
-  --destructive: oklch(0.66 0.19 25);
-  --border: oklch(0.94 0.005 75 / 9%);
-  --input: oklch(0.94 0.005 75 / 13%);
-  --ring: #faa038;
-  --link: #faa038;
+  /* Curated's greys: #0F0F0F ground, #1B1B1B surface, #262626 raised. The rust
+     is lifted to #E4502A so it holds up on black, with near-black text on it. */
+  --background: #0f0f0f;
+  --foreground: #e8e8e8;
+  --card: #1b1b1b;
+  --card-foreground: #e8e8e8;
+  --popover: #1b1b1b;
+  --popover-foreground: #e8e8e8;
+  --primary: #e4502a;
+  --primary-foreground: #1a0d08;
+  --secondary: #262626;
+  --secondary-foreground: #e8e8e8;
+  --muted: #262626;
+  --muted-foreground: #a1a1a1;
+  --accent: #262626;
+  --accent-foreground: #e8e8e8;
+  --destructive: #ff5c5c;
+  --border: #2e2e2e;
+  --input: #2e2e2e;
+  --ring: #ff6a3d;
+  --link: #ff8a63;
 }
 
 @layer base {

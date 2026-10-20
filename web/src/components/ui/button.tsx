@@ -1,8 +1,8 @@
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
-// Next Level's button recipe on a plain <button>: orange only on the default
-// (primary) variant, hairline outline otherwise, orange ring on focus.
+// Next Level's button recipe on a plain <button>: rust only on the default
+// (primary) variant, hairline outline otherwise, rust ring on focus.
 const buttonVariants = cva(
   "inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg border border-transparent text-[13px] font-medium whitespace-nowrap transition-colors duration-150 outline-none select-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   {
