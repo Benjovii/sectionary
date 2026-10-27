@@ -1,24 +1,21 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowRight, ExternalLink, Monitor, Route, Smartphone, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { ArrowLeft, ArrowRight, ExternalLink, Route } from "lucide-react";
 import { StoreIcon } from "@/components/store-icon";
 import { BlockViewer } from "@/components/block-viewer";
 import { cn } from "@/lib/utils";
 import { assetUrl } from "@/lib/data-source";
-import { loadPageBlocks, loadSiteView, wallSource, type PageBlocks } from "@/lib/load-blocks";
+import { loadPageBlocks, loadSiteView, wallSource } from "@/lib/load-blocks";
 import { flowOf } from "@/lib/flows";
 import { markReturn } from "@/lib/return-to";
-import { labelFor, PAGE_TYPE_LABEL, type Block } from "@/lib/blocks";
+import { PAGE_TYPE_LABEL, type Block } from "@/lib/blocks";
 import { industryLabel, platformLabel, rankLabel } from "@/lib/stores";
 import type { ProfilePage, SiteView } from "@/lib/site-profile";
 import type { DetailIndex } from "@/lib/block-detail";
 import type { FilterKey } from "@/lib/filters";
-
-type Viewport = "desktop" | "mobile";
 
 const dateFormat = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric" });
 const when = (iso: string | null) => (iso ? dateFormat.format(new Date(iso)) : "Date not recorded");
@@ -33,7 +30,20 @@ const THUMB_RATIO = 5 / 4;
  */
 export function SiteProfileView({ host }: { host: string }) {
   const [state, setState] = useState<{ host: string; view: SiteView | null; error: string | null } | null>(null);
-  const [open, setOpen] = useState<ProfilePage | null>(null);
+  // The page whose sections are open in the block viewer, and which section.
+  const [open, setOpen] = useState<{ key: string; sections: Block[]; at: number } | null>(null);
+  const [loading, setLoading] = useState<string | null>(null);
+
+  const openPage = useCallback((page: ProfilePage) => {
+    setLoading(page.key);
+    sectionsOf(page).then(
+      (sections) => {
+        setLoading((k) => (k === page.key ? null : k));
+        if (sections.length) setOpen({ key: page.key, sections, at: 0 });
+      },
+      () => setLoading((k) => (k === page.key ? null : k)),
+    );
+  }, []);
 
   useEffect(() => {
     let alive = true;
@@ -174,7 +184,7 @@ export function SiteProfileView({ host }: { host: string }) {
             <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
               {pages.map((page) => (
                 <li key={page.key}>
-                  <PageCard page={page} onOpen={() => setOpen(page)} />
+                  <PageCard page={page} busy={loading === page.key} onOpen={() => openPage(page)} />
                 </li>
               ))}
             </ul>
@@ -185,19 +195,28 @@ export function SiteProfileView({ host }: { host: string }) {
         <Timeline captures={captures} className="lg:hidden" />
       </div>
 
-      {/* Keyed by page, so a page opens with its own sections and no block open. */}
-      <PageViewer key={open?.key ?? ""} page={open} onClose={() => setOpen(null)} />
+      <SectionViewer
+        sections={open?.sections ?? []}
+        at={open?.at ?? null}
+        onAt={(at) => setOpen((o) => (o ? { ...o, at } : o))}
+        onClose={() => setOpen(null)}
+      />
     </div>
   );
 }
 
-function PageCard({ page, onOpen }: { page: ProfilePage; onOpen: () => void }) {
+function PageCard({ page, busy, onOpen }: { page: ProfilePage; busy: boolean; onOpen: () => void }) {
   const path = page.url.replace(/^https?:\/\/[^/]+/, "") || "/";
   return (
     <button
       type="button"
       onClick={onOpen}
-      className="group flex w-full flex-col overflow-hidden rounded-lg border bg-card text-left transition-colors duration-150 outline-none hover:border-primary/60 focus-visible:ring-2 focus-visible:ring-ring"
+      aria-busy={busy}
+      disabled={page.blockCount === 0}
+      className={cn(
+        "group flex w-full cursor-zoom-in flex-col overflow-hidden rounded-lg border bg-card text-left transition-[border-color,opacity] duration-150 outline-none hover:border-primary/60 focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-default disabled:hover:border-border",
+        busy && "cursor-wait opacity-70",
+      )}
     >
       <PageThumb page={page} />
       <span className="flex flex-col gap-0.5 border-t px-2.5 py-2">
@@ -261,56 +280,37 @@ export function Stack({ src, blocks, ratio }: { src: string | null; blocks: Bloc
 }
 
 /**
- * The whole page, full screen, top to bottom, with a switch between viewports.
- * The page is drawn from its sections, each at full resolution, and a click
- * on one opens it in the block viewer over the page; the viewer's arrows walk
- * down the page. Until the sections arrive (from the API) the full-page
- * screenshot stands in.
+ * A page's sections, top to bottom: the sample carries them, the API sends
+ * them on request. Desktop, unless the page was only captured on mobile; the
+ * viewer's Web / Mobile switch shows each section's other viewport.
  */
-function PageViewer({ page, onClose }: { page: ProfilePage | null; onClose: () => void }) {
-  const ref = useRef<HTMLDialogElement>(null);
+async function sectionsOf(page: ProfilePage): Promise<Block[]> {
+  if (page.desktopBlocks.length || page.mobileBlocks.length) return page.desktopBlocks.length ? page.desktopBlocks : page.mobileBlocks;
+  if (page.blockCount === 0) return [];
+  const fetched = await loadPageBlocks(new URL(page.url).host, page.url);
+  return fetched.desktop.length ? fetched.desktop : fetched.mobile;
+}
+
+/**
+ * A page opened from the profile: its sections in the block viewer, one at a
+ * time at full resolution, the arrows walking down the page.
+ */
+function SectionViewer({
+  sections,
+  at,
+  onAt,
+  onClose,
+}: {
+  sections: Block[];
+  at: number | null;
+  onAt: (at: number) => void;
+  onClose: () => void;
+}) {
   const router = useRouter();
-  const [viewport, setViewport] = useState<Viewport>("desktop");
-
-  // The sample carries each page's blocks; the API sends them on request.
-  const own = Boolean(page && (page.desktopBlocks.length || page.mobileBlocks.length));
-  const [fetched, setFetched] = useState<PageBlocks | null>(null);
-  useEffect(() => {
-    if (!page || own || page.blockCount === 0) return;
-    let alive = true;
-    loadPageBlocks(new URL(page.url).host, page.url).then(
-      (b) => alive && setFetched(b),
-      () => undefined,
-    );
-    return () => {
-      alive = false;
-    };
-  }, [page, own]);
-
-  // The section open in the block viewer, by its place on the page.
-  const [at, setAt] = useState<number | null>(null);
   const [info, setInfo] = useState(false);
+  const block = at === null ? null : (sections[at] ?? null);
 
-  useEffect(() => {
-    const d = ref.current;
-    if (!d) return;
-    if (page && !d.open) d.showModal();
-    if (!page && d.open) d.close();
-  }, [page]);
-
-  const hasDesktop = Boolean(page && (page.desktop || page.desktopBlocks.length));
-  const hasMobile = Boolean(page && (page.mobile || page.mobileBlocks.length));
-  // Desktop unless the page only has mobile.
-  const current: Viewport = viewport === "mobile" ? (hasMobile ? "mobile" : "desktop") : hasDesktop ? "desktop" : "mobile";
-  const blocks = useMemo(
-    () => (!page ? [] : own ? (current === "desktop" ? page.desktopBlocks : page.mobileBlocks) : (fetched?.[current] ?? [])),
-    [page, own, current, fetched],
-  );
-  const full = page ? (current === "desktop" ? page.desktop : page.mobile) : null;
-  // Only worth saying when something is actually missing from this page.
-  const partial = Boolean(page && fetched?.partial && blocks.length > 0 && fetched.desktop.length + fetched.mobile.length < page.blockCount);
-
-  const block = at === null ? null : (blocks[at] ?? null);
+  // Pairs (for the Web / Mobile switch) and similar blocks, as on the wall.
   const [detail, setDetail] = useState<{ id: string; index: DetailIndex } | null>(null);
   useEffect(() => {
     if (!block) return;
@@ -329,15 +329,15 @@ function PageViewer({ page, onClose }: { page: ProfilePage | null; onClose: () =
   const step = useMemo(() => {
     if (at === null) return {};
     return {
-      prev: at > 0 ? () => setAt(at - 1) : undefined,
-      next: at < blocks.length - 1 ? () => setAt(at + 1) : undefined,
+      prev: at > 0 ? () => onAt(at - 1) : undefined,
+      next: at < sections.length - 1 ? () => onAt(at + 1) : undefined,
     };
-  }, [at, blocks.length]);
+  }, [at, sections.length, onAt]);
 
   // A similar block or a "Found in" chip leads to the wall; closing the
   // similar block there comes back here.
   const onShow = useCallback(
-    (b: { id: string }) => {
+    (b: Block) => {
       markReturn(b.id);
       router.push(`/?open=${encodeURIComponent(b.id)}`);
     },
@@ -346,107 +346,16 @@ function PageViewer({ page, onClose }: { page: ProfilePage | null; onClose: () =
   const onFilter = useCallback((key: FilterKey, value: string) => router.push(`/?${key}=${encodeURIComponent(value)}`), [router]);
 
   return (
-    <>
-      <dialog
-        ref={ref}
-        aria-label={page ? `${PAGE_TYPE_LABEL[page.type] ?? page.type} page, full screen` : "Page"}
-        onClose={onClose}
-        className="m-0 h-dvh max-h-dvh w-screen max-w-none bg-black/95 p-0 text-white backdrop:bg-black/70 open:flex open:flex-col"
-      >
-        {page && (
-          <>
-            <div className="flex h-12 shrink-0 items-center gap-2 px-2">
-              <Button variant="ghost" size="icon" aria-label="Close" className="text-white hover:bg-white/10 hover:text-white" onClick={onClose}>
-                <X />
-              </Button>
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-[13px] font-medium">{page.title ?? PAGE_TYPE_LABEL[page.type] ?? page.type}</p>
-                <p className="truncate font-mono text-[11px] text-white/60">{page.url.replace(/^https?:\/\//, "")}</p>
-              </div>
-              {hasDesktop && hasMobile && (
-                <div role="radiogroup" aria-label="Viewport" className="flex shrink-0 rounded-lg border border-white/15 p-0.5">
-                  {(["desktop", "mobile"] as const).map((v) => {
-                    const Icon = v === "mobile" ? Smartphone : Monitor;
-                    return (
-                      <button
-                        key={v}
-                        type="button"
-                        role="radio"
-                        aria-checked={current === v}
-                        aria-label={v === "mobile" ? "Mobile" : "Desktop"}
-                        onClick={() => {
-                          setViewport(v);
-                          setAt(null);
-                        }}
-                        className={cn(
-                          "inline-flex h-7 items-center gap-1.5 rounded-md px-2 text-[12px] font-medium transition-colors duration-150 outline-none focus-visible:ring-2 focus-visible:ring-ring sm:px-2.5 touch:h-11 touch:min-w-11 touch:justify-center touch:px-3",
-                          current === v ? "bg-primary text-primary-foreground" : "text-white/70 hover:text-white",
-                        )}
-                      >
-                        <Icon className="size-3.5" />
-                        <span className="hidden sm:inline">{v === "mobile" ? "Mobile" : "Desktop"}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-              <a
-                href={page.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Open the source page"
-                className="inline-flex size-8 shrink-0 items-center justify-center rounded-lg text-white/70 outline-none hover:bg-white/10 hover:text-white focus-visible:ring-2 focus-visible:ring-ring touch:size-11"
-              >
-                <ExternalLink className="size-4" />
-              </a>
-            </div>
-            <div key={`${page.key}:${current}`} className="min-h-0 flex-1 overflow-auto px-3 pb-6 min-[900px]:px-8">
-              <div className="mx-auto w-full" style={{ maxWidth: current === "desktop" ? 1440 : 390 }}>
-                {partial && (
-                  <p className="mb-3 rounded-lg border border-white/15 px-3 py-2 text-[12px] text-white/70">
-                    Sections this store repeats on other pages, like the header, show on the page they first appear on.
-                  </p>
-                )}
-                {blocks.length > 0 ? (
-                  blocks.map((b, i) => (
-                    <button
-                      key={b.id}
-                      type="button"
-                      onClick={() => setAt(i)}
-                      className="group relative block w-full cursor-zoom-in outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                      style={{ aspectRatio: `${b.w} / ${b.h}`, background: b.bg }}
-                      aria-label={`${labelFor(b.typeHint)} section, open it`}
-                    >
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={assetUrl(b.src)} alt="" loading="lazy" decoding="async" className="block h-full w-full" />
-                      {/* Where one section ends and the next begins, on hover. */}
-                      <span className="pointer-events-none absolute inset-0 ring-2 ring-primary ring-inset opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-visible:opacity-100" />
-                      <span className="pointer-events-none absolute top-2 left-2 rounded-full bg-primary px-2 py-0.5 text-[11px] font-medium text-primary-foreground opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-visible:opacity-100">
-                        {labelFor(b.typeHint)}
-                      </span>
-                    </button>
-                  ))
-                ) : full ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={assetUrl(full)} alt={`${page.title ?? page.type}, ${current}`} className="block w-full" />
-                ) : null}
-              </div>
-            </div>
-          </>
-        )}
-      </dialog>
-
-      <BlockViewer
-        block={block}
-        detail={detail?.id === block?.id ? detail?.index : null}
-        info={info}
-        onInfo={setInfo}
-        onClose={() => setAt(null)}
-        onShow={onShow}
-        onStep={step}
-        onFilter={onFilter}
-      />
-    </>
+    <BlockViewer
+      block={block}
+      detail={detail?.id === block?.id ? detail?.index : null}
+      info={info}
+      onInfo={setInfo}
+      onClose={onClose}
+      onShow={onShow}
+      onStep={step}
+      onFilter={onFilter}
+    />
   );
 }
 
