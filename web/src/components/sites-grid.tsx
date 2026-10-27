@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Search, SlidersHorizontal, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Select } from "@/components/ui/select";
 import { StoreIcon } from "@/components/store-icon";
 import { Stack } from "@/components/site-profile";
 import { cn } from "@/lib/utils";
@@ -178,19 +179,14 @@ export function SitesGrid() {
                 className="h-8 w-full rounded-lg border bg-background pr-2.5 pl-8 text-[13px] outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring dark:bg-input/30 touch:h-11"
               />
             </label>
-            <select
-              aria-label="Country"
+            <Select
+              label="Country"
               value={country}
-              onChange={(e) => set("country", e.target.value)}
-              className="h-8 rounded-lg border bg-background px-2 text-[13px] outline-none focus-visible:ring-2 focus-visible:ring-ring dark:bg-input/30 touch:h-11"
-            >
-              <option value="">All countries</option>
-              {countries.map((c) => (
-                <option key={c.value} value={c.value}>
-                  {c.value} ({c.count})
-                </option>
-              ))}
-            </select>
+              onChange={(v) => set("country", v)}
+              active={Boolean(country)}
+              triggerClassName="h-8 text-[13px]"
+              options={[{ value: "", label: "All countries" }, ...countries.map((c) => ({ value: c.value, label: c.value, count: c.count }))]}
+            />
             {[
               industry && { key: "industry", label: industryLabel(industry) },
               platform && { key: "platform", label: platform },

@@ -6,7 +6,7 @@ export type LegalSection = { id: string; title: string; body: React.ReactNode };
 
 /**
  * The frame Terms, Privacy and /bot share (SEC-29): the landing page's type
- * (Bricolage titles, mono labels, the orange for links), a reading column of
+ * (Bricolage titles, mono labels, the rust for links), a reading column of
  * about 68 characters, and the section list pinned beside it on wide screens.
  */
 export function LegalPage({
@@ -87,7 +87,7 @@ export function LegalPage({
                 aria-current={p.href === current ? "page" : undefined}
                 className={cn(
                   "inline-flex h-8 items-center rounded-lg border px-3 text-[13px] outline-none transition-colors duration-150 hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring touch:h-11 dark:border-input",
-                  p.href === current && "border-foreground bg-foreground text-background hover:bg-foreground dark:border-foreground",
+                  p.href === current && "border-primary bg-primary text-primary-foreground hover:bg-primary dark:border-primary",
                 )}
               >
                 {p.label}

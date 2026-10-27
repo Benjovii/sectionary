@@ -92,7 +92,7 @@ export function FlowsIndex() {
           </p>
           <p className="mt-1 max-w-2xl text-[12px] text-muted-foreground">
             A flow is complete when a store&apos;s home, collection and product pages are captured. Cart joins when the
-            store&apos;s robots.txt lets us in; checkout is never captured.
+            store&apos;s robots.txt lets us in.
           </p>
         </div>
         {list && incomplete > 0 && (
@@ -132,7 +132,7 @@ export function FlowsIndex() {
   );
 }
 
-/** One store: who it is, then its five steps as thumbnails, gaps dashed. */
+/** One store: who it is, then its four steps as thumbnails, gaps dashed. */
 function FlowRow({ summary }: { summary: FlowSummary }) {
   const { store, flow } = summary;
   const got = flow.steps.filter((s) => s.pages.length > 0).map((s) => PAGE_TYPE_LABEL[s.type].toLowerCase());
@@ -157,7 +157,7 @@ function FlowRow({ summary }: { summary: FlowSummary }) {
           </span>
         </div>
       </div>
-      <ol aria-hidden className="grid flex-1 grid-cols-5 gap-1.5 sm:max-w-md sm:gap-2">
+      <ol aria-hidden className="grid flex-1 grid-cols-4 gap-1.5 sm:max-w-md sm:gap-2">
         {flow.steps.map((step) => {
           const page = step.pages[0];
           const blocks = page ? (page.desktopBlocks.length ? page.desktopBlocks : page.mobileBlocks) : [];
@@ -200,7 +200,7 @@ export function FlowsSkeleton() {
               <div className="shimmer h-3 w-36 rounded bg-muted" />
             </div>
           </div>
-          <div className="grid flex-1 grid-cols-5 gap-1.5 sm:max-w-md sm:gap-2">
+          <div className="grid flex-1 grid-cols-4 gap-1.5 sm:max-w-md sm:gap-2">
             {Array.from({ length: 5 }, (_, j) => (
               <div key={j} className="shimmer rounded-md bg-muted" style={{ aspectRatio: `1 / ${THUMB_RATIO}` }} />
             ))}

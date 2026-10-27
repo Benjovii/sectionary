@@ -1,4 +1,4 @@
-import { apiError, database } from "@/server/db";
+import { apiError, database, PUBLIC_CACHE } from "@/server/db";
 import { latestPages, toStore } from "@/server/sites";
 
 export const runtime = "nodejs";
@@ -19,6 +19,6 @@ export async function GET(request: Request) {
     const pages = await latestPages(sql, rows.map((r) => r.id as string));
     const items = rows.map((r, i) => ({ store: toStore(r, offset + i + 1), pages: pages.get(r.id) ?? [] }));
     const total = rows[0]?.total ?? 0;
-    return Response.json({ items, generatedAt: new Date().toISOString(), nextCursor: offset + items.length < total ? String(offset + items.length) : null, total });
+    return Response.json({ items, generatedAt: new Date().toISOString(), nextCursor: offset + items.length < total ? String(offset + items.length) : null, total }, { headers: PUBLIC_CACHE });
   } catch (error) { return apiError(error); }
 }

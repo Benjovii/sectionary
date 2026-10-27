@@ -124,7 +124,7 @@ export function FilterBar({
               >
                 {filter.label}
                 {chosen.length > 0 && (
-                  <span className="rounded-full bg-background/25 px-1.5 font-mono text-[10px] tabular-nums">{chosen.length}</span>
+                  <span className="rounded-full bg-primary-foreground/20 px-1.5 font-mono text-[10px] tabular-nums">{chosen.length}</span>
                 )}
                 <ChevronDown className={cn("size-3 transition-transform duration-150", isOpen && "rotate-180")} />
               </Button>

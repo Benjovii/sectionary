@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import {
   Check,
@@ -13,6 +13,8 @@ import {
   Smartphone,
   Maximize2,
   X,
+  ZoomIn,
+  ZoomOut,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BriefPanel } from "@/components/brief-panel";
@@ -343,7 +345,7 @@ function Toolbar({
               className={cn(
                 "inline-flex h-7 items-center gap-1.5 rounded-md px-2.5 text-[12px] font-medium transition-colors duration-150 outline-none focus-visible:ring-2 focus-visible:ring-ring touch:h-11 disabled:opacity-40",
                 option.wideOnly && "hidden min-[900px]:inline-flex",
-                view === option.value ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground",
+                view === option.value ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground",
               )}
             >
               {Icon && <Icon className="size-3.5" />}
@@ -412,7 +414,9 @@ function Shot({
 }) {
   const [loaded, setLoaded] = useState(false);
   return (
-    <figure className={cn("flex flex-col gap-1.5", className)}>
+    // Never wider than the block was captured: a narrow block (a 195px product
+    // card) stretched to the column would be upscaled into blur.
+    <figure className={cn("flex flex-col gap-1.5", className)} style={{ maxWidth: block.w }}>
       <figcaption className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
         {block.viewport === "mobile" ? <Smartphone className="size-3" /> : <Monitor className="size-3" />}
         <span className={cn(highlight && "font-medium text-foreground")}>{block.viewport === "mobile" ? "Mobile" : "Desktop"}</span>
@@ -459,8 +463,13 @@ function Shot({
  * One screenshot over everything, as wide as the screen allows but never wider
  * than it was captured, so it is never upscaled into blur. Scrolls top to
  * bottom. When the block has both viewports a switch in the header flips
- * between them without leaving full screen. Escape, the close button or a
- * click on the image closes it and leaves the detail view open underneath.
+ * between them without leaving full screen.
+ *
+ * A click on the screenshot zooms in on that spot, to its real pixels (see
+ * zoomWidth), and a second click fits it back. Before, the only way closer
+ * was the browser's own zoom, which magnifies the fitted picture and blurs
+ * it. Escape, the close button or a click beside the screenshot closes this
+ * and leaves the detail view open underneath.
  */
 function Expanded({
   start,
@@ -477,6 +486,44 @@ function Expanded({
   const [viewport, setViewport] = useState(start.viewport);
   const block = (viewport === "desktop" ? desktop : mobile) ?? start;
   const both = Boolean(desktop && mobile);
+
+  // Zoomed width in CSS pixels, for this block only, so switching viewport fits again.
+  const [zoom, setZoom] = useState<{ id: string; width: number } | null>(null);
+  const zoomed = zoom?.id === block.id ? zoom : null;
+  const scroller = useRef<HTMLDivElement>(null);
+  const image = useRef<HTMLImageElement>(null);
+  // The point that was clicked, as a fraction of the picture, and where it sat
+  // in the scroller, so the zoomed picture can be scrolled to keep it there.
+  const anchor = useRef<{ fx: number; fy: number; x: number; y: number } | null>(null);
+
+  const toggleZoom = useCallback(
+    (at?: { clientX: number; clientY: number }) => {
+      const img = image.current, el = scroller.current;
+      if (!img || !el) return;
+      if (zoomed) {
+        setZoom(null);
+        return;
+      }
+      const box = img.getBoundingClientRect(), view = el.getBoundingClientRect();
+      const width = zoomWidth(img.naturalWidth || block.w * 2, box.width, window.devicePixelRatio || 1);
+      if (width <= box.width * 1.05) return;
+      const x = at ? at.clientX : view.left + view.width / 2;
+      const y = at ? at.clientY : view.top + view.height / 2;
+      anchor.current = { fx: (x - box.left) / box.width, fy: (y - box.top) / box.height, x: x - view.left, y: y - view.top };
+      setZoom({ id: block.id, width });
+    },
+    [zoomed, block],
+  );
+
+  // After the zoom has laid out, scroll so the clicked point is back under the pointer.
+  useLayoutEffect(() => {
+    const img = image.current, el = scroller.current, at = anchor.current;
+    anchor.current = null;
+    if (!zoomed || !img || !el || !at) return;
+    const box = img.getBoundingClientRect(), view = el.getBoundingClientRect();
+    el.scrollLeft += box.left + at.fx * box.width - (view.left + at.x);
+    el.scrollTop += box.top + at.fy * box.height - (view.top + at.y);
+  }, [zoomed]);
 
   useEffect(() => {
     const before = document.activeElement as HTMLElement | null;
@@ -532,7 +579,7 @@ function Expanded({
                   onClick={() => setViewport(v)}
                   className={cn(
                     "inline-flex h-7 items-center gap-1.5 rounded-md px-2.5 text-[12px] font-medium transition-colors duration-150 outline-none focus-visible:ring-2 focus-visible:ring-ring touch:h-11",
-                    viewport === v ? "bg-white text-black" : "text-white/70 hover:text-white",
+                    viewport === v ? "bg-primary text-primary-foreground" : "text-white/70 hover:text-white",
                   )}
                 >
                   <Icon className="size-3.5" />
@@ -547,24 +594,60 @@ function Expanded({
             <span className="text-[13px] font-medium">{block.viewport === "mobile" ? "Mobile" : "Desktop"}</span>
           </>
         )}
-        <span className="ml-auto pr-2 font-mono text-[11px] text-white/60 tabular-nums">
+        <span className="ml-auto font-mono text-[11px] text-white/60 tabular-nums">
           {block.w} × {block.h}
         </span>
+        <Button
+          variant="ghost"
+          size="icon"
+          aria-label={zoomed ? "Fit to screen" : "Zoom in"}
+          aria-pressed={Boolean(zoomed)}
+          className="text-white hover:bg-white/10 hover:text-white"
+          onClick={(e) => {
+            e.stopPropagation();
+            toggleZoom();
+          }}
+        >
+          {zoomed ? <ZoomOut /> : <ZoomIn />}
+        </Button>
       </div>
-      <div key={block.id} className="min-h-0 flex-1 cursor-zoom-out overflow-auto px-3 pb-6 min-[900px]:px-8">
-        <div className="mx-auto w-full" style={{ maxWidth: block.w, aspectRatio: `${block.w} / ${block.h}`, background: block.bg }}>
+      <div ref={scroller} key={block.id} className="min-h-0 flex-1 overflow-auto px-3 pb-6 min-[900px]:px-8">
+        <div
+          className={cn("mx-auto", !zoomed && "w-full")}
+          style={{
+            ...(zoomed ? { width: zoomed.width } : { maxWidth: block.w }),
+            aspectRatio: `${block.w} / ${block.h}`,
+            background: block.bg,
+          }}
+        >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
+            ref={image}
             src={assetUrl(block.src)}
             alt={`${labelFor(block.typeHint)} block from ${block.host}, ${block.viewport}`}
             width={block.w}
             height={block.h}
-            className="block h-full w-full"
+            onClick={(e) => {
+              e.stopPropagation();
+              toggleZoom(e);
+            }}
+            className={cn("block h-full w-full", zoomed ? "cursor-zoom-out" : "cursor-zoom-in")}
           />
         </div>
       </div>
     </div>
   );
+}
+
+/**
+ * How wide to draw a screenshot zoomed in, in CSS pixels. One image pixel per
+ * screen pixel is as sharp as it gets, and where the fitted picture is already
+ * close to that (a retina laptop), twice the fitted width, so a click always
+ * gets visibly closer. Never past one image pixel per CSS pixel: the
+ * screenshots are captured at 2x, so beyond that there is nothing more to see.
+ */
+function zoomWidth(natural: number, fitted: number, dpr: number): number {
+  return Math.min(natural, Math.max(natural / dpr, fitted * 2));
 }
 
 type Status = { key: string; ok: boolean } | null;

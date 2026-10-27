@@ -251,7 +251,14 @@ export function Wall() {
       alive = false;
     };
   }, [openId]);
-  const loadedOpen = openId && opened?.id === openId ? opened : null;
+  // Closed: forget the last block, so the next one opened from the wall does
+  // not flash it. Set during render, React's pattern for state that follows a prop.
+  if (!openId && opened) setOpened(null);
+  // Moving to another block inside the view ("More like this", the other
+  // viewport) keeps the current one up until the next has loaded. Dropping it
+  // meanwhile closed the dialog, and the dialog's close event then took the
+  // visitor back to the wall instead of to the block they picked.
+  const loadedOpen = openId ? opened : null;
   const open = loadedOpen?.block ?? null;
   const detail = loadedOpen?.detail ?? null;
   const pushed = useRef(false);

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { STORES_SRC } from "@/lib/data-source";
 import { industryLabel, platformLabel, rankLabel, type Store, type StoreSet } from "@/lib/stores";
+import { Select as UiSelect } from "@/components/ui/select";
 
 type Sort = "rank" | "brand" | "platform" | "industry";
 
@@ -28,19 +29,14 @@ export function StoresTableSkeleton() {
 
 function Select({ value, onChange, label, options }: { value: string; onChange: (v: string) => void; label: string; options: [string, string, number][] }) {
   return (
-    <select
-      aria-label={label}
+    <UiSelect
+      label={label}
       value={value}
-      onChange={(e) => onChange(e.target.value)}
-      className="h-7 max-w-full rounded-lg border bg-background px-2 text-[12px] outline-none focus-visible:ring-2 focus-visible:ring-ring dark:bg-input/30 touch:h-11"
-    >
-      <option value="">{label}</option>
-      {options.map(([v, l, n]) => (
-        <option key={v} value={v}>
-          {l} ({n})
-        </option>
-      ))}
-    </select>
+      onChange={onChange}
+      active={Boolean(value)}
+      className="max-w-full"
+      options={[{ value: "", label }, ...options.map(([v, l, n]) => ({ value: v, label: l, count: n }))]}
+    />
   );
 }
 
