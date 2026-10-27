@@ -8,7 +8,7 @@ import { StoreIcon } from "@/components/store-icon";
 import { SaveToBoard } from "@/components/save-to-board";
 import { ViewportSwitch } from "@/components/viewport-switch";
 import { TimeMachineStage, useTimeMachine } from "@/components/time-machine";
-import { BlockInfoPanel, copyImage, TABS, zoomWidth, type Tab } from "@/components/block-dialog";
+import { BlockInfoPanel, copyImage, TABS, zoomWidth, type Tab } from "@/components/block-info";
 import { cn } from "@/lib/utils";
 import { assetUrl } from "@/lib/data-source";
 import { labelFor, PAGE_TYPE_LABEL, thumbOf, type Block } from "@/lib/blocks";
@@ -143,6 +143,7 @@ function Window({
   const [tab, setTab] = useState<Tab>("details");
   const history = info && tab === "history" && !shared;
   const tm = useTimeMachine(block, history);
+  const panel = usePresence(info, PANEL_MS);
 
   const similarRef = useRef<HTMLElement>(null);
 
@@ -284,35 +285,47 @@ function Window({
             </footer>
           </div>
 
-          {info && (
+          {panel.mounted && (
             <aside
               id="block-info"
               aria-label="Block info"
-              className="flex flex-col overflow-y-auto bg-card max-[899px]:absolute max-[899px]:inset-0 max-[899px]:z-20 min-[900px]:w-[360px] min-[900px]:shrink-0 min-[900px]:border-l min-[700px]:max-[899px]:rounded-b-2xl"
+              data-open={panel.shown}
+              className={cn(
+                "group/info overflow-hidden bg-card ease-[cubic-bezier(0.32,0.72,0,1)] motion-reduce:transition-none",
+                // Wide: the panel's column widens from nothing and the
+                // screenshot eases over to make room, as Mobbin's does.
+                "min-[900px]:w-0 min-[900px]:shrink-0 min-[900px]:transition-[width] min-[900px]:duration-300 min-[900px]:data-[open=true]:w-[360px]",
+                // Narrow: it covers the window, rising and fading in.
+                "max-[899px]:absolute max-[899px]:inset-0 max-[899px]:z-20 max-[899px]:translate-y-6 max-[899px]:opacity-0 max-[899px]:transition-[transform,opacity] max-[899px]:duration-300 max-[899px]:data-[open=true]:translate-y-0 max-[899px]:data-[open=true]:opacity-100 min-[700px]:max-[899px]:rounded-b-2xl",
+              )}
             >
-              <div className="sticky top-0 z-10 flex h-12 shrink-0 items-center justify-between border-b bg-card px-4">
-                <h3 className="font-heading text-[15px] font-semibold">Info</h3>
-                <button
-                  type="button"
-                  onClick={() => onInfo(false)}
-                  aria-label="Close info"
-                  className="inline-flex size-8 items-center justify-center rounded-full text-muted-foreground outline-none transition-colors duration-150 hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring touch:size-11"
-                >
-                  <X className="size-4" />
-                </button>
+              {/* Drawn at its full width from the start, so the text does not
+                  reflow while the column opens; it fades and slides in over it. */}
+              <div className="flex h-full flex-col overflow-y-auto transition-[opacity,transform] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] motion-reduce:transition-none min-[900px]:w-[360px] min-[900px]:translate-x-6 min-[900px]:border-l min-[900px]:opacity-0 min-[900px]:group-data-[open=true]/info:translate-x-0 min-[900px]:group-data-[open=true]/info:opacity-100">
+                <div className="sticky top-0 z-10 flex h-12 shrink-0 items-center justify-between border-b bg-card px-4">
+                  <h3 className="font-heading text-[15px] font-semibold">Info</h3>
+                  <button
+                    type="button"
+                    onClick={() => onInfo(false)}
+                    aria-label="Close info"
+                    className="inline-flex size-8 items-center justify-center rounded-full text-muted-foreground outline-none transition-colors duration-150 hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring touch:size-11"
+                  >
+                    <X className="size-4" />
+                  </button>
+                </div>
+                <BlockInfoPanel
+                  block={block}
+                  tab={shared ? "details" : tab}
+                  onTab={setTab}
+                  tm={tab === "history" && !shared ? tm : null}
+                  captures={captures}
+                  captureAt={captureAt}
+                  onCaptureAt={setCaptureAt}
+                  counts={counts}
+                  onFilter={shared ? undefined : onFilter}
+                  tabs={shared ? SHARED_TABS : TABS}
+                />
               </div>
-              <BlockInfoPanel
-                block={block}
-                tab={shared ? "details" : tab}
-                onTab={setTab}
-                tm={history ? tm : null}
-                captures={captures}
-                captureAt={captureAt}
-                onCaptureAt={setCaptureAt}
-                counts={counts}
-                onFilter={shared ? undefined : onFilter}
-                tabs={shared ? SHARED_TABS : TABS}
-              />
             </aside>
           )}
         </div>
@@ -349,6 +362,46 @@ function Window({
       )}
     </>
   );
+}
+
+/** How long the info panel takes to open or close. */
+const PANEL_MS = 300;
+
+/**
+ * Keeps something mounted for `ms` after `open` turns false, so it can
+ * animate out, and reports `shown` a frame after it mounts, so it can
+ * animate in from its closed state.
+ */
+function usePresence(open: boolean, ms: number): { mounted: boolean; shown: boolean } {
+  const [mounted, setMounted] = useState(open);
+  const [entered, setEntered] = useState(false);
+  // Mounting is set during render, React's pattern for state that follows a prop.
+  if (open && !mounted) setMounted(true);
+
+  useEffect(() => {
+    if (open) {
+      // Two frames: the closed state has to be painted before the open one,
+      // or the browser skips straight to the end. The timer is a fallback
+      // for a page that is not painting (a hidden tab), which runs no frames.
+      let inner = 0;
+      const outer = requestAnimationFrame(() => {
+        inner = requestAnimationFrame(() => setEntered(true));
+      });
+      const fallback = window.setTimeout(() => setEntered(true), 100);
+      return () => {
+        cancelAnimationFrame(outer);
+        cancelAnimationFrame(inner);
+        window.clearTimeout(fallback);
+      };
+    }
+    const timer = window.setTimeout(() => {
+      setMounted(false);
+      setEntered(false);
+    }, ms);
+    return () => window.clearTimeout(timer);
+  }, [open, ms]);
+
+  return { mounted, shown: open && entered };
 }
 
 /**
