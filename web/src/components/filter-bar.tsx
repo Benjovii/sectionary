@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Check, ChevronDown, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { FILTERS, countSelected, type FilterKey, type Selected } from "@/lib/filters";
+import { BAR_FILTERS, FILTERS, countSelected, type FilterKey, type Selected } from "@/lib/filters";
 
 type Facets = Record<string, { value: string; count: number }[]>;
 
@@ -96,13 +96,14 @@ export function FilterBar({
     return ordered.filter((o) => spec.format(o.value).toLowerCase().includes(trimmed) || o.value.toLowerCase().includes(trimmed));
   }, [spec, facets, needle]);
 
-  const activeCount = countSelected(selected) + (search.trim() ? 1 : 0);
+  // The viewport has its own switch and stays put through "Clear all", so it is not counted here.
+  const activeCount = countSelected({ ...selected, vp: undefined }) + (search.trim() ? 1 : 0);
 
   return (
     <div ref={root} className="relative flex flex-col gap-2">
       <div className={ROW}>
         <div className={CHIPS}>
-          {FILTERS.map((filter) => {
+          {BAR_FILTERS.map((filter) => {
             const chosen = selected[filter.key] ?? [];
             const isOpen = open === filter.key;
             return (
@@ -229,7 +230,7 @@ export function FilterBarSkeleton() {
     <div className="flex flex-col gap-2" aria-busy="true" aria-label="Loading filters">
       <div className={ROW}>
         <div className={CHIPS}>
-          {FILTERS.map((filter) => (
+          {BAR_FILTERS.map((filter) => (
             <Button key={filter.key} variant="outline" size="sm" disabled className="opacity-50">
               {filter.label}
               <ChevronDown className="size-3" />

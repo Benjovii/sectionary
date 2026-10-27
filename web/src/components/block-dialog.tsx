@@ -640,7 +640,7 @@ function Expanded({
  * gets visibly closer. Never past one image pixel per CSS pixel: the
  * screenshots are captured at 2x, so beyond that there is nothing more to see.
  */
-function zoomWidth(natural: number, fitted: number, dpr: number): number {
+export function zoomWidth(natural: number, fitted: number, dpr: number): number {
   return Math.min(natural, Math.max(natural / dpr, fitted * 2));
 }
 
@@ -696,7 +696,7 @@ function Actions({ block }: { block: Block }) {
  * clipboard accepts. The ClipboardItem gets a promise rather than a blob so
  * Safari still sees the write as part of the click.
  */
-async function copyImage(url: string): Promise<void> {
+export async function copyImage(url: string): Promise<void> {
   const png = (async () => {
     const response = await fetch(url, { mode: "cors" });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
