@@ -19,7 +19,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { BriefPanel } from "@/components/brief-panel";
 import { SaveToBoard } from "@/components/save-to-board";
-import { TimeMachineControls, TimeMachineStage, useTimeMachine } from "@/components/time-machine";
+import { TimeMachineControls, TimeMachineStage, useTimeMachine, type TimeMachine } from "@/components/time-machine";
 import { cn } from "@/lib/utils";
 import { assetUrl } from "@/lib/data-source";
 import { labelFor, PAGE_TYPE_LABEL, type Block } from "@/lib/blocks";
@@ -30,8 +30,8 @@ import { capturedAtOf, capturesOf, counterpartOf, similarTo, type DetailIndex } 
 
 type View = "both" | "desktop" | "mobile";
 
-type Tab = "details" | "brief" | "history";
-const TABS: [Tab, string][] = [
+export type Tab = "details" | "brief" | "history";
+export const TABS: [Tab, string][] = [
   ["details", "Details"],
   ["brief", "Copy as brief"],
   ["history", "Time machine"],
@@ -170,7 +170,6 @@ function Detail({
   // The block the metadata describes: the one opened, unless the person
   // switched to its other viewport.
   const focus = view === "both" ? shown : view === "desktop" ? (desktop ?? shown) : (mobile ?? shown);
-  const bucket = bucketFor(focus.bg);
   const pageLabel = PAGE_TYPE_LABEL[focus.pageType] ?? focus.pageType;
 
   // Back to the top of the stage when the block changes under a kept-open sheet.
@@ -214,90 +213,143 @@ function Detail({
 
         <aside className="flex flex-col border-t min-[900px]:w-[340px] min-[900px]:shrink-0 min-[900px]:overflow-auto min-[900px]:border-t-0 min-[900px]:border-l">
           <Actions block={focus} />
-          <div role="tablist" aria-label="Block tools" className="flex gap-1 border-b px-3 py-1.5">
-            {TABS.map(([t, l]) => (
-              <button
-                key={t}
-                role="tab"
-                type="button"
-                id={`tab-${t}`}
-                aria-selected={tab === t}
-                aria-controls={`panel-${t}`}
-                onClick={() => setTab(t)}
-                className={cn(
-                  "rounded-md px-2 py-1 text-[12px] text-muted-foreground outline-none transition-colors duration-150 hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring touch:min-h-11",
-                  tab === t && "bg-muted text-foreground",
-                )}
-              >
-                {l}
-              </button>
-            ))}
-          </div>
-          {tab === "brief" && (
-            <div role="tabpanel" id="panel-brief" aria-labelledby="tab-brief" className="flex min-h-0 flex-1 flex-col">
-              <BriefPanel block={focus} />
-            </div>
-          )}
-          {tab === "history" && (
-            <div role="tabpanel" id="panel-history" aria-labelledby="tab-history" className="flex min-h-0 flex-1 flex-col">
-              <TimeMachineControls tm={tm} />
-            </div>
-          )}
-          {tab === "details" && (
-            <div role="tabpanel" id="panel-details" aria-labelledby="tab-details">
-              <dl className="grid grid-cols-[88px_1fr] gap-x-3 gap-y-2.5 px-4 py-4 text-[13px]">
-                <dt className="text-muted-foreground">Site</dt>
-                <dd className="min-w-0">
-                  <Link
-                    href={`/sites/${encodeURIComponent(focus.host)}`}
-                    className="block truncate rounded-sm underline-offset-4 outline-none hover:text-link hover:underline focus-visible:ring-2 focus-visible:ring-ring touch:-my-3 touch:py-3"
-                    title={`${focus.host}: tech stack and every captured page`}
-                  >
-                    {focus.host}
-                  </Link>
-                </dd>
-                <dt className="text-muted-foreground">Page</dt>
-                <dd className="min-w-0">
-                  {pageLabel}
-                  {focus.pageTitle && <span className="block truncate text-[12px] text-muted-foreground">{focus.pageTitle}</span>}
-                </dd>
-                <dt className="text-muted-foreground">Block</dt>
-                <dd>{labelFor(focus.typeHint)}</dd>
-                <dt className="text-muted-foreground">Style</dt>
-                <dd>
-                  {platformLabel(focus.platform)}
-                  {focus.theme ? <span className="text-muted-foreground"> · {focus.theme}</span> : null}
-                </dd>
-                <dt className="text-muted-foreground">Colours</dt>
-                <dd className="flex items-center gap-2">
-                  <span aria-hidden className="size-4 shrink-0 rounded-full border" style={{ background: focus.bg }} />
-                  <span>{bucket ? COLOUR_LABEL[bucket] : "Unknown"}</span>
-                  <span className="truncate font-mono text-[11px] text-muted-foreground">{focus.bg}</span>
-                </dd>
-                {focus.headline && (
-                  <>
-                    <dt className="text-muted-foreground">Headline</dt>
-                    <dd>{focus.headline}</dd>
-                  </>
-                )}
-                <dt className="text-muted-foreground">Contains</dt>
-                <dd className="text-muted-foreground">
-                  {focus.buttons} buttons · {focus.images} images · {focus.videos} videos
-                </dd>
-                <dt className="text-muted-foreground">Size</dt>
-                <dd className="font-mono text-[12px] tabular-nums">
-                  {focus.w} × {focus.h}
-                </dd>
-              </dl>
-              <TechStack block={focus} counts={counts ?? null} onFilter={onFilter} />
-              <Captures captures={captures} at={captureAt} onAt={setCaptureAt} />
-              <Similar blocks={similar} onOpen={onOpen} className="min-[900px]:hidden" />
-            </div>
-          )}
+          <BlockInfoPanel
+            block={focus}
+            tab={tab}
+            onTab={setTab}
+            tm={tm}
+            captures={captures}
+            captureAt={captureAt}
+            onCaptureAt={setCaptureAt}
+            counts={counts}
+            onFilter={onFilter}
+          >
+            <Similar blocks={similar} onOpen={onOpen} className="min-[900px]:hidden" />
+          </BlockInfoPanel>
         </aside>
       </div>
       {expanded && <Expanded start={expanded} desktop={desktop} mobile={mobile} onClose={collapse} />}
     </div>
+  );
+}
+
+/**
+ * What "More info" shows: the tabs (details, brief, time machine), then the
+ * details list, tech stack and captures. The detail dialog and the block
+ * viewer's side panel both use it. `tabs` narrows the tabs (a shared board
+ * shows only the details); `children` goes at the end of the details.
+ */
+export function BlockInfoPanel({
+  block: focus,
+  tab,
+  onTab,
+  tm,
+  captures,
+  captureAt,
+  onCaptureAt,
+  counts,
+  onFilter,
+  tabs = TABS,
+  children,
+}: {
+  block: Block;
+  tab: Tab;
+  onTab: (tab: Tab) => void;
+  /** The time machine's state; the history tab needs it. */
+  tm: TimeMachine | null;
+  captures: Block[];
+  captureAt: number;
+  onCaptureAt: (at: number) => void;
+  tabs?: [Tab, string][];
+  children?: React.ReactNode;
+} & TechProps) {
+  const bucket = bucketFor(focus.bg);
+  const pageLabel = PAGE_TYPE_LABEL[focus.pageType] ?? focus.pageType;
+  return (
+    <>
+      {tabs.length > 1 && (
+        <div role="tablist" aria-label="Block tools" className="flex gap-1 border-b px-3 py-1.5">
+          {tabs.map(([t, l]) => (
+            <button
+              key={t}
+              role="tab"
+              type="button"
+              id={`tab-${t}`}
+              aria-selected={tab === t}
+              aria-controls={`panel-${t}`}
+              onClick={() => onTab(t)}
+              className={cn(
+                "rounded-md px-2 py-1 text-[12px] text-muted-foreground outline-none transition-colors duration-150 hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring touch:min-h-11",
+                tab === t && "bg-muted text-foreground",
+              )}
+            >
+              {l}
+            </button>
+          ))}
+        </div>
+      )}
+      {tab === "brief" && (
+        <div role="tabpanel" id="panel-brief" aria-labelledby="tab-brief" className="flex min-h-0 flex-1 flex-col">
+          <BriefPanel block={focus} />
+        </div>
+      )}
+      {tab === "history" && (
+        <div role="tabpanel" id="panel-history" aria-labelledby="tab-history" className="flex min-h-0 flex-1 flex-col">
+          {tm && <TimeMachineControls tm={tm} />}
+        </div>
+      )}
+      {tab === "details" && (
+        <div role="tabpanel" id="panel-details" aria-labelledby="tab-details">
+          <dl className="grid grid-cols-[88px_1fr] gap-x-3 gap-y-2.5 px-4 py-4 text-[13px]">
+            <dt className="text-muted-foreground">Site</dt>
+            <dd className="min-w-0">
+              <Link
+                href={`/sites/${encodeURIComponent(focus.host)}`}
+                className="block truncate rounded-sm underline-offset-4 outline-none hover:text-link hover:underline focus-visible:ring-2 focus-visible:ring-ring touch:-my-3 touch:py-3"
+                title={`${focus.host}: tech stack and every captured page`}
+              >
+                {focus.host}
+              </Link>
+            </dd>
+            <dt className="text-muted-foreground">Page</dt>
+            <dd className="min-w-0">
+              {pageLabel}
+              {focus.pageTitle && <span className="block truncate text-[12px] text-muted-foreground">{focus.pageTitle}</span>}
+            </dd>
+            <dt className="text-muted-foreground">Block</dt>
+            <dd>{labelFor(focus.typeHint)}</dd>
+            <dt className="text-muted-foreground">Style</dt>
+            <dd>
+              {platformLabel(focus.platform)}
+              {focus.theme ? <span className="text-muted-foreground"> · {focus.theme}</span> : null}
+            </dd>
+            <dt className="text-muted-foreground">Colours</dt>
+            <dd className="flex items-center gap-2">
+              <span aria-hidden className="size-4 shrink-0 rounded-full border" style={{ background: focus.bg }} />
+              <span>{bucket ? COLOUR_LABEL[bucket] : "Unknown"}</span>
+              <span className="truncate font-mono text-[11px] text-muted-foreground">{focus.bg}</span>
+            </dd>
+            {focus.headline && (
+              <>
+                <dt className="text-muted-foreground">Headline</dt>
+                <dd>{focus.headline}</dd>
+              </>
+            )}
+            <dt className="text-muted-foreground">Contains</dt>
+            <dd className="text-muted-foreground">
+              {focus.buttons} buttons · {focus.images} images · {focus.videos} videos
+            </dd>
+            <dt className="text-muted-foreground">Size</dt>
+            <dd className="font-mono text-[12px] tabular-nums">
+              {focus.w} × {focus.h}
+            </dd>
+          </dl>
+          <TechStack block={focus} counts={counts ?? null} onFilter={onFilter} />
+          <Captures captures={captures} at={captureAt} onAt={onCaptureAt} />
+          {children}
+        </div>
+      )}
+    </>
   );
 }
 

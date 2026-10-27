@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, ExternalLink, Monitor, Smartphone, X } from "lucide-react";
 import { Logo } from "@/components/logo";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -8,13 +8,15 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { assetUrl } from "@/lib/data-source";
 import { labelFor, type Block } from "@/lib/blocks";
+import { BlockViewer } from "@/components/block-viewer";
 
 export type SharedItem = { note: string | null; block: Block };
 
 /**
  * What a client sees behind a share link: the board's name and brief, then the
  * blocks in the order the agency set, each with its note. No filters, no nav,
- * nothing to sign in to. Tap a block to see it full size.
+ * nothing to sign in to. Tap a block to open it in the block viewer, with its
+ * note, the arrows walking the board in order.
  */
 export function SharedBoardView({
   name,
@@ -30,6 +32,12 @@ export function SharedBoardView({
   notice?: React.ReactNode;
 }) {
   const [open, setOpen] = useState<number | null>(null);
+  const [info, setInfo] = useState(false);
+  const item = open === null ? null : (items[open] ?? null);
+  const step = useMemo(() => {
+    if (open === null || items.length < 2) return {};
+    return { prev: () => setOpen((open - 1 + items.length) % items.length), next: () => setOpen((open + 1) % items.length) };
+  }, [open, items.length]);
 
   return (
     <div className="flex min-h-dvh flex-col">
@@ -71,7 +79,14 @@ export function SharedBoardView({
           Collected with Sectionary: real stores, cut into blocks.
         </div>
       </footer>
-      <Lightbox items={items} index={open} onIndex={setOpen} />
+      <BlockViewer
+        block={item?.block ?? null}
+        info={info}
+        onInfo={setInfo}
+        onClose={() => setOpen(null)}
+        onStep={step}
+        shared={item ? { note: item.note, position: `${String(open! + 1).padStart(2, "0")} / ${String(items.length).padStart(2, "0")}` } : undefined}
+      />
     </div>
   );
 }
@@ -118,7 +133,8 @@ function SharedCard({ item, n, onOpen }: { item: SharedItem; n: number; onOpen: 
   );
 }
 
-function Lightbox({ items, index, onIndex }: { items: SharedItem[]; index: number | null; onIndex: (i: number | null) => void }) {
+/** The full-size view this page used before the block viewer. Kept, unused, until it is decided to delete it. */
+export function Lightbox({ items, index, onIndex }: { items: SharedItem[]; index: number | null; onIndex: (i: number | null) => void }) {
   const ref = useRef<HTMLDialogElement>(null);
   const item = index === null ? null : items[index];
 

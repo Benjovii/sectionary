@@ -4,7 +4,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { BlockCard, BlockCardSkeleton } from "@/components/block-card";
-import { BlockDialog } from "@/components/block-dialog";
 import { BlockViewer } from "@/components/block-viewer";
 import { ViewportSwitch, type ViewportChoice } from "@/components/viewport-switch";
 import { FilterBar, FilterBarSkeleton } from "@/components/filter-bar";
@@ -38,7 +37,7 @@ const LOADING_STRIP = 420;
 /** The URL key that holds the open block's id. Not "block": that is the block-type filter. */
 const BLOCK_KEY = "open";
 
-/** Present (`info=1`) while the open block's detail panel is up over the viewer. */
+/** Present (`info=1`) while the open block's "More info" panel is open in the viewer. */
 const INFO_KEY = "info";
 
 /** Web unless the URL says otherwise; "All" shows both viewports mixed. */
@@ -327,29 +326,18 @@ export function Wall() {
     }
   }, [openId, returnOnClose, router, withBlock]);
 
-  // "More info" lays the detail panel over the viewer; closing it comes back
-  // to the viewer. Replaced rather than pushed, so Back still closes both.
+  // "More info" opens a panel inside the viewer. In the URL, so a link can
+  // open with it; replaced rather than pushed, so Back still closes the block.
   const info = Boolean(openId) && params.get(INFO_KEY) === "1";
-  const onInfo = useCallback(() => {
-    const next = new URLSearchParams(params.toString());
-    next.set(INFO_KEY, "1");
-    router.replace(`${pathname}?${next}`, { scroll: false });
-  }, [params, pathname, router]);
-  const onLessInfo = useCallback(() => {
-    const next = new URLSearchParams(params.toString());
-    next.delete(INFO_KEY);
-    router.replace(next.size ? `${pathname}?${next}` : pathname, { scroll: false });
-  }, [params, pathname, router]);
-  // The panel's own close event also fires when the URL closes it, so this
-  // acts only on a real close: the panel was up, or it was showing "missing".
-  const onDialogClose = useCallback(() => {
-    if (info) onLessInfo();
-    else if (!open) onCloseBlock();
-  }, [info, open, onLessInfo, onCloseBlock]);
-  // Likewise the viewer: while the panel is over it, its close event is not the person's.
-  const onViewerClose = useCallback(() => {
-    if (!info) onCloseBlock();
-  }, [info, onCloseBlock]);
+  const onInfo = useCallback(
+    (on: boolean) => {
+      const next = new URLSearchParams(params.toString());
+      if (on) next.set(INFO_KEY, "1");
+      else next.delete(INFO_KEY);
+      router.replace(next.size ? `${pathname}?${next}` : pathname, { scroll: false });
+    },
+    [params, pathname, router],
+  );
 
   // Opened by a pasted link, then closed by Back: nothing of ours to pop.
   useEffect(() => {
@@ -512,24 +500,15 @@ export function Wall() {
 
       <BlockViewer
         block={open}
-        detail={detail}
-        active={!info}
-        onClose={onViewerClose}
-        onShow={onShow}
-        onStep={onStep}
-        onInfo={onInfo}
-        onFilter={onFilterTech}
-      />
-
-      <BlockDialog
-        block={info ? open : null}
         missing={Boolean(loadedOpen && !open)}
         detail={detail}
-        onClose={onDialogClose}
-        onOpen={onShow}
+        info={info}
+        onInfo={onInfo}
+        onClose={onCloseBlock}
+        onShow={onShow}
         onStep={onStep}
-        counts={libraryCounts}
         onFilter={onFilterTech}
+        counts={libraryCounts}
       />
     </div>
   );

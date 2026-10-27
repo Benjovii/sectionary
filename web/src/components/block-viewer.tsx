@@ -7,20 +7,53 @@ import { Button } from "@/components/ui/button";
 import { StoreIcon } from "@/components/store-icon";
 import { SaveToBoard } from "@/components/save-to-board";
 import { ViewportSwitch } from "@/components/viewport-switch";
-import { copyImage, zoomWidth } from "@/components/block-dialog";
+import { TimeMachineStage, useTimeMachine } from "@/components/time-machine";
+import { BlockInfoPanel, copyImage, TABS, zoomWidth, type Tab } from "@/components/block-dialog";
 import { cn } from "@/lib/utils";
 import { assetUrl } from "@/lib/data-source";
 import { labelFor, PAGE_TYPE_LABEL, thumbOf, type Block } from "@/lib/blocks";
-import { counterpartOf, similarTo, type DetailIndex } from "@/lib/block-detail";
+import { capturesOf, counterpartOf, similarTo, type DetailIndex } from "@/lib/block-detail";
 import type { FilterKey } from "@/lib/filters";
+import type { TechCounts } from "@/lib/tech";
 import type { Viewport } from "@/contracts/block";
 
 /** Gap round the window on a wide screen. Phones get the whole screen. */
 const INSET = "min-[700px]:m-6 min-[700px]:h-[calc(100dvh-48px)]";
 
+/** A block opened from a shared board: the client sees its note, and none of the library's tools. */
+export type SharedContext = { note: string | null; position: string };
+
+const NO_DETAIL: DetailIndex = { byId: new Map(), byPage: new Map(), byType: new Map(), captures: new Map() };
+
+/** A shared board offers the details tab only: no brief to generate, no history to browse. */
+const SHARED_TABS = TABS.filter(([t]) => t === "details");
+
+type ViewerProps = {
+  block: Block | null;
+  /** The URL names a block the loaded set does not have. */
+  missing?: boolean;
+  /** Pairs, similar blocks and captures; without it the window shows the block alone. */
+  detail?: DetailIndex | null;
+  /** The "More info" side panel is open. */
+  info: boolean;
+  onInfo: (open: boolean) => void;
+  onClose: () => void;
+  /** Show another block in place: a similar one. Without it, no "See similar". */
+  onShow?: (block: Block) => void;
+  /** Previous and next; absent at the ends, or when the block is not in a list. */
+  onStep: { prev?: () => void; next?: () => void };
+  /** "Found in" chips and tech-stack chips: show every block with that value. */
+  onFilter?: (key: FilterKey, value: string) => void;
+  /** Library-wide counts for the tech-stack chips. */
+  counts?: TechCounts | null;
+  /** Opened from a shared board, by a client. */
+  shared?: SharedContext;
+};
+
 /**
  * The block viewer: one screenshot in a window of its own, the way Mobbin
- * opens a screen. It is what a click on the wall opens.
+ * opens a screen. A click on a block anywhere in the app opens it: the wall,
+ * a site's pages, a flow, a board, a shared board.
  *
  * The screenshot is the full-resolution capture (2x), not the wall's
  * thumbnail, fitted to the window and never drawn wider than the block was
@@ -28,36 +61,14 @@ const INSET = "min-[700px]:m-6 min-[700px]:h-[calc(100dvh-48px)]";
  * underneath while it arrives, so the picture is there at once and sharpens.
  * A click zooms to the capture's real pixels; a second click fits it again.
  *
- * Arrows (on screen and on the keyboard) walk the wall. "More info" opens the
- * detail panel (details, brief, time machine) over this, and closing that
- * comes back here. "See similar" scrolls to the same kind of block from other
- * stores, below the window.
+ * Arrows (on screen and on the keyboard) step through the list it was opened
+ * from. "More info" opens the details (and the brief and time machine) in a
+ * panel on the right of the window; Escape closes that panel first. "See
+ * similar" scrolls to the same kind of block from other stores, below.
  */
-export function BlockViewer({
-  block,
-  detail,
-  active,
-  onClose,
-  onShow,
-  onStep,
-  onInfo,
-  onFilter,
-}: {
-  block: Block | null;
-  detail: DetailIndex | null;
-  /** False while the detail panel is open on top, so the arrows are its own. */
-  active: boolean;
-  onClose: () => void;
-  /** Show another block in place: a similar one. */
-  onShow: (block: Block) => void;
-  /** Previous and next on the wall; absent when this block is not on it. */
-  onStep: { prev?: () => void; next?: () => void };
-  onInfo: () => void;
-  /** A "Found in" chip: show every block of that page or block type. */
-  onFilter: (key: FilterKey, value: string) => void;
-}) {
+export function BlockViewer({ block, missing = false, detail, info, onInfo, onClose, ...rest }: ViewerProps) {
   const ref = useRef<HTMLDialogElement>(null);
-  const show = Boolean(block && detail);
+  const show = Boolean(block || missing);
 
   useEffect(() => {
     const d = ref.current;
@@ -71,14 +82,31 @@ export function BlockViewer({
       ref={ref}
       aria-label={block ? `${labelFor(block.typeHint)} from ${block.host}` : "Block"}
       onClose={onClose}
+      onCancel={(e) => {
+        // Escape closes the info panel before the window.
+        if (info) {
+          e.preventDefault();
+          onInfo(false);
+        }
+      }}
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
       className="m-0 h-dvh max-h-dvh w-screen max-w-none overflow-y-auto overscroll-contain bg-transparent p-0 backdrop:bg-black/75 backdrop:backdrop-blur-sm"
     >
-      {block && detail && (
-        <Window key={block.id} block={block} detail={detail} active={active} onClose={onClose} onShow={onShow} onStep={onStep} onInfo={onInfo} onFilter={onFilter} />
-      )}
+      {block ? (
+        <Window key={block.id} block={block} detail={detail ?? NO_DETAIL} info={info} onInfo={onInfo} onClose={onClose} {...rest} />
+      ) : missing ? (
+        <div className="flex min-h-dvh items-center justify-center p-4" onClick={(e) => e.target === e.currentTarget && onClose()}>
+          <div className="flex max-w-sm flex-col items-center gap-3 rounded-xl border bg-card p-8 text-center text-card-foreground">
+            <p className="text-foreground">This block is not in the loaded set.</p>
+            <p className="text-[12px] text-muted-foreground">It may come from a newer capture than the one this page is reading.</p>
+            <Button variant="outline" size="sm" onClick={onClose}>
+              Back to the wall
+            </Button>
+          </div>
+        </div>
+      ) : null}
     </dialog>
   );
 }
@@ -86,36 +114,40 @@ export function BlockViewer({
 function Window({
   block: opened,
   detail,
-  active,
+  info,
+  onInfo,
   onClose,
   onShow,
   onStep,
-  onInfo,
   onFilter,
-}: {
-  block: Block;
-  detail: DetailIndex;
-  active: boolean;
-  onClose: () => void;
-  onShow: (block: Block) => void;
-  onStep: { prev?: () => void; next?: () => void };
-  onInfo: () => void;
-  onFilter: (key: FilterKey, value: string) => void;
-}) {
+  counts = null,
+  shared,
+}: Omit<ViewerProps, "block" | "missing" | "detail"> & { block: Block; detail: DetailIndex }) {
+  // Earlier captures of this block, once recapture gives it any; the newest
+  // is shown, and the info panel steps back through the rest.
+  const captures = useMemo(() => capturesOf(detail, opened), [detail, opened]);
+  const [captureAt, setCaptureAt] = useState(captures.length - 1);
+  const current = captures[captureAt] ?? opened;
+
   // The same block at the other viewport, when the page has one. Switching to
-  // it is local: the wall's arrows still step from the block that was opened.
-  const pair = useMemo(() => counterpartOf(detail, opened), [detail, opened]);
+  // it is local: the arrows still step from the block that was opened.
+  const pair = useMemo(() => counterpartOf(detail, current), [detail, current]);
   const [viewport, setViewport] = useState<Viewport>(opened.viewport);
-  const block = viewport === opened.viewport ? opened : (pair ?? opened);
-  const similar = useMemo(() => similarTo(detail, block), [detail, block]);
+  const block = viewport === current.viewport ? current : (pair ?? current);
+  const similar = useMemo(() => (shared || !onShow ? [] : similarTo(detail, block)), [detail, block, shared, onShow]);
   const mobile = block.viewport === "mobile";
   const pageLabel = PAGE_TYPE_LABEL[block.pageType] ?? block.pageType;
 
+  // The info panel's tab. The time machine fetches its history only once
+  // its tab is open, and shows its comparison where the screenshot was.
+  const [tab, setTab] = useState<Tab>("details");
+  const history = info && tab === "history" && !shared;
+  const tm = useTimeMachine(block, history);
+
   const similarRef = useRef<HTMLElement>(null);
 
-  // Arrow keys walk the wall, unless the detail panel is on top (it has its own).
+  // Arrow keys step through the list, but not while typing (the brief).
   useEffect(() => {
-    if (!active) return;
     const onKey = (event: KeyboardEvent) => {
       if (event.altKey || event.metaKey || event.ctrlKey || event.shiftKey) return;
       const target = event.target as HTMLElement | null;
@@ -130,7 +162,14 @@ function Window({
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [active, onStep]);
+  }, [onStep]);
+
+  const store = (
+    <>
+      <StoreIcon host={block.host} brand={block.host} size={34} className="rounded-lg" />
+      <span className="truncate font-heading text-[17px] font-semibold min-[700px]:text-[19px]">{block.host}</span>
+    </>
+  );
 
   return (
     <>
@@ -141,18 +180,19 @@ function Window({
         )}
       >
         <header className="flex h-14 shrink-0 items-center gap-3 px-3 min-[700px]:h-16 min-[700px]:px-5">
-          <Link
-            href={`/sites/${encodeURIComponent(block.host)}`}
-            className="flex min-w-0 items-center gap-2.5 rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            title={`${block.host}: every captured page`}
-          >
-            <StoreIcon host={block.host} brand={block.host} size={34} className="rounded-lg" />
-            <span className="truncate font-heading text-[17px] font-semibold min-[700px]:text-[19px]">{block.host}</span>
-          </Link>
+          {shared ? (
+            <div className="flex min-w-0 items-center gap-2.5">{store}</div>
+          ) : (
+            <Link
+              href={`/sites/${encodeURIComponent(block.host)}`}
+              className="flex min-w-0 items-center gap-2.5 rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              title={`${block.host}: every captured page`}
+            >
+              {store}
+            </Link>
+          )}
           <div className="ml-auto flex items-center gap-1">
-            {pair && (
-              <ViewportSwitch value={viewport} onChange={setViewport} size="sm" className="mr-2 hidden sm:inline-flex" />
-            )}
+            {pair && <ViewportSwitch value={viewport} onChange={setViewport} size="sm" className="mr-2 hidden sm:inline-flex" />}
             <CopyLink />
             <a
               href={block.pageUrl}
@@ -183,39 +223,99 @@ function Window({
           </div>
         )}
 
-        <Stage key={block.id} block={block} />
+        <div className="relative flex min-h-0 flex-1 border-t">
+          <div className="relative flex min-w-0 flex-1 flex-col">
+            {history ? (
+              <div className="min-h-0 flex-1 overflow-auto">
+                <TimeMachineStage tm={tm} />
+              </div>
+            ) : (
+              <Stage key={block.id} block={block} />
+            )}
 
-        <Arrow side="left" onClick={onStep.prev} />
-        <Arrow side="right" onClick={onStep.next} />
+            <Arrow side="left" onClick={onStep.prev} />
+            <Arrow side="right" onClick={onStep.next} />
 
-        <footer className="flex shrink-0 items-center justify-between gap-2 px-3 py-3 min-[700px]:px-5 min-[700px]:py-4 md:grid md:grid-cols-[1fr_auto_1fr] md:gap-3">
-          <div className="hidden min-w-0 items-center gap-2 text-[13px] md:flex">
-            <span className="shrink-0 text-muted-foreground">Found in</span>
-            <FoundIn label={pageLabel} title={`Every block from ${pageLabel.toLowerCase()} pages`} onClick={() => onFilter("page", block.pageType)} />
-            <FoundIn
-              label={labelFor(block.typeHint)}
-              title={`Every ${labelFor(block.typeHint).toLowerCase()} block`}
-              onClick={() => onFilter("block", block.typeHint)}
-            />
+            <footer className="flex shrink-0 items-center justify-between gap-2 px-3 py-3 min-[700px]:px-5 min-[700px]:py-4 md:grid md:grid-cols-[1fr_auto_1fr] md:gap-3">
+              <div className="hidden min-w-0 items-center gap-2 text-[13px] md:flex">
+                {shared ? (
+                  <>
+                    <span className="shrink-0 font-mono text-[12px] text-muted-foreground tabular-nums">{shared.position}</span>
+                    {shared.note && (
+                      <span className="truncate" title={shared.note}>
+                        {shared.note}
+                      </span>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <span className="shrink-0 text-muted-foreground">Found in</span>
+                    <FoundIn label={pageLabel} title={`Every block from ${pageLabel.toLowerCase()} pages`} onClick={onFilter && (() => onFilter("page", block.pageType))} />
+                    <FoundIn
+                      label={labelFor(block.typeHint)}
+                      title={`Every ${labelFor(block.typeHint).toLowerCase()} block`}
+                      onClick={onFilter && (() => onFilter("block", block.typeHint))}
+                    />
+                  </>
+                )}
+              </div>
+              <div className="flex items-center gap-2 md:col-start-2">
+                {!shared && <SaveToBoard block={block} up className="h-10 rounded-full px-5 text-[14px] touch:h-11" />}
+                <CopyImage block={block} />
+                <More block={block} site={!shared} />
+              </div>
+              <div className="flex min-w-0 flex-col items-end text-right text-[13px] leading-tight">
+                <span className="hidden truncate text-muted-foreground sm:block">
+                  {mobile ? "Mobile" : "Desktop"} <span className="font-mono text-[12px] tabular-nums">({block.w}×{block.h})</span>
+                </span>
+                <button
+                  type="button"
+                  onClick={() => onInfo(!info)}
+                  aria-expanded={info}
+                  aria-controls="block-info"
+                  className={cn(
+                    "rounded-sm font-medium whitespace-nowrap underline-offset-4 outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring touch:py-3",
+                    info && "text-primary",
+                  )}
+                >
+                  {info ? "Hide info" : "More info"}
+                </button>
+              </div>
+            </footer>
           </div>
-          <div className="flex items-center gap-2 md:col-start-2">
-            <SaveToBoard block={block} up className="h-10 rounded-full px-5 text-[14px] touch:h-11" />
-            <CopyImage block={block} />
-            <More block={block} />
-          </div>
-          <div className="flex min-w-0 flex-col items-end text-right text-[13px] leading-tight">
-            <span className="hidden truncate text-muted-foreground sm:block">
-              {mobile ? "Mobile" : "Desktop"} <span className="font-mono text-[12px] tabular-nums">({block.w}×{block.h})</span>
-            </span>
-            <button
-              type="button"
-              onClick={onInfo}
-              className="rounded-sm font-medium whitespace-nowrap underline-offset-4 outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring touch:py-3"
+
+          {info && (
+            <aside
+              id="block-info"
+              aria-label="Block info"
+              className="flex flex-col overflow-y-auto bg-card max-[899px]:absolute max-[899px]:inset-0 max-[899px]:z-20 min-[900px]:w-[360px] min-[900px]:shrink-0 min-[900px]:border-l min-[700px]:max-[899px]:rounded-b-2xl"
             >
-              More info
-            </button>
-          </div>
-        </footer>
+              <div className="sticky top-0 z-10 flex h-12 shrink-0 items-center justify-between border-b bg-card px-4">
+                <h3 className="font-heading text-[15px] font-semibold">Info</h3>
+                <button
+                  type="button"
+                  onClick={() => onInfo(false)}
+                  aria-label="Close info"
+                  className="inline-flex size-8 items-center justify-center rounded-full text-muted-foreground outline-none transition-colors duration-150 hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring touch:size-11"
+                >
+                  <X className="size-4" />
+                </button>
+              </div>
+              <BlockInfoPanel
+                block={block}
+                tab={shared ? "details" : tab}
+                onTab={setTab}
+                tm={history ? tm : null}
+                captures={captures}
+                captureAt={captureAt}
+                onCaptureAt={setCaptureAt}
+                counts={counts}
+                onFilter={shared ? undefined : onFilter}
+                tabs={shared ? SHARED_TABS : TABS}
+              />
+            </aside>
+          )}
+        </div>
 
         {similar.length > 0 && (
           <button
@@ -228,7 +328,7 @@ function Window({
         )}
       </div>
 
-      {similar.length > 0 && (
+      {similar.length > 0 && onShow && (
         <section ref={similarRef} aria-labelledby="similar-heading" className="mx-auto max-w-[1600px] scroll-mt-6 px-3 pt-8 pb-12 min-[700px]:px-6">
           <h3 id="similar-heading" className="mb-4 font-heading text-[17px] font-semibold text-white">
             More {labelFor(block.typeHint).toLowerCase()} blocks
@@ -394,7 +494,8 @@ function Arrow({ side, onClick }: { side: "left" | "right"; onClick?: () => void
   );
 }
 
-function FoundIn({ label, title, onClick }: { label: string; title: string; onClick: () => void }) {
+function FoundIn({ label, title, onClick }: { label: string; title: string; onClick?: () => void }) {
+  if (!onClick) return <span className="max-w-40 truncate rounded-lg bg-muted px-2.5 py-1 font-medium">{label}</span>;
   return (
     <button
       type="button"
@@ -461,7 +562,7 @@ function CopyLink() {
 }
 
 /** The "…" menu: the less common actions. */
-function More({ block }: { block: Block }) {
+function More({ block, site }: { block: Block; site: boolean }) {
   const [open, setOpen] = useState(false);
   const [state, run] = useFlash();
   const ref = useRef<HTMLDivElement>(null);
@@ -511,10 +612,12 @@ function More({ block }: { block: Block }) {
             <ExternalLink />
             Open source page
           </a>
-          <Link role="menuitem" href={`/sites/${encodeURIComponent(block.host)}`} className={item}>
-            <Store />
-            View {block.host}
-          </Link>
+          {site && (
+            <Link role="menuitem" href={`/sites/${encodeURIComponent(block.host)}`} className={item}>
+              <Store />
+              View {block.host}
+            </Link>
+          )}
         </div>
       )}
     </div>

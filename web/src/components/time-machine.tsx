@@ -18,9 +18,10 @@ const date = (iso: string) => new Date(iso).toLocaleDateString("en-GB", { day: "
 /**
  * Time machine state for one block: every capture of its page, and which two
  * are being compared (newest on the right). Shared by the stage (the image
- * pane) and the controls (the side panel).
+ * pane) and the controls (the side panel). With `enabled` false nothing is
+ * fetched yet: the block viewer turns it on when its time machine tab opens.
  */
-export function useTimeMachine(block: Block) {
+export function useTimeMachine(block: Block, enabled = true) {
   const [history, setHistory] = useState<BlockHistory | null>(null);
   const [status, setStatus] = useState<"loading" | "ready" | "sample" | "error">(API_MODE ? "loading" : "sample");
   const [before, setBefore] = useState(1);
@@ -29,7 +30,7 @@ export function useTimeMachine(block: Block) {
   const [view, setView] = useState<View>("block");
 
   useEffect(() => {
-    if (!API_MODE) return;
+    if (!API_MODE || !enabled) return;
     // The dialog remounts this hook per block (keyed by id), so it starts in "loading".
     let alive = true;
     fetch(`/api/blocks/${encodeURIComponent(block.id)}/history`)
@@ -45,7 +46,7 @@ export function useTimeMachine(block: Block) {
     return () => {
       alive = false;
     };
-  }, [block.id]);
+  }, [block.id, enabled]);
 
   const captures = useMemo(() => history?.captures ?? [], [history]);
   return { block, status, captures, before, setBefore, after, setAfter, mode, setMode, view, setView };
