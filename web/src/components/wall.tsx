@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { BlockCard, BlockCardSkeleton } from "@/components/block-card";
 import { BlockDialog } from "@/components/block-dialog";
 import { BlockViewer } from "@/components/block-viewer";
-import { ViewportSwitch } from "@/components/viewport-switch";
+import { ViewportSwitch, type ViewportChoice } from "@/components/viewport-switch";
 import { FilterBar, FilterBarSkeleton } from "@/components/filter-bar";
 import { TechFilters } from "@/components/tech-filters";
 import { techFromFacets } from "@/lib/tech";
@@ -41,7 +41,7 @@ const BLOCK_KEY = "open";
 /** Present (`info=1`) while the open block's detail panel is up over the viewer. */
 const INFO_KEY = "info";
 
-/** The wall shows one viewport at a time; Web unless the URL says otherwise. */
+/** Web unless the URL says otherwise; "All" shows both viewports mixed. */
 const DEFAULT_VIEWPORT: Viewport = "desktop";
 
 /**
@@ -53,8 +53,8 @@ const DEFAULT_VIEWPORT: Viewport = "desktop";
 export function WallFallback() {
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex justify-center">
-        <ViewportSwitch value={DEFAULT_VIEWPORT} onChange={() => undefined} />
+      <div className="flex">
+        <ViewportSwitch value={DEFAULT_VIEWPORT as ViewportChoice} onChange={() => undefined} withAll />
       </div>
       <FilterBarSkeleton />
       <WallSkeleton />
@@ -87,10 +87,9 @@ export function Wall() {
   const params = useMemo(() => new URLSearchParams(searchParams.toString()), [searchParams]);
   const selected = useMemo(() => readSelected(params), [params]);
   const search = params.get(SEARCH_KEY) ?? "";
-  // Web or Mobile, from the switch above the filters. No `vp` in the URL means
-  // Web, so the plain address stays clean; an older link naming both viewports
-  // still shows both.
-  const viewport: Viewport = selected.vp?.length === 1 && selected.vp[0] === "mobile" ? "mobile" : "desktop";
+  // All, Web or Mobile, from the switch above the filters. No `vp` in the URL
+  // means Web, so the plain address stays clean; All names both viewports.
+  const viewport: ViewportChoice = !selected.vp?.length ? DEFAULT_VIEWPORT : selected.vp.length > 1 ? "all" : (selected.vp[0] as Viewport);
   const effective = useMemo(() => (selected.vp?.length ? selected : { ...selected, vp: [DEFAULT_VIEWPORT] }), [selected]);
   // Keyed by its JSON so a URL change that leaves the filters alone, like
   // opening a block, does not re-run the query over the whole set.
@@ -126,7 +125,8 @@ export function Wall() {
   }, [params, replace]);
 
   const onViewport = useCallback(
-    (value: Viewport) => replace(writeSelected(params, "vp", value === DEFAULT_VIEWPORT ? [] : [value])),
+    (value: ViewportChoice) =>
+      replace(writeSelected(params, "vp", value === DEFAULT_VIEWPORT ? [] : value === "all" ? ["desktop", "mobile"] : [value])),
     [params, replace],
   );
 
@@ -418,8 +418,8 @@ export function Wall() {
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex justify-center">
-        <ViewportSwitch value={viewport} onChange={onViewport} />
+      <div className="flex">
+        <ViewportSwitch value={viewport} onChange={onViewport} withAll />
       </div>
 
       <FilterBar
