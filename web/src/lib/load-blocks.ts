@@ -156,6 +156,33 @@ export async function loadSiteView(host: string): Promise<SiteView | null> {
   return profileFromIndex(await loadBlockIndex(), host);
 }
 
+export type PageBlocks = {
+  desktop: Block[];
+  mobile: Block[];
+  /** True when only the sections the wall shows came back, without the ones the store repeats on other pages. */
+  partial: boolean;
+};
+
+const pageBlocks = new Map<string, Promise<PageBlocks>>();
+
+/**
+ * Every block of one page, in page order, so the site profile can rebuild the
+ * page from sections that each open in the block viewer. From
+ * /api/sites/[host]/page; where that is not deployed yet, the store's blocks
+ * from /api/blocks, which leave out the sections repeated from other pages.
+ */
+export function loadPageBlocks(host: string, url: string): Promise<PageBlocks> {
+  return once(pageBlocks, `${host} ${url}`, async () => {
+    const response = await fetch(withQuery(`${SITES_SRC}/${encodeURIComponent(host)}/page`, { url })).catch(() => null);
+    if (response?.ok) {
+      const { desktop, mobile } = (await response.json()) as { desktop: Block[]; mobile: Block[] };
+      return { desktop, mobile, partial: false };
+    }
+    const own = (await once(storeBlocks, host, () => fetchAll({ host }))).filter((b) => b.pageUrl === url);
+    return { desktop: own.filter((b) => b.viewport === "desktop"), mobile: own.filter((b) => b.viewport === "mobile"), partial: true };
+  });
+}
+
 /**
  * Every store with its pages, from GET /api/sites when NEXT_PUBLIC_SITES_SRC
  * is set (SEC-47). 200 a request, so the 1,005 validated stores take six;
