@@ -39,6 +39,7 @@ const local = await startLocalDb();
 const ids = new Map<string, string>();
 const sentTo: string[] = [];
 const used = new Set<string>();
+const redirects: string[] = [];
 const gotrue = createServer((req, res) => {
   let body = "";
   req.on("data", (c) => (body += c));
@@ -46,8 +47,16 @@ const gotrue = createServer((req, res) => {
     const json = JSON.parse(body || "{}");
     const reply = (status: number, data: unknown) => { res.writeHead(status, { "content-type": "application/json" }); res.end(JSON.stringify(data)); };
     if (req.headers.apikey !== "sb_publishable_test") return reply(401, { msg: "No API key found in request" });
-    if (req.url === "/auth/v1/otp") {
+    const path = (req.url ?? "").split("?")[0];
+    if (path === "/auth/v1/user") {
+      // Supabase's default link: an access token "at-<email>" stands in for the JWT.
+      const email = String(req.headers.authorization ?? "").replace(/^Bearer at-/, "");
+      return ids.has(email) ? reply(200, { id: ids.get(email), email }) : reply(401, { msg: "invalid JWT" });
+    }
+    if (path === "/auth/v1/otp") {
       sentTo.push(json.email);
+      const redirect = new URL(req.url ?? "", "http://x").searchParams.get("redirect_to");
+      if (redirect) redirects.push(redirect);
       if (!ids.has(json.email)) {
         const id = crypto.randomUUID();
         ids.set(json.email, id);
@@ -133,6 +142,12 @@ try {
   const viaCode = await auth.verifyCode("ana@studio.test", "123 456");
   const ana2 = await signIn(viaCode);
   check("six-digit code signs the same person in", ana2.user.id === ana.user.id);
+  await auth.sendMagicLink("ana@studio.test", "https://app.test/auth/callback");
+  check("the email asks Supabase to come back to /auth/callback", redirects.includes("https://app.test/auth/callback"));
+  const viaDefault = await auth.userFromAccessToken("at-ana@studio.test");
+  check("Supabase's default link: an access token Supabase vouches for signs the same person in", viaDefault.id === ana.user.id && viaDefault.email === "ana@studio.test");
+  const badToken = await auth.userFromAccessToken("at-nobody@studio.test").then(() => "accepted", (e: { code?: string }) => e.code);
+  check("an access token Supabase refuses is refused", badToken === "EXPIRED", String(badToken));
   const badType = await auth.verifyTokenHash("th-x", "recovery").then(() => "accepted", (e: { code?: string }) => e.code);
   check("link types other than email sign-in are refused", badType === "INVALID");
   let body = await (await accountRoute.GET(req("/api/account", { cookie: ana.cookie }))).json();

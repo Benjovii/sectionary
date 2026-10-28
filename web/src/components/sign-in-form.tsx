@@ -44,7 +44,7 @@ function Steps({ next, restart }: { next: string; restart: () => void }) {
         <form action={check} className="flex flex-col gap-2" noValidate>
           <input type="hidden" name="email" value={sentTo} />
           <label htmlFor={`${id}-code`} className="text-[13px] text-muted-foreground">
-            Or type the code from the email
+            Or, if the email has a code, type it here
           </label>
           <div className="flex flex-col gap-2 min-[420px]:flex-row">
             <input

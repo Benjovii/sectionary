@@ -4,12 +4,14 @@ import { Logo } from "@/components/logo";
 import { NavLinks } from "@/components/nav-links";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { PlanBadge } from "@/components/plan-badge";
+import { AuthHashRedirect } from "@/components/auth-hash-redirect";
 
 /** Top bar (48px, hairline) plus the page. Mobile first: the nav stays inline
  *  because it is four short words; the search field grows on wider screens. */
 export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-dvh flex-col">
+      <AuthHashRedirect />
       {/* The first thing Tab reaches, so keyboard users can go straight past the bar. */}
       <a
         href="#main"

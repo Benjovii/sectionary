@@ -60,9 +60,43 @@ async function gotrue(path: string, body: unknown) {
   throw new AuthError("Sign-in failed. Ask for a new link and try again.", "UPSTREAM");
 }
 
-/** Sends the magic link (and code). Creates the Supabase user on first sign-in. */
-export async function sendMagicLink(email: string) {
-  await gotrue("otp", { email, create_user: true });
+/**
+ * Sends the magic link (and code). Creates the Supabase user on first sign-in.
+ * `redirectTo` is where Supabase's own default email link lands after it
+ * verifies (our /auth/callback); it must be in Supabase's Redirect URLs, or
+ * Supabase falls back to the Site URL. Our template's link does not use it.
+ */
+export async function sendMagicLink(email: string, redirectTo?: string) {
+  await gotrue(redirectTo ? `otp?redirect_to=${encodeURIComponent(redirectTo)}` : "otp", { email, create_user: true });
+}
+
+/**
+ * Supabase's default email (the one sent until custom SMTP lets us change the
+ * template) links to Supabase, which verifies it and redirects to
+ * /auth/callback#access_token=... . The token is a Supabase JWT; asking
+ * Supabase who it belongs to (GET /user) is what proves it. We keep nothing
+ * of it but the id and address, then start our own session as usual.
+ */
+export async function userFromAccessToken(accessToken: string): Promise<VerifiedUser> {
+  const { url, key } = config();
+  if (!accessToken || accessToken.length > 4000) throw new AuthError("This sign-in link is incomplete. Ask for a new one.", "INVALID");
+  let res: Response;
+  try {
+    res = await fetch(`${url}/auth/v1/user`, {
+      headers: { apikey: key, authorization: `Bearer ${accessToken}` },
+      signal: AbortSignal.timeout(10_000),
+    });
+  } catch (error) {
+    console.error("[auth]", error);
+    throw new AuthError("We couldn't reach the sign-in service. Try again in a minute.", "UPSTREAM");
+  }
+  if (res.status === 401 || res.status === 403) throw new AuthError("That link has expired or was already used. Ask for a new one.", "EXPIRED");
+  const json = (await res.json().catch(() => ({}))) as { id?: string; email?: string };
+  if (!res.ok || !json.id || !json.email) {
+    console.error("[auth] /user", res.status);
+    throw new AuthError("Sign-in failed. Ask for a new link and try again.", "UPSTREAM");
+  }
+  return { id: json.id, email: json.email };
 }
 
 function userFrom(json: Record<string, unknown>): VerifiedUser {
