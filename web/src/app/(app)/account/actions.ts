@@ -1,9 +1,9 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { currentUser, EMAIL_COOKIE, finishTwoStep, rememberSignIn, safeNext, signOut, signOutEverywhere, startSession, takeNext } from "@/server/auth";
-import { AuthError, sendMagicLink, verifyCode, verifyTokenHash } from "@/server/supabase-auth";
+import { AuthError, sendMagicLink, userFromAccessToken, verifyCode, verifyTokenHash } from "@/server/supabase-auth";
 import { portalUrl } from "@/server/paddle";
 import { beginSetup, confirmSetup, disable, regenerateRecoveryCodes, TwoStepCodeError } from "@/server/two-step";
 import { TwoStepError } from "@/server/totp";
@@ -23,6 +23,15 @@ const message = (error: unknown) => {
   return "Something went wrong on our side. Try again in a minute.";
 };
 
+/** This site's /auth/callback, where Supabase's default email link comes back to. */
+async function callbackUrl(): Promise<string | undefined> {
+  const h = await headers();
+  const host = h.get("x-forwarded-host") ?? h.get("host");
+  if (!host) return undefined;
+  const proto = h.get("x-forwarded-proto") ?? (host.startsWith("localhost") || host.startsWith("127.") ? "http" : "https");
+  return `${proto}://${host}/auth/callback`;
+}
+
 /** Step 1: email the link and the code. */
 export async function requestSignIn(_prev: SignInState, form: FormData): Promise<SignInState> {
   const email = String(form.get("email") ?? "").trim().toLowerCase();
@@ -30,7 +39,7 @@ export async function requestSignIn(_prev: SignInState, form: FormData): Promise
     return { status: "error", message: "That doesn't look like an email address. Check for a typo.", email, step: "email" };
   }
   try {
-    await sendMagicLink(email);
+    await sendMagicLink(email, await callbackUrl());
     await rememberSignIn(email, safeNext(form.get("next")));
     return { status: "sent", email };
   } catch (error) {
@@ -63,6 +72,22 @@ export async function confirmSignIn(_prev: ConfirmState, form: FormData): Promis
   let next: string;
   try {
     const verified = await verifyTokenHash(String(form.get("token_hash") ?? ""), String(form.get("type") ?? "email"));
+    next = await takeNext();
+    if ((await startSession(verified, next)).twoStep) next = "/auth/two-step";
+  } catch (error) {
+    return { status: "error", message: message(error) };
+  }
+  redirect(next);
+}
+
+/**
+ * Supabase's default email link, after Supabase verified it: the page hands
+ * over the access token from the URL fragment, Supabase says whose it is.
+ */
+export async function signInWithAccessToken(_prev: ConfirmState, form: FormData): Promise<ConfirmState> {
+  let next: string;
+  try {
+    const verified = await userFromAccessToken(String(form.get("access_token") ?? ""));
     next = await takeNext();
     if ((await startSession(verified, next)).twoStep) next = "/auth/two-step";
   } catch (error) {

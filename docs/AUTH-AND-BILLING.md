@@ -28,6 +28,18 @@ plans, paddle, views) and `platform/drizzle/0009_accounts_billing.sql`.
    cookie is `Secure` in production only, because Safari does not store Secure
    cookies on `http://localhost` or on a dev server opened by IP from a phone.
 
+**Before custom SMTP (today).** Supabase only lets you edit the email
+template once custom SMTP is set up, so until then it sends its default
+email: a link to Supabase and no code. That works too. The app asks Supabase
+to send people back to `/auth/callback` (`redirect_to`, allowed by the
+`https://sectionary-pink.vercel.app/**` Redirect URL); Supabase verifies the
+link and redirects there with an access token in the URL fragment; the page
+hands it to the server, which asks Supabase whose it is (`GET /auth/v1/user`)
+and starts our own session as above, two-step included. Two limits until SMTP:
+the default sender only reaches members of the Supabase organisation, a few
+emails an hour; and a mail scanner that opens links can use one up before the
+person clicks (our template's Continue button is what prevents that).
+
 The app talks to Supabase Auth over plain HTTPS, with no Supabase client library,
 like the rest of the code.
 
@@ -132,13 +144,16 @@ cd platform && npm run db:migrate     # applies 0009_accounts_billing.sql and 00
 
 - **Authentication → URL Configuration → Site URL**: the site's address (the
   Vercel URL today, the real domain later). The email links are built from it.
+- **Authentication → URL Configuration → Redirect URLs**: `https://<site>/**`,
+  so Supabase's default link may come back to `/auth/callback`. (For local
+  development add `http://localhost:3000/**` too.)
 - **Authentication → Emails → SMTP**: set up custom SMTP (Resend, Postmark or
   SES). Supabase's built-in sender only delivers to members of the Supabase
   organisation and a few emails an hour, so it is fine for testing and not for
   users.
 - **Authentication → Sign In / Providers → Email**: email provider on; OTP
   length 6; OTP expiry 3600 seconds.
-- **Authentication → Emails → Templates**: paste this into both **Magic Link**
+- **Authentication → Emails → Templates** (unlocked by custom SMTP; until then the default email works, see above): paste this into both **Magic Link**
   and **Confirm signup** (a new address gets the second one):
 
   Subject: `Your Sectionary sign-in link`
