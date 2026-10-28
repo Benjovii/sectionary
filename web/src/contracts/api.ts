@@ -93,5 +93,51 @@ export type BlockHistory = {
 export type BriefTarget = "claude-code" | "cursor" | "designer";
 export type BriefRequest = { blockId: string; target: BriefTarget };
 
+/**
+ * Accounts and plans (additive, M4 · SEC-27, SEC-28). Sign-in is a magic link;
+ * the session is an httpOnly cookie, so the browser sends it with every
+ * same-origin request and the API needs no token header.
+ *
+ * GET /api/account · `{ account: Account | null }` (null when signed out).
+ * GET /api/boards · `{ items: Board[] }`, the signed-in account's boards (401 when signed out).
+ * Board writes from a signed-in account need no `x-board-token`; a token board
+ * opened by a signed-in account becomes that account's. With plan gates on,
+ * creating and adding to boards answers 401 `SIGN_IN_REQUIRED` or 402
+ * `PLAN_REQUIRED` for Free.
+ */
+export type Plan = "free" | "pro" | "team";
+export type Account = {
+  id: string;
+  email: string;
+  plan: Plan;
+  /** Paddle subscription status (active, trialing, past_due, paused, canceled), null if never subscribed. */
+  planStatus: string | null;
+  seats: number;
+  renewsAt: string | null;
+  /** Set when the plan ends at this time (cancelled, running to the end of the period). */
+  cancelAt: string | null;
+  /** End of the seven-day Pro trial every account starts with. */
+  trialEndsAt: string | null;
+  /** What the account gets today: `plan`, or "pro" while the trial runs. */
+  access: Plan;
+  /** Two-step sign-in with an authenticator app is on. */
+  twoStep: boolean;
+};
+/** Pro-only things the UI locks for Free and signed-out viewers ("open" is opening a block at all). */
+export type Feature = "open" | "brief" | "history" | "boards" | "filters" | "copy-image" | "source-link" | "full-images";
+/**
+ * `gates` is false while PLAN_GATES is off (everything open). `features` is
+ * what this viewer may use, signed out included.
+ */
+export type AccountResponse = { account: Account | null; views?: { used: number; limit: number | null }; gates?: boolean; features?: Feature[] };
+/**
+ * POST /api/views · `{ blockId }` when the detail view opens a block. The Free
+ * plan's daily cap: `allowed: false` means show the upgrade prompt instead of
+ * the block. `limit` is null when the viewer has no cap.
+ */
+export type ViewCheck = { allowed: boolean; used: number; limit: number | null; plan: Plan | null;
+  /** Why not: signed out (opening a block needs an account) or today's cap is used up. */
+  reason?: "SIGN_IN_REQUIRED" | "LIMIT" };
+
 /** Every error response, any endpoint. */
 export type ApiError = { error: string; code?: string };

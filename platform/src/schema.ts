@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { boolean, customType, index, integer, jsonb, pgTable, real, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
+import { boolean, customType, date, index, integer, jsonb, pgTable, primaryKey, real, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 
 const vector = customType<{ data: number[] | null; driverData: string | null }>({
   dataType: () => "vector(1024)",
@@ -56,10 +56,31 @@ export const siteTech = pgTable("site_tech", {
   kind: text("kind").notNull(), name: text("name").notNull(), version: text("version"), metadata: jsonb("metadata").notNull().default({}), ...timestamps,
 }, (t) => [uniqueIndex("site_tech_site_kind_name_uidx").on(t.siteId, t.kind, t.name), index("site_tech_site_idx").on(t.siteId), index("site_tech_kind_name_idx").on(t.kind, t.name)]);
 
-export const users = pgTable("users", { id: uuid("id").primaryKey(), email: text("email"), name: text("name"), avatarUrl: text("avatar_url"), ...timestamps });
+export const users = pgTable("users", {
+  id: uuid("id").primaryKey(), email: text("email"), name: text("name"), avatarUrl: text("avatar_url"),
+  // Plans and Paddle billing (0009, SEC-28).
+  plan: text("plan").notNull().default("free"), planStatus: text("plan_status"), planSeats: integer("plan_seats").notNull().default(1),
+  planRenewsAt: timestamp("plan_renews_at", { withTimezone: true }), planCancelAt: timestamp("plan_cancel_at", { withTimezone: true }),
+  planEventAt: timestamp("plan_event_at", { withTimezone: true }), paddleCustomerId: text("paddle_customer_id"), paddleSubscriptionId: text("paddle_subscription_id"),
+  lastSignInAt: timestamp("last_sign_in_at", { withTimezone: true }), ...timestamps,
+}, (t) => [uniqueIndex("users_email_uidx").on(sql`lower(${t.email})`), index("users_paddle_customer_idx").on(t.paddleCustomerId), index("users_paddle_subscription_idx").on(t.paddleSubscriptionId)]);
+export const sessions = pgTable("sessions", {
+  tokenHash: text("token_hash").primaryKey(), userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }), userAgent: text("user_agent"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(), lastSeenAt: timestamp("last_seen_at", { withTimezone: true }).notNull().defaultNow(),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+}, (t) => [index("sessions_user_idx").on(t.userId), index("sessions_expires_idx").on(t.expiresAt)]);
+export const paddleEvents = pgTable("paddle_events", {
+  eventId: text("event_id").primaryKey(), eventType: text("event_type").notNull(), occurredAt: timestamp("occurred_at", { withTimezone: true }).notNull(),
+  userId: uuid("user_id").references(() => users.id, { onDelete: "set null" }), outcome: text("outcome").notNull(), payload: jsonb("payload").notNull(),
+  receivedAt: timestamp("received_at", { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [index("paddle_events_user_idx").on(t.userId)]);
+export const blockViews = pgTable("block_views", {
+  viewer: text("viewer").notNull(), day: date("day").notNull(), blockId: uuid("block_id").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [primaryKey({ columns: [t.viewer, t.day, t.blockId] }), index("block_views_day_idx").on(t.day)]);
 export const orgs = pgTable("orgs", { id: uuid("id").primaryKey().defaultRandom(), ownerId: uuid("owner_id").notNull().references(() => users.id), name: text("name").notNull(), slug: text("slug").notNull(), ...timestamps }, (t) => [uniqueIndex("orgs_slug_uidx").on(t.slug), index("orgs_owner_idx").on(t.ownerId)]);
 // Until auth (SEC-27) a board is owned by whoever holds its edit token (only the SHA-256 is stored); share_slug is the public read-only link, live while `shared`.
-export const boards = pgTable("boards", { id: uuid("id").primaryKey().defaultRandom(), orgId: uuid("org_id").references(() => orgs.id, { onDelete: "cascade" }), createdBy: uuid("created_by").references(() => users.id), name: text("name").notNull(), description: text("description"), shareSlug: text("share_slug").notNull(), shared: boolean("shared").notNull().default(false), editTokenHash: text("edit_token_hash"), ...timestamps }, (t) => [index("boards_org_idx").on(t.orgId), index("boards_created_by_idx").on(t.createdBy), uniqueIndex("boards_share_slug_uidx").on(t.shareSlug)]);
+export const boards = pgTable("boards", { id: uuid("id").primaryKey().defaultRandom(), orgId: uuid("org_id").references(() => orgs.id, { onDelete: "cascade" }), createdBy: uuid("created_by").references(() => users.id), name: text("name").notNull(), description: text("description"), shareSlug: text("share_slug").notNull(), shared: boolean("shared").notNull().default(false), editTokenHash: text("edit_token_hash"), ownerId: uuid("owner_id").references(() => users.id, { onDelete: "cascade" }), ...timestamps }, (t) => [index("boards_org_idx").on(t.orgId), index("boards_owner_idx").on(t.ownerId), index("boards_created_by_idx").on(t.createdBy), uniqueIndex("boards_share_slug_uidx").on(t.shareSlug)]);
 export const boardItems = pgTable("board_items", { id: uuid("id").primaryKey().defaultRandom(), boardId: uuid("board_id").notNull().references(() => boards.id, { onDelete: "cascade" }), blockId: uuid("block_id").notNull().references(() => blocks.id, { onDelete: "cascade" }), addedBy: uuid("added_by").references(() => users.id), note: text("note"), position: integer("position").notNull().default(0), ...timestamps }, (t) => [uniqueIndex("board_items_board_block_uidx").on(t.boardId, t.blockId), index("board_items_board_position_idx").on(t.boardId, t.position), index("board_items_block_idx").on(t.blockId), index("board_items_added_by_idx").on(t.addedBy)]);
 export const takedownRequests = pgTable("takedown_requests", { id: uuid("id").primaryKey().defaultRandom(), requesterUserId: uuid("requester_user_id").references(() => users.id), email: text("email").notNull(), host: text("host").notNull(), reason: text("reason").notNull(), status: text("status").notNull().default("pending"), resolvedAt: timestamp("resolved_at", { withTimezone: true }), ...timestamps }, (t) => [index("takedown_user_idx").on(t.requesterUserId), index("takedown_host_idx").on(t.host), index("takedown_status_idx").on(t.status)]);
 export const waitlist = pgTable("waitlist", { id: uuid("id").primaryKey().defaultRandom(), email: text("email").notNull(), source: text("source").notNull().default("landing"), referrer: text("referrer"), userAgent: text("user_agent"), createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow() }, (t) => [uniqueIndex("waitlist_email_uidx").on(sql`lower(${t.email})`), index("waitlist_created_idx").on(t.createdAt)]);

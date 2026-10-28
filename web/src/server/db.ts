@@ -5,7 +5,9 @@ declare global { var sectionarySql: ReturnType<typeof postgres> | undefined; }
 export function database() {
   const url = process.env.DATABASE_URL;
   if (!url) throw new Error("DATABASE_URL is not configured");
-  return globalThis.sectionarySql ??= postgres(url, { max: 5, prepare: false, idle_timeout: 20 });
+  // DATABASE_POOL_MAX=1 for a local PGlite (platform/src/local-db.ts), which mixes up statements from parallel connections.
+  const max = Number(process.env.DATABASE_POOL_MAX) || 5;
+  return globalThis.sectionarySql ??= postgres(url, { max, prepare: false, idle_timeout: 20 });
 }
 
 /**

@@ -1,5 +1,5 @@
 import { apiError } from "@/server/db";
-import { boardErrorResponse, removeItem, setItemNote, tokenFrom } from "@/server/boards";
+import { actorFrom, boardErrorResponse, removeItem, setItemNote } from "@/server/boards";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -11,13 +11,13 @@ export async function PATCH(request: Request, { params }: Ctx) {
   try {
     const { id, blockId } = await params;
     const body = (await request.json().catch(() => ({}))) as { note?: unknown };
-    return Response.json(await setItemNote(id, tokenFrom(request), blockId, body.note));
+    return Response.json(await setItemNote(id, await actorFrom(request), blockId, body.note));
   } catch (error) { return boardErrorResponse(error) ?? apiError(error); }
 }
 
 export async function DELETE(request: Request, { params }: Ctx) {
   try {
     const { id, blockId } = await params;
-    return Response.json(await removeItem(id, tokenFrom(request), blockId));
+    return Response.json(await removeItem(id, await actorFrom(request), blockId));
   } catch (error) { return boardErrorResponse(error) ?? apiError(error); }
 }

@@ -16,6 +16,8 @@ Live preview: https://sectionary-pink.vercel.app
 | The shapes that cross lanes and how to change them | [docs/CONTRACTS.md](docs/CONTRACTS.md) |
 | What we are building and why | [docs/PLAN.md](docs/PLAN.md) |
 | The name question | [docs/NAMES.md](docs/NAMES.md) |
+| Sign-in, plans and Paddle billing | [docs/AUTH-AND-BILLING.md](docs/AUTH-AND-BILLING.md) |
+| Infrastructure accounts and the crawler VPS | [docs/OPS.md](docs/OPS.md) |
 
 Work is tracked on the private Next Level space **SEC**. Three lanes: Capture
 (`src/`, Ben), Platform (`platform/` and the API routes, Buna), Web (`web/`,

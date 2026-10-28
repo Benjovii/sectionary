@@ -5,6 +5,7 @@ import { Monitor, Smartphone } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { assetUrl } from "@/lib/data-source";
 import { blurOf, labelFor, thumbOf, type Block } from "@/lib/blocks";
+import { useAccess } from "@/lib/account";
 
 /**
  * A block on the wall. The frame reserves the block's exact aspect ratio and
@@ -24,6 +25,8 @@ export function BlockCard({ block, onOpen, height }: { block: Block; onOpen: (b:
   const mobile = block.viewport === "mobile";
   const fixed = height != null;
   const blur = blurOf(block);
+  // Signed out (with the plan gates on): a blurred preview only; an account opens the real thing.
+  const preview = !useAccess().can("full-images");
   return (
     <figure
       className={cn(
@@ -74,6 +77,7 @@ export function BlockCard({ block, onOpen, height }: { block: Block; onOpen: (b:
               // resolves into place. Filter and opacity only: no layout.
               "block h-full w-full object-cover object-top transition-[opacity,filter] duration-150",
               loaded ? "opacity-100 blur-0" : "opacity-0 blur-md",
+              preview && "scale-105 blur-[6px]",
             )}
           />
         </div>

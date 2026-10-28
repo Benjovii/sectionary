@@ -3,6 +3,8 @@ import { assetUrl } from "@/lib/data-source";
 import { apiError } from "@/server/db";
 import { findBlock } from "@/server/blocks";
 import { BRIEF_SYSTEM, briefUserText, isBriefTarget, templateBrief } from "@/server/brief";
+import { userForRequest } from "@/server/accounts";
+import { accessOf, can, planRequired } from "@/server/plans";
 import type { Block } from "@/contracts/block";
 
 export const runtime = "nodejs";
@@ -44,6 +46,8 @@ export async function POST(request: Request) {
     if (typeof blockId !== "string" || !isBriefTarget(target)) {
       return Response.json({ error: "Send { blockId, target } with target claude-code, cursor or designer", code: "INVALID" }, { status: 400 });
     }
+    const access = accessOf(await userForRequest(request));
+    if (!can(access, "brief")) return planRequired(access, "Copy as brief");
     const origin = new URL(request.url).origin;
     const block = await findBlock(blockId, origin);
     if (!block) return Response.json({ error: "Block not found", code: "NOT_FOUND" }, { status: 404 });

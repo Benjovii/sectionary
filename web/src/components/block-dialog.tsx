@@ -9,6 +9,7 @@ import {
   Copy,
   ExternalLink,
   Link2,
+  Lock,
   Monitor,
   Smartphone,
   Maximize2,
@@ -19,6 +20,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { BriefPanel } from "@/components/brief-panel";
 import { SaveToBoard } from "@/components/save-to-board";
+import { ProOnly, useViewCheck, ViewLimitPanel } from "@/components/view-limit";
+import { useAccess, type Access } from "@/lib/account";
 import { TimeMachineControls, TimeMachineStage, useTimeMachine } from "@/components/time-machine";
 import { cn } from "@/lib/utils";
 import { assetUrl } from "@/lib/data-source";
@@ -76,6 +79,9 @@ export function BlockDialog({
 } & TechProps) {
   const ref = useRef<HTMLDialogElement>(null);
   const show = Boolean(block || missing);
+  // Free plan daily cap (SEC-28); null until the count answers, and in sample mode.
+  const check = useViewCheck(block?.id ?? null);
+  const limited = check?.allowed === false;
 
   useEffect(() => {
     const d = ref.current;
@@ -114,7 +120,9 @@ export function BlockDialog({
       }}
       className="m-0 h-dvh max-h-dvh w-screen max-w-none bg-transparent p-0 backdrop:bg-black/70 open:flex open:items-stretch open:justify-center min-[900px]:open:items-center min-[900px]:p-6"
     >
-      {block && detail ? (
+      {block && limited && check ? (
+        <ViewLimitPanel check={check} onClose={onClose} />
+      ) : block && detail ? (
         <Detail key={block.id} block={block} detail={detail} onClose={onClose} onOpen={onOpen} onStep={onStep} counts={counts} onFilter={onFilter} />
       ) : missing ? (
         <div className="m-auto flex max-w-sm flex-col items-center gap-3 rounded-xl border bg-card p-8 text-center text-card-foreground">
@@ -146,6 +154,7 @@ function Detail({
 } & TechProps) {
   const [tab, setTab] = useState<Tab>("details");
   const tm = useTimeMachine(block);
+  const access = useAccess();
   const pair = useMemo(() => counterpartOf(detail, block), [detail, block]);
   const similar = useMemo(() => similarTo(detail, block), [detail, block]);
   const captures = useMemo(() => capturesOf(detail, block), [detail, block]);
@@ -201,7 +210,7 @@ function Detail({
 
       <div ref={scroller} className="min-h-0 flex-1 overflow-auto min-[900px]:flex min-[900px]:overflow-hidden">
         <div className="flex min-w-0 flex-col min-[900px]:flex-1 min-[900px]:overflow-auto">
-          {tab === "history" ? (
+          {tab === "history" && access.can("history") ? (
             <TimeMachineStage tm={tm} />
           ) : (
             <>
@@ -213,7 +222,7 @@ function Detail({
         </div>
 
         <aside className="flex flex-col border-t min-[900px]:w-[340px] min-[900px]:shrink-0 min-[900px]:overflow-auto min-[900px]:border-t-0 min-[900px]:border-l">
-          <Actions block={focus} />
+          <Actions block={focus} access={access} />
           <div role="tablist" aria-label="Block tools" className="flex gap-1 border-b px-3 py-1.5">
             {TABS.map(([t, l]) => (
               <button
@@ -235,12 +244,24 @@ function Detail({
           </div>
           {tab === "brief" && (
             <div role="tabpanel" id="panel-brief" aria-labelledby="tab-brief" className="flex min-h-0 flex-1 flex-col">
-              <BriefPanel block={focus} />
+              {access.can("brief") ? (
+                <BriefPanel block={focus} />
+              ) : (
+                <ProOnly title="Copy as brief comes with Pro" signedIn={access.signedIn}>
+                  A ready-to-paste brief of this block for Claude Code, Cursor or a designer. Included in Pro and in the 7-day trial.
+                </ProOnly>
+              )}
             </div>
           )}
           {tab === "history" && (
             <div role="tabpanel" id="panel-history" aria-labelledby="tab-history" className="flex min-h-0 flex-1 flex-col">
-              <TimeMachineControls tm={tm} />
+              {access.can("history") ? (
+                <TimeMachineControls tm={tm} />
+              ) : (
+                <ProOnly title="The time machine comes with Pro" signedIn={access.signedIn}>
+                  See how this block changed across every capture of the page, side by side or as an overlay. Included in Pro and in the 7-day trial.
+                </ProOnly>
+              )}
             </div>
           )}
           {tab === "details" && (
@@ -646,8 +667,12 @@ function zoomWidth(natural: number, fitted: number, dpr: number): number {
 
 type Status = { key: string; ok: boolean } | null;
 
+/** A Pro-only action for Free viewers: same size as the button it replaces, a lock, and a link to the plans. */
+const LOCKED =
+  "inline-flex h-7 items-center gap-1.5 rounded-lg border border-dashed px-2.5 text-[12px] font-medium text-muted-foreground transition-colors duration-150 outline-none hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring touch:h-11";
+
 /** Copy image, copy link, open the source page. */
-function Actions({ block }: { block: Block }) {
+function Actions({ block, access }: { block: Block; access: Access }) {
   const [status, setStatus] = useState<Status>(null);
 
   useEffect(() => {
@@ -667,23 +692,33 @@ function Actions({ block }: { block: Block }) {
 
   return (
     <div className="flex flex-wrap gap-2 border-b px-4 py-3">
-      <Button variant="default" size="sm" onClick={() => run("image", () => copyImage(assetUrl(block.src)))}>
-        {status?.key === "image" && status.ok ? <Check /> : <Copy />}
-        {label("image", "Copy image")}
-      </Button>
+      {access.can("copy-image") ? (
+        <Button variant="default" size="sm" onClick={() => run("image", () => copyImage(assetUrl(block.src)))}>
+          {status?.key === "image" && status.ok ? <Check /> : <Copy />}
+          {label("image", "Copy image")}
+        </Button>
+      ) : (
+        <Link href="/account" title="Copy image comes with Pro" className={LOCKED}>
+          <Lock className="size-3.5" /> Copy image
+        </Link>
+      )}
       <Button variant="outline" size="sm" onClick={() => run("link", () => navigator.clipboard.writeText(window.location.href))}>
         {status?.key === "link" && status.ok ? <Check /> : <Link2 />}
         {label("link", "Copy link")}
       </Button>
       <SaveToBoard block={block} />
-      <a
+      {!access.can("source-link") ? (
+        <Link href="/account" title="The source page link comes with Pro" className={LOCKED}>
+          <Lock className="size-3.5" /> Source page
+        </Link>
+      ) : <a
         href={block.pageUrl}
         target="_blank"
         rel="noopener noreferrer"
         className="inline-flex h-7 items-center gap-1.5 rounded-lg px-2.5 text-[12px] font-medium text-muted-foreground transition-colors duration-150 outline-none hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring touch:h-11"
       >
         Source page <ExternalLink className="size-3.5" />
-      </a>
+      </a>}
       <span className="sr-only" aria-live="polite">
         {status ? (status.ok ? "Copied to the clipboard" : "Could not copy") : ""}
       </span>
