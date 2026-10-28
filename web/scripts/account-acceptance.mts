@@ -14,7 +14,10 @@
 //  4. a scheduled cancellation keeps Pro with an end date; subscription.canceled downgrades to Free;
 //  5. redelivered, stale, forged and unknown events change nothing;
 //  6. the Free daily view cap counts distinct blocks; Pro has none;
-//  7. a token board from before accounts is claimed on the first signed-in visit.
+//  7. a token board from before accounts is claimed on the first signed-in visit;
+//  8. the 7-day trial is Pro; after it, Free loses brief, time machine and filters; signed out opens nothing;
+//  9. two-step sign-in: setup, pending sessions, codes once only, recovery codes, lockout, turning off;
+// 10. a session that slides forward renews its cookie; signing out everywhere.
 // What it cannot prove: the real emails, Safari and phones, and Paddle's
 // checkout. docs/AUTH-AND-BILLING.md has the manual checklist for those.
 // Exit 0 when every check passes.
@@ -72,7 +75,7 @@ const gotrueUrl = `http://127.0.0.1:${(gotrue.address() as { port: number }).por
 const SECRET = "pdl_ntfset_test_secret";
 Object.assign(process.env, {
   DATABASE_URL: local.url, SUPABASE_URL: gotrueUrl, SUPABASE_PUBLISHABLE_KEY: "sb_publishable_test",
-  PLAN_GATES: "on", FREE_DAILY_VIEWS: "2", PADDLE_WEBHOOK_SECRET: SECRET,
+  PLAN_GATES: "on", FREE_DAILY_VIEWS: "2", AUTH_ENCRYPTION_KEY: "acceptance-key", DATABASE_POOL_MAX: "1", PADDLE_WEBHOOK_SECRET: SECRET,
   PADDLE_PRICE_PRO_MONTH: "pri_pro_m", PADDLE_PRICE_PRO_YEAR: "pri_pro_y", PADDLE_PRICE_TEAM_MONTH: "pri_team_m",
 });
 
@@ -95,6 +98,12 @@ try {
   const accountRoute = await import("@/app/api/account/route");
   const viewsRoute = await import("@/app/api/views/route");
   const webhook = await import("@/app/api/paddle/webhook/route");
+  const blocksRoute = await import("@/app/api/blocks/route");
+  const historyRoute = await import("@/app/api/blocks/[id]/history/route");
+  const briefRoute = await import("@/app/api/brief/route");
+  const twoStep = await import("@/server/two-step");
+  const totp = await import("@/server/totp");
+  const endTrial = (id: string) => local.db.query("UPDATE users SET trial_ends_at = now() - interval '1 minute' WHERE id=$1", [id]);
 
   const base = "http://app.test";
   const req = (path: string, init: RequestInit & { cookie?: string; json?: unknown } = {}) => {
@@ -136,11 +145,45 @@ try {
   check("signing out ends that session only", (await accounts.userForRequest(req("/", { cookie: ana2.cookie }))) === null
     && (await accounts.userForRequest(req("/", { cookie: ana.cookie })))?.id === ana.user.id);
 
+  // ------------------------------------------------------------ 8a. the trial
+  const days = (Date.parse(ana.user.trialEndsAt ?? "") - Date.now()) / 86_400_000;
+  check("a new account starts a 7-day trial", days > 6.9 && days <= 7, String(days));
+  body = await (await accountRoute.GET(req("/api/account", { cookie: ana.cookie }))).json();
+  check("on the trial: access is Pro with every feature", body.account?.access === "pro" && body.features?.includes("brief") && body.features?.includes("history") && body.views?.limit === null);
+  let res = await boardsRoute.POST(req("/api/boards", { method: "POST", cookie: ana.cookie, json: { name: "Trial board" } }));
+  const trialBoard = await res.json();
+  check("on the trial: boards work", res.status === 201, String(res.status));
+  res = await historyRoute.GET(req(`/api/blocks/${blockIds[0]}/history`, { cookie: ana.cookie }), ctx({ id: blockIds[0] }));
+  check("on the trial: the time machine works", res.status === 200, String(res.status));
+  await endTrial(ana.user.id);
+  body = await (await accountRoute.GET(req("/api/account", { cookie: ana.cookie }))).json();
+  check("after the trial: access is Free", body.account?.access === "free" && body.account.plan === "free" && body.views?.limit === 2 && !body.features?.includes("brief"));
+  body = await (await accountRoute.GET(req("/api/account"))).json();
+  check("signed out: no features, browsing only", body.gates === true && Array.isArray(body.features) && body.features.length === 0);
+
   // ------------------------------------------------------------ 2. gates on Free
-  let res = await boardsRoute.POST(req("/api/boards", { method: "POST", json: { name: "Signed out" } }));
+  res = await boardsRoute.POST(req("/api/boards", { method: "POST", json: { name: "Signed out" } }));
   check("signed out cannot make a board (401 SIGN_IN_REQUIRED)", res.status === 401 && (await res.json()).code === "SIGN_IN_REQUIRED");
   res = await boardsRoute.POST(req("/api/boards", { method: "POST", cookie: ana.cookie, json: { name: "Free" } }));
   check("Free cannot make a board (402 PLAN_REQUIRED)", res.status === 402 && (await res.json()).code === "PLAN_REQUIRED");
+  res = await itemsRoute.POST(req(`/api/boards/${trialBoard.board.id}/items`, { method: "POST", cookie: ana.cookie, json: { blockId: blockIds[0] } }), ctx({ id: trialBoard.board.id }));
+  const readBack = await boardRoute.GET(req(`/api/boards/${trialBoard.board.id}`, { cookie: ana.cookie }), ctx({ id: trialBoard.board.id }));
+  check("after the trial: the trial's board is read-only (402 on add, 200 on read)", res.status === 402 && readBack.status === 200);
+  res = await briefRoute.POST(req("/api/brief", { method: "POST", cookie: ana.cookie, json: { blockId: blockIds[0], target: "designer" } }));
+  check("Free: Copy as brief is refused (402)", res.status === 402, String(res.status));
+  res = await briefRoute.POST(req("/api/brief", { method: "POST", json: { blockId: blockIds[0], target: "designer" } }));
+  check("signed out: Copy as brief is refused (401)", res.status === 401, String(res.status));
+  res = await historyRoute.GET(req(`/api/blocks/${blockIds[0]}/history`, { cookie: ana.cookie }), ctx({ id: blockIds[0] }));
+  check("Free: the time machine is refused (402)", res.status === 402, String(res.status));
+  const totalOf = async (path: string, cookie?: string) => {
+    const r = await blocksRoute.GET(req(path, { cookie }));
+    return { total: (await r.json()).total as number, cache: r.headers.get("cache-control") ?? "" };
+  };
+  const all = await totalOf("/api/blocks?limit=1"), freeVp = await totalOf("/api/blocks?limit=1&vp=mobile", ana.cookie);
+  check("Free: filters other than Store and Block type are dropped, and not CDN-cached", freeVp.total === all.total && freeVp.cache.includes("no-store"), `${freeVp.total} vs ${all.total}`);
+  const { host } = (await local.db.query<{ host: string }>("SELECT host FROM sites ORDER BY host LIMIT 1")).rows[0];
+  const freeHost = await totalOf(`/api/blocks?limit=1&host=${encodeURIComponent(host)}`, ana.cookie);
+  check("Free: the Store filter still works", freeHost.total > 0 && freeHost.total < all.total, `${freeHost.total}`);
 
   // ------------------------------------------------------------ 3. Paddle upgrade
   let n = 0;
@@ -175,7 +218,7 @@ try {
   res = await itemsRoute.POST(req(`/api/boards/${createdBoard.board.id}/items`, { method: "POST", cookie: ana.cookie, json: { blockId: blockIds[0] } }), ctx({ id: createdBoard.board.id }));
   check("Pro can add a block without a token header", res.status === 200 && (await res.json()).items.length === 1);
   body = await (await boardsRoute.GET(req("/api/boards", { cookie: ana.cookie }))).json();
-  check("GET /api/boards lists the account's boards", body.items?.length === 1);
+  check("GET /api/boards lists the account's boards (the trial one and this one)", body.items?.length === 2, String(body.items?.length));
 
   // ------------------------------------------------------------ 4. cancellation
   await send(event("subscription.updated", sub("active", { scheduled_change: { action: "cancel", effective_at: "2026-11-15T12:00:00Z" } })));
@@ -208,6 +251,7 @@ try {
   // ------------------------------------------------------------ 6. views
   await auth.sendMagicLink("bo@studio.test");
   const bo = await signIn(await auth.verifyTokenHash("th-bo@studio.test", "email"));
+  await endTrial(bo.user.id);
   const view = async (cookie: string | undefined, blockId: string) => {
     const r = await viewsRoute.POST(req("/api/views", { method: "POST", cookie, json: { blockId } }));
     return { ...(await r.json()), setCookie: r.headers.get("set-cookie") };
@@ -216,13 +260,60 @@ try {
   check("Free: two distinct blocks a day (FREE_DAILY_VIEWS=2)", v1.allowed && v2.allowed && v2.used === 2);
   check("Free: reopening a block already seen today is free", v1again.allowed && v1again.used === 2);
   check("Free: the third distinct block is refused", v3.allowed === false && v3.limit === 2);
+  check("Free: the refused block says why (LIMIT)", v3.reason === "LIMIT");
   const anon1 = await view(undefined, blockIds[0]);
-  const anonCookie = anon1.setCookie?.split(";")[0];
-  await view(anonCookie, blockIds[1]);
-  const anon3 = await view(anonCookie, blockIds[2]);
-  check("signed out: counted by a viewer cookie, same cap", Boolean(anonCookie) && anon3.allowed === false && anon3.plan === null);
+  check("signed out: opening a block needs an account", anon1.allowed === false && anon1.reason === "SIGN_IN_REQUIRED");
   const t1 = await view(ana.cookie, blockIds[0]), t2 = await view(ana.cookie, blockIds[1]), t3 = await view(ana.cookie, blockIds[2]);
   check("Team: no cap", t1.allowed && t2.allowed && t3.allowed && t3.limit === null);
+
+  // ------------------------------------------------------------ 9. two-step sign-in
+  await auth.sendMagicLink("cy@studio.test");
+  const cy = await signIn(await auth.verifyTokenHash("th-cy@studio.test", "email"));
+  const secret = await twoStep.beginSetup(cy.user.id);
+  const stored = (await local.db.query<{ totp_pending_secret: string }>("SELECT totp_pending_secret FROM users WHERE id=$1", [cy.user.id])).rows[0];
+  check("two-step: the secret is stored encrypted", stored.totp_pending_secret.startsWith("v1.") && !stored.totp_pending_secret.includes(secret));
+  const wrongSetup = await twoStep.confirmSetup(cy.user.id, "000000").then(() => "accepted", (e: { code?: string }) => e.code);
+  check("two-step: a wrong code does not turn it on", wrongSetup === "INVALID");
+  // A step at or before the last one used is refused, so each check takes a later step.
+  const at = (offset: number) => totp.codeFor(secret, totp.stepAt() + offset);
+  const recovery = await twoStep.confirmSetup(cy.user.id, at(-1));
+  check("two-step: a code from the app turns it on, with 10 recovery codes", recovery.length === 10 && (await accounts.userById(cy.user.id))?.twoStepSince != null);
+  const pend = await accounts.createSession(cy.user.id, "acceptance", { next: "/boards" });
+  const pendCookie = `${accounts.SESSION_COOKIE}=${encodeURIComponent(pend.token)}`;
+  check("two-step: a pending session signs nobody in", (await accounts.userForRequest(req("/", { cookie: pendCookie }))) === null);
+  check("two-step: the code step finds the pending sign-in", (await twoStep.pendingSignIn(pend.token))?.next === "/boards");
+  const wrong = await twoStep.finishSignIn(pend.token, "000000").then(() => "accepted", (e: { message: string }) => e.message);
+  check("two-step: a wrong code counts down", /4 tries left/.test(String(wrong)), String(wrong));
+  const fin = await twoStep.finishSignIn(pend.token, at(0));
+  check("two-step: the right code finishes the sign-in", fin.userId === cy.user.id && fin.next === "/boards" && (await twoStep.pendingSignIn(pend.token)) === null);
+  const pend2 = await accounts.createSession(cy.user.id, "acceptance", { next: "/" });
+  const replay = await twoStep.finishSignIn(pend2.token, at(0)).then(() => "accepted", (e: { code?: string }) => e.code);
+  check("two-step: the same code cannot be used twice", replay === "INVALID");
+  const viaRecovery = await twoStep.finishSignIn(pend2.token, recovery[0].toUpperCase());
+  check("two-step: a recovery code signs in", viaRecovery.userId === cy.user.id);
+  const pend3 = await accounts.createSession(cy.user.id, "acceptance", { next: "/" });
+  const recoveryAgain = await twoStep.finishSignIn(pend3.token, recovery[0]).then(() => "accepted", (e: { code?: string }) => e.code);
+  check("two-step: a recovery code works once", recoveryAgain === "INVALID" && (await twoStep.recoveryCodesLeft(cy.user.id)) === 9);
+  let last = "";
+  for (let i = 0; i < 4; i++) last = await twoStep.finishSignIn(pend3.token, "111111").then(() => "accepted", (e: { code?: string }) => e.code ?? "");
+  check("two-step: the fifth wrong code ends the pending sign-in", last === "LOCKED" && (await twoStep.pendingSignIn(pend3.token)) === null);
+  const offWrong = await twoStep.disable(cy.user.id, "222222").then(() => "off", (e: { code?: string }) => e.code);
+  check("two-step: turning it off needs a right code", offWrong === "INVALID");
+  await twoStep.disable(cy.user.id, recovery[1]);
+  check("two-step: turned off with a recovery code", (await accounts.userById(cy.user.id))?.twoStepSince === null && (await twoStep.recoveryCodesLeft(cy.user.id)) === 0);
+
+  // ------------------------------------------------------------ 10. session renewal, sign out everywhere
+  const cyToken = decodeURIComponent(cy.cookie.split("=")[1]);
+  await local.db.query("UPDATE sessions SET last_seen_at = now() - interval '2 hours' WHERE token_hash=$1", [accounts.hashToken(cyToken)]);
+  res = await accountRoute.GET(req("/api/account", { cookie: cy.cookie }));
+  const renewedCookie = res.headers.get("set-cookie") ?? "";
+  check("a session used after an hour renews its cookie for 30 days", renewedCookie.startsWith(`${accounts.SESSION_COOKIE}=`) && renewedCookie.includes("Max-Age=2592000") && renewedCookie.includes("HttpOnly"));
+  res = await accountRoute.GET(req("/api/account", { cookie: cy.cookie }));
+  check("and not again within the hour", res.headers.get("set-cookie") === null);
+  const cyOther = await signIn({ id: cy.user.id, email: cy.user.email });
+  await accounts.endAllSessions(cy.user.id);
+  check("sign out everywhere ends every session", (await accounts.userForRequest(req("/", { cookie: cy.cookie }))) === null
+    && (await accounts.userForRequest(req("/", { cookie: cyOther.cookie }))) === null);
 
   // ------------------------------------------------------------ 7. token boards from before accounts
   process.env.PLAN_GATES = "off";

@@ -2,9 +2,12 @@
 
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
-import { currentUser, EMAIL_COOKIE, rememberSignIn, safeNext, signOut, startSession, takeNext } from "@/server/auth";
+import { currentUser, EMAIL_COOKIE, finishTwoStep, rememberSignIn, safeNext, signOut, signOutEverywhere, startSession, takeNext } from "@/server/auth";
 import { AuthError, sendMagicLink, verifyCode, verifyTokenHash } from "@/server/supabase-auth";
 import { portalUrl } from "@/server/paddle";
+import { beginSetup, confirmSetup, disable, regenerateRecoveryCodes, TwoStepCodeError } from "@/server/two-step";
+import { TwoStepError } from "@/server/totp";
+import { revalidatePath } from "next/cache";
 
 // SEC-27 sign-in and SEC-28 billing actions. Thin: the work is in src/server.
 
@@ -15,7 +18,7 @@ export type SignInState =
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const message = (error: unknown) => {
-  if (error instanceof AuthError) return error.message;
+  if (error instanceof AuthError || error instanceof TwoStepCodeError || error instanceof TwoStepError) return error.message;
   console.error("[auth]", error);
   return "Something went wrong on our side. Try again in a minute.";
 };
@@ -40,8 +43,9 @@ export async function signInWithCode(_prev: SignInState, form: FormData): Promis
   const email = String(form.get("email") ?? (await cookies()).get(EMAIL_COOKIE)?.value ?? "").trim().toLowerCase();
   let next: string;
   try {
-    await startSession(await verifyCode(email, String(form.get("code") ?? "")));
+    const verified = await verifyCode(email, String(form.get("code") ?? ""));
     next = await takeNext();
+    if ((await startSession(verified, next)).twoStep) next = "/auth/two-step";
   } catch (error) {
     return { status: "error", message: message(error), email, step: "code" };
   }
@@ -58,8 +62,9 @@ export type ConfirmState = { status: "idle" } | { status: "error"; message: stri
 export async function confirmSignIn(_prev: ConfirmState, form: FormData): Promise<ConfirmState> {
   let next: string;
   try {
-    await startSession(await verifyTokenHash(String(form.get("token_hash") ?? ""), String(form.get("type") ?? "email")));
+    const verified = await verifyTokenHash(String(form.get("token_hash") ?? ""), String(form.get("type") ?? "email"));
     next = await takeNext();
+    if ((await startSession(verified, next)).twoStep) next = "/auth/two-step";
   } catch (error) {
     return { status: "error", message: message(error) };
   }
@@ -69,6 +74,78 @@ export async function confirmSignIn(_prev: ConfirmState, form: FormData): Promis
 export async function signOutAction() {
   await signOut();
   redirect("/account");
+}
+
+export async function signOutEverywhereAction() {
+  const user = await currentUser();
+  if (user) await signOutEverywhere(user.id);
+  redirect("/account");
+}
+
+// ---------------------------------------------------------------- two-step sign-in
+
+/** The step after the email link: the code from the authenticator app, or a recovery code. */
+export async function submitTwoStepCode(_prev: ConfirmState, form: FormData): Promise<ConfirmState> {
+  let next: string;
+  try {
+    next = safeNext(await finishTwoStep(String(form.get("code") ?? "")));
+  } catch (error) {
+    return { status: "error", message: message(error) };
+  }
+  redirect(next);
+}
+
+export type TwoStepState =
+  | { status: "idle" }
+  | { status: "codes"; codes: string[] }
+  | { status: "off" }
+  | { status: "error"; message: string };
+
+/** Setup step 1: a new secret; the page shows it as a QR code. */
+export async function beginTwoStep() {
+  const user = await currentUser();
+  if (!user) redirect("/account");
+  try {
+    await beginSetup(user.id);
+  } catch (error) {
+    console.error("[two-step]", error);
+    redirect("/account?two_step=unavailable");
+  }
+  redirect("/account?two_step=setup");
+}
+
+/** Setup step 2: a code from the app turns it on and returns the recovery codes. */
+export async function confirmTwoStep(_prev: TwoStepState, form: FormData): Promise<TwoStepState> {
+  const user = await currentUser();
+  if (!user) return { status: "error", message: "Sign in again first." };
+  try {
+    const codes = await confirmSetup(user.id, String(form.get("code") ?? ""));
+    return { status: "codes", codes };
+  } catch (error) {
+    return { status: "error", message: message(error) };
+  }
+}
+
+export async function disableTwoStep(_prev: TwoStepState, form: FormData): Promise<TwoStepState> {
+  const user = await currentUser();
+  if (!user) return { status: "error", message: "Sign in again first." };
+  try {
+    await disable(user.id, String(form.get("code") ?? ""));
+  } catch (error) {
+    return { status: "error", message: message(error) };
+  }
+  revalidatePath("/account");
+  return { status: "off" };
+}
+
+export async function newRecoveryCodes(_prev: TwoStepState, form: FormData): Promise<TwoStepState> {
+  const user = await currentUser();
+  if (!user) return { status: "error", message: "Sign in again first." };
+  try {
+    return { status: "codes", codes: await regenerateRecoveryCodes(user.id, String(form.get("code") ?? "")) };
+  } catch (error) {
+    return { status: "error", message: message(error) };
+  }
 }
 
 /** Paddle's customer portal: invoices, card, plan changes, cancelling. */

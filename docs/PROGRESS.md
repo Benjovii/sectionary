@@ -7,6 +7,28 @@ PLAN.md changes only when scope does; the board mirrors every work item.
 Earlier sessions are in Ben's vault copy (To Do's/New APP Mobbin Recreate).
 This file starts on 2026-10-01 so every lane can append to it.
 
+## 2026-10-28 · Buna (Lane B)
+
+**Free plan with a 7-day trial, two-step sign-in, session fix.** On `buna`.
+
+- Free plan, mostly the "free trial, then locked" model with two pieces of
+  "blur the good stuff": every account gets Pro for 7 days, no card; after
+  that Free opens 3 blocks a day, filters by Store and Block type only, has no
+  Copy as brief, time machine, copy image or source link, and its boards are
+  read-only. Signed out: blurred wall, and opening a block asks for an account.
+  Enforced by the API (`can(access, feature)` in `server/plans.ts`), shown in
+  the UI as locks and a trial badge in the app bar.
+- Two-step sign-in with an authenticator app (TOTP), optional per account on
+  the account page: QR setup, ten recovery codes, `/auth/two-step` after the
+  email link, five tries, codes usable once.
+- Session fix: the cookie is now renewed when the session slides (it used to
+  expire 30 days after sign-in however often it was used). Sign out everywhere.
+- Migration `0010_trial_two_step.sql` and the new `AUTH_ENCRYPTION_KEY`
+  variable: see [AUTH-AND-BILLING.md](AUTH-AND-BILLING.md). `npm run
+  account:acceptance` covers all of it and passes.
+- Lane C files touched, for Leke's review: block dialog (locks), filter bar
+  (locks), block card (blur), app bar (trial badge), account page (two-step card).
+
 ## 2026-10-15 · Buna (Lane B)
 
 **SEC-27 · auth with magic links.** Built on `buna`. Supabase sends the link

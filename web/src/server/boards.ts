@@ -3,7 +3,7 @@ import type { Board, BoardPatch, SharedBoard } from "@/contracts/api";
 import { database, pgArray } from "@/server/db";
 import { blockColumns, blockJoins, toBlock, UUID } from "@/server/blocks";
 import { userForRequest, type SessionUser } from "@/server/accounts";
-import { canUseBoards } from "@/server/plans";
+import { accessOf, canUseBoards } from "@/server/plans";
 
 // Who may touch a board. A board with an owner (owner_id, SEC-27) belongs to
 // that signed-in account and nobody else. A board from before accounts belongs
@@ -38,7 +38,7 @@ export const actorFrom = async (request: Request): Promise<Actor> =>
   ({ token: request.headers.get("x-board-token")?.trim() ?? "", user: await userForRequest(request) });
 
 function requirePlan(actor: Actor) {
-  if (canUseBoards(actor.user?.plan)) return;
+  if (canUseBoards(accessOf(actor.user))) return;
   if (!actor.user) throw new BoardError("Sign in to make boards", 401, "SIGN_IN_REQUIRED");
   throw new BoardError("Boards come with Pro and Team", 402, "PLAN_REQUIRED");
 }

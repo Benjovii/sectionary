@@ -31,22 +31,64 @@ plans, paddle, views) and `platform/drizzle/0009_accounts_billing.sql`.
 The app talks to Supabase Auth over plain HTTPS, with no Supabase client library,
 like the rest of the code.
 
+The session slides: used after more than an hour, its expiry moves 30 days
+ahead in `sessions`, and `GET /api/account` (which every page calls once)
+sends the cookie again with a fresh 30 days, so the browser keeps it too.
+**Sign out everywhere** on the account page ends every session of the account.
+
+## Two-step sign-in (authenticator app)
+
+Optional, per account, from the account page: after the email link, a
+six-digit code from an authenticator app (Google Authenticator, 1Password,
+Authy...). Standard TOTP (RFC 6238: SHA-1, 6 digits, 30 seconds), written on
+`node:crypto` in `web/src/server/totp.ts`; the database side is
+`two-step.ts`.
+
+- **Turning it on:** Turn on shows a QR code and the setup key; a code from the
+  app confirms it and shows ten recovery codes once (Copy, Download).
+- **Signing in with it on:** the email link or code makes a *pending* session
+  (`sx_two_step` cookie, ten minutes, signs nobody in) and goes to
+  `/auth/two-step`. The right code swaps it for the real session. Five wrong
+  codes end it; the person starts again from the email.
+- A code is accepted once (`totp_last_step`), one step of clock drift either
+  way. Recovery codes work once each and are stored as SHA-256 only.
+- The secret is encrypted with AES-256-GCM before it is stored, with the key
+  from `AUTH_ENCRYPTION_KEY`. **Changing that key breaks every enrolled
+  authenticator**, so set it once and keep it.
+- Turning it off, or making new recovery codes, needs a current code.
+- Lost phone and recovery codes: support clears `totp_secret` and
+  `totp_enabled_at` on the users row after checking who it is.
+
 ## Plans
 
-| | Free | Pro | Team |
+Every account starts with **Pro free for 7 days**, no card (`users.trial_ends_at`,
+set on first sign-in). After that it is Free unless it pays.
+
+| | Signed out | Free (after the trial) | Pro trial, Pro, Team |
 |---|---|---|---|
-| Browse, filter, search | yes | yes | yes |
-| Blocks opened in the detail view | `FREE_DAILY_VIEWS` a day (default 25) | unlimited | unlimited |
-| Boards and share links | no | yes | yes |
-| Price shown (hypothesis, PLAN.md) | $0 | $12 a month, $96 a year | $20 a seat a month, $192 a year |
+| Wall and search | blurred previews | yes | yes |
+| Blocks opened in the detail view | none: needs an account | `FREE_DAILY_VIEWS` a day (default 3) | unlimited |
+| Filters | Store, Block type | Store, Block type | all |
+| Copy as brief, time machine | no | no | yes |
+| Copy image, source page link | no | no | yes |
+| Boards and share links | no | read-only: the ones you have stay readable, shareable, deletable | yes |
+| Price shown (hypothesis, PLAN.md) | | $0 | $12 a month, $96 a year; Team $20 a seat a month, $192 a year |
+
+Each gate is one call, `can(access, feature)` in `web/src/server/plans.ts`,
+and the API enforces it, not only the UI: `/api/brief` and
+`/api/blocks/[id]/history` answer 402 (401 signed out), `/api/blocks` drops
+filters other than Store and Block type (and then skips the CDN cache),
+`/api/views` refuses signed-out viewers and caps Free, and board writes need
+Pro. `GET /api/account` returns `gates` and `features` so the UI shows the locks.
 
 - **The gates are off until `PLAN_GATES=on`.** With them off, everyone has
   boards and no cap, as before. That lets auth and billing go live on staging
   without locking the team out. Turn them on at launch.
 - The daily cap counts distinct blocks opened per UTC day. Opening the same
-  block again that day is free. Signed out, a viewer is counted by an anonymous
-  cookie (`sx_viewer`). It is a soft gate: the images themselves are public on
-  the CDN, the cap is about the product, not about secrecy.
+  block again that day is free. Signed out, no block opens: the detail view
+  asks for an account and offers the trial.
+- The thumbnails themselves are public on the CDN; the blur on the wall and
+  the locks on copy image and the source link are about the product, not secrecy.
 - After a downgrade, existing boards stay readable, shareable and deletable.
   Only creating boards and adding blocks need Pro.
 - Team is Pro billed per seat. Inviting the other seats is not built yet
@@ -83,7 +125,7 @@ out by Payoneer or IBAN).
 On Ben's PC, with the Session pooler address in `platform/.env`:
 
 ```bash
-cd platform && npm run db:migrate     # applies 0009_accounts_billing.sql
+cd platform && npm run db:migrate     # applies 0009_accounts_billing.sql and 0010_trial_two_step.sql
 ```
 
 ### 2. Supabase (project for Sectionary)
@@ -141,12 +183,13 @@ Server-only, none of them `NEXT_PUBLIC_`. Then redeploy.
 | `PADDLE_WEBHOOK_SECRET` | the notification destination's secret |
 | `PADDLE_PRICE_PRO_MONTH`, `PADDLE_PRICE_PRO_YEAR`, `PADDLE_PRICE_TEAM_MONTH`, `PADDLE_PRICE_TEAM_YEAR` | `pri_...` |
 | `PLAN_GATES` | leave unset until launch, then `on` |
-| `FREE_DAILY_VIEWS` | optional, default 25 |
+| `FREE_DAILY_VIEWS` | optional, default 3 |
+| `AUTH_ENCRYPTION_KEY` | a long random string (`openssl rand -base64 32`) for two-step secrets. Set once, never change it |
 
 ## Checking it
 
 Automated, no accounts needed (throwaway Postgres, a stand-in for Supabase
-Auth, Paddle webhooks signed with a test secret; 41 checks):
+Auth, Paddle webhooks signed with a test secret; trial, Free gates, two-step and session renewal too):
 
 ```bash
 cd web && npm run account:acceptance

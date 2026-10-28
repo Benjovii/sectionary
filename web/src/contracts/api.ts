@@ -116,14 +116,28 @@ export type Account = {
   renewsAt: string | null;
   /** Set when the plan ends at this time (cancelled, running to the end of the period). */
   cancelAt: string | null;
+  /** End of the seven-day Pro trial every account starts with. */
+  trialEndsAt: string | null;
+  /** What the account gets today: `plan`, or "pro" while the trial runs. */
+  access: Plan;
+  /** Two-step sign-in with an authenticator app is on. */
+  twoStep: boolean;
 };
-export type AccountResponse = { account: Account | null; views?: { used: number; limit: number | null } };
+/** Pro-only things the UI locks for Free and signed-out viewers ("open" is opening a block at all). */
+export type Feature = "open" | "brief" | "history" | "boards" | "filters" | "copy-image" | "source-link" | "full-images";
+/**
+ * `gates` is false while PLAN_GATES is off (everything open). `features` is
+ * what this viewer may use, signed out included.
+ */
+export type AccountResponse = { account: Account | null; views?: { used: number; limit: number | null }; gates?: boolean; features?: Feature[] };
 /**
  * POST /api/views · `{ blockId }` when the detail view opens a block. The Free
  * plan's daily cap: `allowed: false` means show the upgrade prompt instead of
  * the block. `limit` is null when the viewer has no cap.
  */
-export type ViewCheck = { allowed: boolean; used: number; limit: number | null; plan: Plan | null };
+export type ViewCheck = { allowed: boolean; used: number; limit: number | null; plan: Plan | null;
+  /** Why not: signed out (opening a block needs an account) or today's cap is used up. */
+  reason?: "SIGN_IN_REQUIRED" | "LIMIT" };
 
 /** Every error response, any endpoint. */
 export type ApiError = { error: string; code?: string };

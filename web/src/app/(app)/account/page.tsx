@@ -1,9 +1,13 @@
 import type { Metadata } from "next";
 import { currentUser, safeNext } from "@/server/auth";
 import { authConfigured } from "@/server/supabase-auth";
-import { priceIds, viewLimit } from "@/server/plans";
+import { accessOf, freeDailyViews, inTrial, priceIds, viewLimit } from "@/server/plans";
+import QRCode from "qrcode";
+import { otpauthUrl, twoStepConfigured } from "@/server/totp";
+import { pendingSetupSecret, recoveryCodesLeft } from "@/server/two-step";
+import { TwoStepCard } from "@/components/two-step-card";
 import { viewsToday } from "@/server/views";
-import { openBillingPortal, signOutAction } from "./actions";
+import { openBillingPortal, signOutAction, signOutEverywhereAction } from "./actions";
 import { SignInForm } from "@/components/sign-in-form";
 import { PlanPicker } from "@/components/plan-picker";
 import { Button } from "@/components/ui/button";
@@ -41,8 +45,15 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
     );
   }
 
-  const limit = viewLimit(user.plan);
+  const access = accessOf(user);
+  const trial = user.plan === "free" && inTrial(user);
+  const limit = viewLimit(access);
   const used = limit === null ? 0 : await viewsToday(`u:${user.id}`);
+  let setup: { qrSvg: string; secret: string } | null = null;
+  if (!user.twoStepSince && params.two_step === "setup" && twoStepConfigured()) {
+    const secret = await pendingSetupSecret(user.id).catch(() => null);
+    if (secret) setup = { secret, qrSvg: await QRCode.toString(otpauthUrl(secret, user.email), { type: "svg", margin: 0, errorCorrectionLevel: "M", color: { dark: "#000000", light: "#ffffff" } }) };
+  }
   const billingNote = typeof params.billing === "string" ? BILLING_NOTE[params.billing] : undefined;
 
   return (
@@ -52,14 +63,21 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
           <h1 className="font-heading text-[22px] font-semibold">Account</h1>
           <p className="mt-1 truncate text-[14px] text-muted-foreground">{user.email}</p>
         </div>
-        <form action={signOutAction}>
-          <Button type="submit" variant="outline">Sign out</Button>
-        </form>
+        <div className="flex flex-wrap gap-2">
+          <form action={signOutEverywhereAction}>
+            <Button type="submit" variant="ghost">Sign out everywhere</Button>
+          </form>
+          <form action={signOutAction}>
+            <Button type="submit" variant="outline">Sign out</Button>
+          </form>
+        </div>
       </div>
 
       <section aria-label="Your plan" className="flex flex-col gap-3 rounded-xl border bg-card p-4">
         <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-          <p className="font-heading text-[15px] font-semibold">{PLAN_NAME[user.plan]}{user.plan === "team" && ` · ${user.seats} seats`}</p>
+          <p className="font-heading text-[15px] font-semibold">{trial ? "Pro trial" : PLAN_NAME[user.plan]}{user.plan === "team" && ` · ${user.seats} seats`}</p>
+          {trial && user.trialEndsAt && <p className="text-[13px] text-muted-foreground">Everything in Pro until {day(user.trialEndsAt)}, then Free. No card needed.</p>}
+          {!trial && user.plan === "free" && user.trialEndsAt && <p className="text-[13px] text-muted-foreground">Your Pro trial ended {day(user.trialEndsAt)}. Free opens {freeDailyViews()} blocks a day, with the Store and Block type filters; your boards stay readable.</p>}
           {user.planStatus === "past_due" && <p className="text-[13px] text-destructive">The last payment failed. Update your card in Manage billing.</p>}
           {user.cancelAt && user.plan !== "free" && <p className="text-[13px] text-muted-foreground">Ends {day(user.cancelAt)}, then Free.</p>}
           {!user.cancelAt && user.renewsAt && user.plan !== "free" && <p className="text-[13px] text-muted-foreground">Renews {day(user.renewsAt)}.</p>}
@@ -85,6 +103,14 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
         )}
         {billingNote && <p className="text-[13px] text-muted-foreground">{billingNote}</p>}
       </section>
+
+      <TwoStepCard
+        since={user.twoStepSince}
+        codesLeft={user.twoStepSince ? await recoveryCodesLeft(user.id) : 0}
+        setup={setup}
+        configured={twoStepConfigured()}
+        note={params.two_step === "unavailable" ? "Two-step sign-in could not start just now. Try again in a minute." : undefined}
+      />
 
       <PlanPicker
         plan={user.plan}

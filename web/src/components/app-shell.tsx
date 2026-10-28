@@ -3,6 +3,7 @@ import { CircleUser } from "lucide-react";
 import { Logo } from "@/components/logo";
 import { NavLinks } from "@/components/nav-links";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { PlanBadge } from "@/components/plan-badge";
 
 /** Top bar (48px, hairline) plus the page. Mobile first: the nav stays inline
  *  because it is four short words; the search field grows on wider screens. */
@@ -25,6 +26,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <NavLinks />
           <div className="ml-auto flex items-center gap-1">
             <span className="hidden font-mono text-[11px] tabular-nums text-muted-foreground md:inline">preview · sample data</span>
+            <PlanBadge />
             <ThemeToggle />
             <Link
               href="/account"

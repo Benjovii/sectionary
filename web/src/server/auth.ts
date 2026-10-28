@@ -1,6 +1,8 @@
 import { cookies, headers } from "next/headers";
-import { createSession, endSession, SESSION_COOKIE, SESSION_DAYS, upsertUser, userForSession, type SessionUser } from "@/server/accounts";
+import { createSession, endAllSessions, endSession, lookupSession, SESSION_COOKIE, SESSION_DAYS, upsertUser, userById, type SessionUser } from "@/server/accounts";
+import { PENDING_MINUTES } from "@/server/accounts";
 import type { VerifiedUser } from "@/server/supabase-auth";
+import { finishSignIn } from "@/server/two-step";
 
 // The Next.js side of accounts: the session cookie. Lax so the click from the
 // email arrives signed in on the next request; httpOnly so page scripts never
@@ -9,23 +11,63 @@ import type { VerifiedUser } from "@/server/supabase-auth";
 
 const secure = () => process.env.NODE_ENV === "production";
 
+/** The half-signed-in cookie between the email link and the authenticator code. */
+export const PENDING_COOKIE = "sx_two_step";
+
 export async function currentUser(): Promise<SessionUser | null> {
   if (!process.env.DATABASE_URL) return null;
-  return userForSession((await cookies()).get(SESSION_COOKIE)?.value);
+  return (await lookupSession((await cookies()).get(SESSION_COOKIE)?.value))?.user ?? null;
 }
 
-/** After Supabase verified the address: the users row, a session, the cookie. */
-export async function startSession(verified: VerifiedUser) {
-  const user = await upsertUser(verified.id, verified.email);
-  const { token, expires } = await createSession(user.id, (await headers()).get("user-agent"));
+async function setSessionCookie(userId: string) {
+  const { token, expires } = await createSession(userId, (await headers()).get("user-agent"));
   (await cookies()).set(SESSION_COOKIE, token, { httpOnly: true, secure: secure(), sameSite: "lax", path: "/", expires, maxAge: SESSION_DAYS * 86_400 });
-  return user;
+}
+
+/**
+ * After Supabase verified the address: the users row, then either a session
+ * and its cookie, or, with two-step on, a ten-minute pending session that only
+ * /auth/two-step can finish. Says which, so the caller knows where to go.
+ */
+export async function startSession(verified: VerifiedUser, next: string): Promise<{ user: SessionUser; twoStep: boolean }> {
+  const user = await upsertUser(verified.id, verified.email);
+  const jar = await cookies();
+  if (user.twoStepSince) {
+    const { token, expires } = await createSession(user.id, (await headers()).get("user-agent"), { next });
+    jar.set(PENDING_COOKIE, token, { httpOnly: true, secure: secure(), sameSite: "lax", path: "/", expires, maxAge: PENDING_MINUTES * 60 });
+    return { user, twoStep: true };
+  }
+  await setSessionCookie(user.id);
+  return { user, twoStep: false };
+}
+
+/** The authenticator (or recovery) code for a pending sign-in. Returns where to go next; throws TwoStepCodeError. */
+export async function finishTwoStep(code: string): Promise<string> {
+  const jar = await cookies();
+  const token = jar.get(PENDING_COOKIE)?.value ?? "";
+  try {
+    const { userId, next } = await finishSignIn(token, code);
+    if (!(await userById(userId))) throw new Error("user vanished");
+    await setSessionCookie(userId);
+    jar.delete(PENDING_COOKIE);
+    return next;
+  } catch (error) {
+    // A locked or timed-out pending sign-in is gone; so is its cookie.
+    if ((error as { code?: string }).code === "LOCKED" || (error as { code?: string }).code === "EXPIRED") jar.delete(PENDING_COOKIE);
+    throw error;
+  }
 }
 
 export async function signOut() {
   const jar = await cookies();
   await endSession(jar.get(SESSION_COOKIE)?.value);
   jar.delete(SESSION_COOKIE);
+}
+
+/** Every device, this one included. */
+export async function signOutEverywhere(userId: string) {
+  await endAllSessions(userId);
+  (await cookies()).delete(SESSION_COOKIE);
 }
 
 /** Where to go after signing in: a path on this site, never another origin. */
