@@ -6,7 +6,7 @@ import { Lock } from "lucide-react";
 import type { ViewCheck } from "@/contracts/api";
 import { Button } from "@/components/ui/button";
 import { API_MODE } from "@/lib/data-source";
-import { useAccess } from "@/lib/account";
+import { DEV_DAILY_VIEWS, DEV_VIEWS_KEY, devAs, useAccess, type DevAs } from "@/lib/account";
 
 /**
  * The Free plan's daily cap (SEC-28) as the detail view sees it: asks
@@ -16,8 +16,16 @@ import { useAccess } from "@/lib/account";
 export function useViewCheck(blockId: string | null): ViewCheck | null {
   const [check, setCheck] = useState<{ id: string; result: ViewCheck } | null>(null);
   useEffect(() => {
-    if (!API_MODE || !blockId) return;
+    if (!blockId) return;
     let alive = true;
+    const as = devAs();
+    if (as) {
+      Promise.resolve(devViewCheck(as, blockId)).then((result) => alive && setCheck({ id: blockId, result }));
+      return () => {
+        alive = false;
+      };
+    }
+    if (!API_MODE) return;
     fetch("/api/views", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ blockId }) })
       .then((r) => (r.ok ? (r.json() as Promise<ViewCheck>) : null))
       .then((result) => alive && result && setCheck({ id: blockId, result }))
@@ -27,6 +35,26 @@ export function useViewCheck(blockId: string | null): ViewCheck | null {
     };
   }, [blockId]);
   return check && check.id === blockId ? check.result : null;
+}
+
+/** Development only (see devAs): /api/views as it answers with the gates on, the count kept in this browser. */
+function devViewCheck(as: DevAs, blockId: string): ViewCheck {
+  if (as === "out") return { allowed: false, used: 0, limit: null, plan: null, reason: "SIGN_IN_REQUIRED" };
+  if (as === "trial") return { allowed: true, used: 0, limit: null, plan: "free" };
+  const day = new Date().toISOString().slice(0, 10);
+  let ids: string[] = [];
+  try {
+    const saved = JSON.parse(localStorage.getItem(DEV_VIEWS_KEY) ?? "null") as { day: string; ids: string[] } | null;
+    if (saved?.day === day) ids = saved.ids;
+  } catch {}
+  if (!ids.includes(blockId)) {
+    if (ids.length >= DEV_DAILY_VIEWS) return { allowed: false, used: ids.length, limit: DEV_DAILY_VIEWS, plan: "free", reason: "LIMIT" };
+    ids = [...ids, blockId];
+    try {
+      localStorage.setItem(DEV_VIEWS_KEY, JSON.stringify({ day, ids }));
+    } catch {}
+  }
+  return { allowed: true, used: ids.length, limit: DEV_DAILY_VIEWS, plan: "free" };
 }
 
 export function ViewLimitPanel({ check, onClose }: { check: ViewCheck; onClose: () => void }) {

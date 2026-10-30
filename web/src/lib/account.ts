@@ -7,14 +7,64 @@ import { API_MODE } from "@/lib/data-source";
 let cached: Promise<AccountResponse> | null = null;
 
 function load(): Promise<AccountResponse> {
-  cached ??= fetch("/api/account", { cache: "no-store" }).then((r) => (r.ok ? r.json() : { account: null })).catch(() => ({ account: null }));
+  const as = devAs();
+  cached ??= as
+    ? Promise.resolve(devAccount(as))
+    : fetch("/api/account", { cache: "no-store" }).then((r) => (r.ok ? r.json() : { account: null })).catch(() => ({ account: null }));
   return cached;
+}
+
+/**
+ * Development only: the plan switch (DevPlanSwitch, bottom right) stands in
+ * for the account, so the signed-out, trial and Free screens can be seen
+ * without a database or a sign-in, with the gates on. The UI only: the API
+ * still answers as it is configured. Never set in a production build.
+ */
+export type DevAs = "out" | "trial" | "free";
+export const DEV_AS_KEY = "sx-dev-as";
+/** The Free count under the switch: { day, ids } for today (UTC). */
+export const DEV_VIEWS_KEY = "sx-dev-views";
+
+export function devAs(): DevAs | null {
+  if (process.env.NODE_ENV !== "development" || typeof window === "undefined") return null;
+  try {
+    const v = localStorage.getItem(DEV_AS_KEY);
+    return v === "out" || v === "trial" || v === "free" ? v : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Mirrors can() in server/plans.ts with the gates on: Free and signed out get only "open" (signed out not even that). */
+const DEV_PRO: Feature[] = ["open", "brief", "history", "boards", "filters", "copy-image", "source-link", "full-images"];
+export const DEV_DAILY_VIEWS = 3;
+
+function devAccount(as: DevAs): AccountResponse {
+  if (as === "out") return { account: null, gates: true, features: [] };
+  const trial = as === "trial";
+  return {
+    account: {
+      id: "dev",
+      email: `${as}@localhost`,
+      plan: "free",
+      planStatus: null,
+      seats: 1,
+      renewsAt: null,
+      cancelAt: null,
+      trialEndsAt: new Date(Date.now() + (trial ? 5 : -2) * 86_400_000).toISOString(),
+      access: trial ? "pro" : "free",
+      twoStep: false,
+    },
+    views: { used: 0, limit: trial ? null : DEV_DAILY_VIEWS },
+    gates: true,
+    features: trial ? DEV_PRO : ["open"],
+  };
 }
 
 function useAccountResponse(): AccountResponse | undefined {
   const [res, setRes] = useState<AccountResponse | undefined>(API_MODE ? undefined : { account: null, gates: false });
   useEffect(() => {
-    if (!API_MODE) return;
+    if (!API_MODE && !devAs()) return;
     let alive = true;
     load().then((r) => alive && setRes(r));
     return () => {

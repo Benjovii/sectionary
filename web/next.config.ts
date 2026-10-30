@@ -6,6 +6,15 @@ const nextConfig: NextConfig = {
   // any host but localhost and the page never hydrates. Development only.
   allowedDevOrigins: ["192.168.*.*"],
 
+  // Development only: DEV_API_PROXY=https://sectionary-pink.vercel.app sends
+  // /api/* to that deployment, so with the NEXT_PUBLIC_*_SRC values set to the
+  // /api paths the wall, Sites and Flows show real blocks without a database.
+  // Pair it with the dev plan switch (bottom right) to see Free and signed out.
+  async rewrites() {
+    const target = process.env.NODE_ENV === "development" ? process.env.DEV_API_PROXY?.replace(/\/+$/, "") : undefined;
+    return target ? { beforeFiles: [{ source: "/api/:path*", destination: `${target}/api/:path*` }], afterFiles: [], fallback: [] } : [];
+  },
+
   // The "Pages" tab became Flows (SEC-20). A real redirect, so old links and
   // bookmarks move for good rather than bouncing through a meta refresh.
   async redirects() {

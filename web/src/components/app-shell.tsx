@@ -5,6 +5,7 @@ import { NavLinks } from "@/components/nav-links";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { PlanBadge } from "@/components/plan-badge";
 import { AuthHashRedirect } from "@/components/auth-hash-redirect";
+import { DevPlanSwitch } from "@/components/dev-plan-switch";
 
 /** Top bar (48px, hairline) plus the page. Mobile first: the nav stays inline
  *  because it is four short words; the search field grows on wider screens. */
@@ -42,6 +43,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       </header>
       <main id="main" tabIndex={-1} className="mx-auto outline-none w-full max-w-[1800px] flex-1 px-3 py-3 sm:px-4 sm:py-4">{children}</main>
+      {process.env.NODE_ENV === "development" && <DevPlanSwitch />}
     </div>
   );
 }

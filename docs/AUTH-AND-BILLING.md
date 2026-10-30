@@ -115,6 +115,28 @@ Pro. `GET /api/account` returns `gates` and `features` so the UI shows the locks
   first signed-in visit that carries the token. After that the token alone no
   longer opens them.
 
+### Trying the plans locally
+
+No database or sign-in needed. In `web/.env.local`:
+
+```
+NEXT_PUBLIC_BLOCKS_SRC=/api/blocks
+NEXT_PUBLIC_STORES_SRC=/api/stores
+NEXT_PUBLIC_SITES_SRC=/api/sites
+DEV_API_PROXY=https://sectionary-pink.vercel.app
+```
+
+Run `npm run dev` in `web/` and use the **dev · view as** switch at the bottom
+right: Real, Signed out, Trial or Free. It stands in for `/api/account` and
+`/api/views` in this browser (Free counts 3 distinct blocks a day, with a
+"reset count" button), so every screen shows as it will with `PLAN_GATES=on`.
+It only changes the UI: the API answers as it is configured. The switch and
+the proxy exist only under `npm run dev`, never in a build.
+
+To test the real thing end to end (sign-in, the server-side cap, the 402s),
+use a `DATABASE_URL`, `PLAN_GATES=on` and your own account, and end its trial
+with `UPDATE users SET trial_ends_at = now() - interval '1 day' WHERE email = '...'`.
+
 ## How billing works
 
 Paddle is the merchant of record (Stripe does not serve Kosovo; Paddle pays
