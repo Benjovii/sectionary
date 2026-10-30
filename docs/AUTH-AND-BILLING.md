@@ -78,12 +78,12 @@ set on first sign-in). After that it is Free unless it pays.
 
 | | Signed out | Free (after the trial) | Pro trial, Pro, Team |
 |---|---|---|---|
-| Wall and search | blurred previews | yes | yes |
-| Blocks opened in the detail view | none: needs an account | `FREE_DAILY_VIEWS` a day (default 3) | unlimited |
+| Wall, search, Sites and Flows | blurred previews | blurred previews | full images |
+| Blocks opened in the detail view | none: needs an account | `FREE_DAILY_VIEWS` a day, shown in full (default 3) | unlimited |
 | Filters | Store, Block type | Store, Block type | all |
 | Copy as brief, time machine | no | no | yes |
 | Copy image, source page link | no | no | yes |
-| Boards and share links | no | read-only: the ones you have stay readable, shareable, deletable | yes |
+| Boards and share links | no | no new boards or additions; the ones you have stay readable, shareable, editable, deletable | yes |
 | Price shown (hypothesis, PLAN.md) | | $0 | $12 a month, $96 a year; Team $20 a seat a month, $192 a year |
 
 Each gate is one call, `can(access, feature)` in `web/src/server/plans.ts`,
@@ -99,8 +99,14 @@ Pro. `GET /api/account` returns `gates` and `features` so the UI shows the locks
 - The daily cap counts distinct blocks opened per UTC day. Opening the same
   block again that day is free. Signed out, no block opens: the detail view
   asks for an account and offers the trial.
-- The thumbnails themselves are public on the CDN; the blur on the wall and
-  the locks on copy image and the source link are about the product, not secrecy.
+- The model: a week of everything, then the library turns into blurred
+  previews. Free still sees how big it is and can open a few blocks a day in
+  full; Pro brings the whole thing back. The wall says why it is blurred, next
+  to the Web / Mobile switch, with the upgrade link (`PreviewNotice`).
+- The thumbnails themselves are public on the CDN; the blur (wall, Sites,
+  Flows: `usePreviewOnly` in `web/src/lib/account.ts`) and the locks on copy
+  image and the source link are about the product, not secrecy. Shared board
+  links (`/b/...`) are not blurred, so a client always sees what was sent.
 - After a downgrade, existing boards stay readable, shareable and deletable.
   Only creating boards and adding blocks need Pro.
 - Team is Pro billed per seat. Inviting the other seats is not built yet

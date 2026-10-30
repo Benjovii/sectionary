@@ -6,6 +6,7 @@ import { Lock } from "lucide-react";
 import type { ViewCheck } from "@/contracts/api";
 import { Button } from "@/components/ui/button";
 import { API_MODE } from "@/lib/data-source";
+import { useAccess } from "@/lib/account";
 
 /**
  * The Free plan's daily cap (SEC-28) as the detail view sees it: asks
@@ -52,7 +53,7 @@ export function ViewLimitPanel({ check, onClose }: { check: ViewCheck; onClose: 
     <div className="m-auto flex max-w-sm flex-col items-center gap-3 rounded-xl border bg-card p-8 text-center text-card-foreground">
       <p className="font-heading text-[15px] font-semibold">That&apos;s today&apos;s {check.limit} blocks</p>
       <p className="text-[13px] text-muted-foreground text-pretty">
-        The Free plan opens {check.limit} blocks a day; the count starts again at midnight UTC. Pro opens as many as you like and adds boards, Copy as brief and the time machine.
+        The Free plan opens {check.limit} blocks a day in full; the count starts again at midnight UTC. Pro shows the whole library in full and adds boards, Copy as brief and the time machine.
       </p>
       <div className="flex flex-wrap justify-center gap-2">
         <Link href={signedIn ? "/account" : "/account?next=/"} className="inline-flex h-8 items-center rounded-lg bg-primary px-3 text-[13px] font-medium text-primary-foreground outline-none transition-colors duration-150 hover:bg-primary/80 focus-visible:ring-2 focus-visible:ring-ring touch:h-11">
@@ -63,6 +64,27 @@ export function ViewLimitPanel({ check, onClose }: { check: ViewCheck; onClose: 
         </Button>
       </div>
     </div>
+  );
+}
+
+/**
+ * Beside the wall's Web / Mobile switch while the previews are blurred: why,
+ * and the way out. Nothing until the account answers, so Pro never sees it flash.
+ */
+export function PreviewNotice() {
+  const access = useAccess();
+  if (!access.ready || access.can("full-images")) return null;
+  const opens = access.dailyViews ? `Open ${access.dailyViews} blocks a day in full` : "Open a few blocks a day in full";
+  return (
+    <p className="flex min-w-0 basis-full items-start gap-2 text-[12px] text-muted-foreground sm:ml-auto sm:basis-auto sm:items-center">
+      <Lock aria-hidden className="mt-0.5 size-3.5 shrink-0 sm:mt-0" />
+      <span className="text-pretty sm:truncate">
+        {access.signedIn ? `Your Pro trial has ended, so these are previews. ${opens}, or upgrade to see everything.` : "These are previews. Start a free 7-day Pro trial to see every block in full."}
+      </span>
+      <Link href={access.signedIn ? "/account" : "/account?next=/"} className="shrink-0 font-medium text-link underline-offset-4 outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring">
+        {access.signedIn ? "Upgrade" : "Start free trial"}
+      </Link>
+    </p>
   );
 }
 

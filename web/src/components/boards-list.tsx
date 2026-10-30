@@ -3,11 +3,11 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Plus } from "lucide-react";
+import { Lock, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { assetUrl } from "@/lib/data-source";
 import { boardStore, onBoardsChanged, type BoardSummary } from "@/lib/boards";
-import { gateOf, useAccount, type Gate } from "@/lib/account";
+import { gateOf, useAccess, useAccount, type Gate } from "@/lib/account";
 import { API_MODE } from "@/lib/data-source";
 
 /** Your boards, newest first, and a field to start one. */
@@ -19,6 +19,7 @@ export function BoardsList() {
   const [busy, setBusy] = useState(false);
   const router = useRouter();
   const account = useAccount();
+  const access = useAccess();
 
   useEffect(() => {
     let alive = true;
@@ -54,19 +55,31 @@ export function BoardsList() {
         </p>
       </div>
 
-      <form onSubmit={create} className="flex max-w-md gap-1.5">
-        <input
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="Name a new board, e.g. Acme PDP refresh"
-          aria-label="New board name"
-          maxLength={120}
-          className="h-8 min-w-0 flex-1 rounded-lg border bg-background px-2.5 text-[13px] outline-none placeholder:text-muted-foreground focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30"
-        />
-        <Button type="submit" disabled={!name.trim() || busy}>
-          <Plus /> Create
-        </Button>
-      </form>
+      {!access.can("boards") ? (
+        <p className="flex max-w-md items-center gap-2 text-[13px] text-muted-foreground">
+          <Lock aria-hidden className="size-3.5 shrink-0" />
+          <span>
+            {access.signedIn ? "New boards come with Pro. The ones you have stay readable, shareable and editable." : "Sign in to make boards. New accounts get Pro free for 7 days."}{" "}
+            <Link href={access.signedIn ? "/account" : "/account?next=/boards"} className="font-medium text-link underline-offset-4 hover:underline">
+              {access.signedIn ? "See plans" : "Start free trial"}
+            </Link>
+          </span>
+        </p>
+      ) : (
+        <form onSubmit={create} className="flex max-w-md gap-1.5">
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Name a new board, e.g. Acme PDP refresh"
+            aria-label="New board name"
+            maxLength={120}
+            className="h-8 min-w-0 flex-1 rounded-lg border bg-background px-2.5 text-[13px] outline-none placeholder:text-muted-foreground focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30"
+          />
+          <Button type="submit" disabled={!name.trim() || busy}>
+            <Plus /> Create
+          </Button>
+        </form>
+      )}
 
       {error && (
         <p className="text-[12px] text-destructive">

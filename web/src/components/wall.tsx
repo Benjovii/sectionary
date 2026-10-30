@@ -5,6 +5,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { BlockCard, BlockCardSkeleton } from "@/components/block-card";
 import { BlockViewer } from "@/components/block-viewer";
+import { PreviewNotice } from "@/components/view-limit";
 import { ViewportSwitch, type ViewportChoice } from "@/components/viewport-switch";
 import { FilterBar, FilterBarSkeleton } from "@/components/filter-bar";
 import { TechFilters } from "@/components/tech-filters";
@@ -406,8 +407,9 @@ export function Wall() {
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
         <ViewportSwitch value={viewport} onChange={onViewport} withAll />
+        <PreviewNotice />
       </div>
 
       <FilterBar

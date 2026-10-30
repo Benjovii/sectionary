@@ -4,9 +4,10 @@ import type { Plan, Feature } from "@/contracts/api";
 //
 // Every account starts with Pro for seven days, no card (trial_ends_at). After
 // that, unless it pays, it is Free:
-//  - opens FREE_DAILY_VIEWS blocks a day (default 3);
+//  - the wall, Sites and Flows show blurred previews (no "full-images");
+//  - opens FREE_DAILY_VIEWS blocks a day in full (default 3);
 //  - no Copy as brief, no time machine;
-//  - boards are read-only: what it has stays readable, shareable and deletable,
+//  - boards: what it has stays readable, shareable, editable and deletable,
 //    but it cannot make boards or add to them;
 //  - filters: Store and Block type only (and Web / Mobile, the wall's viewport switch);
 //  - no copy image, no source page link.

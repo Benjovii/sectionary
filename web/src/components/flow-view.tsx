@@ -7,6 +7,7 @@ import { ArrowLeft, ChevronLeft, ChevronRight, Monitor, Smartphone } from "lucid
 import { Button } from "@/components/ui/button";
 import { StoreIcon } from "@/components/store-icon";
 import { cn } from "@/lib/utils";
+import { PREVIEW_BLUR, usePreviewOnly } from "@/lib/account";
 import { assetUrl } from "@/lib/data-source";
 import { loadSiteView } from "@/lib/load-blocks";
 import { labelFor, PAGE_TYPE_LABEL } from "@/lib/blocks";
@@ -375,12 +376,14 @@ function PageBody({
   cap: number | null;
   onLeave: () => void;
 }) {
+  // Signed out, or Free after the trial: blurred, like the wall; each block still opens in full.
+  const preview = usePreviewOnly();
   if (shown.full) {
     const alt = `${page.title ?? PAGE_TYPE_LABEL[page.type] ?? page.type}, ${shown.viewport}`;
     return (
       <div className="overflow-hidden" style={cap ? { aspectRatio: `1 / ${cap}` } : undefined}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={assetUrl(shown.full)} alt={alt} loading="lazy" className="block w-full" />
+        <img src={assetUrl(shown.full)} alt={alt} loading="lazy" className={cn("block w-full", preview && PREVIEW_BLUR)} />
       </div>
     );
   }
@@ -402,7 +405,7 @@ function PageBody({
           >
             <span className="block" style={{ aspectRatio: `${b.w} / ${b.h}` }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={assetUrl(b.src)} alt="" loading="lazy" decoding="async" className="block h-full w-full" />
+              <img src={assetUrl(b.src)} alt="" loading="lazy" decoding="async" className={cn("block h-full w-full", preview && PREVIEW_BLUR)} />
             </span>
             {/* Where the block starts and ends, on hover or focus. */}
             <span className="pointer-events-none absolute inset-0 ring-2 ring-primary ring-inset opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-visible:opacity-100" />

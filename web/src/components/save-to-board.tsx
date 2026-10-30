@@ -2,11 +2,11 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Bookmark, BookmarkCheck, Check, Plus } from "lucide-react";
+import { Bookmark, BookmarkCheck, Check, Lock, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { boardStore, onBoardsChanged, type BoardSummary } from "@/lib/boards";
-import { gateOf, type Gate } from "@/lib/account";
+import { gateOf, useAccess, type Gate } from "@/lib/account";
 import type { Block } from "@/lib/blocks";
 
 /**
@@ -22,6 +22,9 @@ export function SaveToBoard({ block, className, up }: { block: Block; className?
   const [error, setError] = useState<string | null>(null);
   const [gate, setGate] = useState<Gate | null>(null);
   const ref = useRef<HTMLDivElement>(null);
+  const access = useAccess();
+  // Free after the trial, or signed out: no new boards and nothing added (the API agrees, see server/boards.ts).
+  const locked = !access.can("boards");
 
   useEffect(() => {
     let alive = true;
@@ -84,12 +87,26 @@ export function SaveToBoard({ block, className, up }: { block: Block; className?
   return (
     <div ref={ref} className="relative">
       <Button variant={saved.length ? "secondary" : "default"} size="sm" className={className} aria-expanded={open} aria-haspopup="dialog" onClick={() => setOpen((o) => !o)}>
-        {saved.length ? <BookmarkCheck /> : <Bookmark />}
+        {locked ? <Lock /> : saved.length ? <BookmarkCheck /> : <Bookmark />}
         {saved.length ? `Saved${saved.length > 1 ? ` · ${saved.length}` : ""}` : "Save"}
       </Button>
       {open && (
         <div role="dialog" aria-label="Save to board" className={cn("absolute z-10 w-64", up ? "bottom-full left-1/2 mb-2 -translate-x-1/2" : "top-full right-0 mt-1.5", "rounded-lg border bg-popover p-1.5 text-popover-foreground shadow-lg")}>
-          {boards === null ? (
+          {locked ? (
+            <div className="flex flex-col items-start gap-2 px-2 py-1.5">
+              <p className="text-[12px] text-muted-foreground text-pretty">
+                {access.signedIn
+                  ? "Saving to boards comes with Pro. The boards you have stay readable and shareable."
+                  : "Sign in to save blocks to boards. New accounts get Pro free for 7 days."}
+              </p>
+              <Link
+                href={access.signedIn ? "/account" : "/account?next=/boards"}
+                className="inline-flex h-7 items-center rounded-lg bg-primary px-2.5 text-[12px] font-medium text-primary-foreground outline-none transition-colors duration-150 hover:bg-primary/80 focus-visible:ring-2 focus-visible:ring-ring touch:h-11"
+              >
+                {access.signedIn ? "See plans" : "Start free trial"}
+              </Link>
+            </div>
+          ) : boards === null ? (
             <p className="px-2 py-1.5 text-[12px] text-muted-foreground">Loading boards…</p>
           ) : boards.length === 0 ? (
             <p className="px-2 py-1.5 text-[12px] text-muted-foreground">No boards yet. Name one below: it is how you send a set of references to a client.</p>
@@ -117,19 +134,21 @@ export function SaveToBoard({ block, className, up }: { block: Block; className?
               })}
             </ul>
           )}
-          <form onSubmit={create} className="mt-1 flex gap-1 border-t pt-1.5">
-            <input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="New board"
-              aria-label="New board name"
-              maxLength={120}
-              className="h-7 min-w-0 flex-1 rounded-lg border bg-background px-2 text-[12px] outline-none placeholder:text-muted-foreground focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30"
-            />
-            <Button type="submit" size="icon-sm" variant="outline" aria-label="Create board and save" disabled={!name.trim() || busy !== null}>
-              <Plus />
-            </Button>
-          </form>
+          {!locked && (
+            <form onSubmit={create} className="mt-1 flex gap-1 border-t pt-1.5">
+              <input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="New board"
+                aria-label="New board name"
+                maxLength={120}
+                className="h-7 min-w-0 flex-1 rounded-lg border bg-background px-2 text-[12px] outline-none placeholder:text-muted-foreground focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30"
+              />
+              <Button type="submit" size="icon-sm" variant="outline" aria-label="Create board and save" disabled={!name.trim() || busy !== null}>
+                <Plus />
+              </Button>
+            </form>
+          )}
           {error && (
             <p className="px-2 pt-1.5 text-[12px] text-destructive">
               {error}

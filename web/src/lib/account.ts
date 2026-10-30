@@ -41,6 +41,8 @@ export type Access = {
   trialEndsAt: string | null;
   onTrial: boolean;
   plan: Plan;
+  /** Blocks this account may open in full today (Free after the trial); null without a cap or signed out. */
+  dailyViews: number | null;
 };
 
 /** What this viewer may use (plan, trial, signed out), from the same one request as useAccount. */
@@ -58,8 +60,19 @@ export function useAccess(): Access {
     trialEndsAt: account?.trialEndsAt ?? null,
     onTrial,
     plan: account?.plan ?? "free",
+    dailyViews: res?.views?.limit ?? null,
   };
 }
+
+/**
+ * Signed out, or Free once the trial ends (gates on): the wall, Sites and Flows
+ * show blurred previews. A block opened in the detail view is shown in full,
+ * and that is what the daily cap counts.
+ */
+export const usePreviewOnly = () => !useAccess().can("full-images");
+
+/** The blur a preview gets, on the image itself (its frame clips the scale). */
+export const PREVIEW_BLUR = "scale-105 blur-[6px]";
 
 /** Board and view errors that mean "sign in" or "upgrade", from the API's error code. */
 export type Gate = "SIGN_IN_REQUIRED" | "PLAN_REQUIRED";

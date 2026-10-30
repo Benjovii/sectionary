@@ -7,6 +7,7 @@ import { ArrowLeft, ArrowRight, ExternalLink, Route } from "lucide-react";
 import { StoreIcon } from "@/components/store-icon";
 import { BlockViewer } from "@/components/block-viewer";
 import { cn } from "@/lib/utils";
+import { PREVIEW_BLUR, usePreviewOnly } from "@/lib/account";
 import { assetUrl } from "@/lib/data-source";
 import { loadPageBlocks, loadSiteView, wallSource } from "@/lib/load-blocks";
 import { flowOf } from "@/lib/flows";
@@ -256,9 +257,11 @@ function PageThumb({ page }: { page: ProfilePage }) {
 
 /** Enough of the page to fill a frame of height `ratio` × width, and no more. */
 export function Stack({ src, blocks, ratio }: { src: string | null; blocks: Block[]; ratio: number }) {
+  // Signed out, or Free after the trial: blurred, like the wall (see usePreviewOnly).
+  const preview = usePreviewOnly();
   if (src) {
     // eslint-disable-next-line @next/next/no-img-element
-    return <img src={assetUrl(src)} alt="" loading="lazy" decoding="async" className="block h-full w-full object-cover object-top" />;
+    return <img src={assetUrl(src)} alt="" loading="lazy" decoding="async" className={cn("block h-full w-full object-cover object-top", preview && PREVIEW_BLUR)} />;
   }
   const shown: Block[] = [];
   let filled = 0;
@@ -268,11 +271,11 @@ export function Stack({ src, blocks, ratio }: { src: string | null; blocks: Bloc
     if (filled >= ratio) break;
   }
   return (
-    <span className="block h-full w-full">
+    <span className="block h-full w-full overflow-hidden">
       {shown.map((b) => (
         <span key={b.id} className="block" style={{ aspectRatio: `${b.w} / ${b.h}`, background: b.bg }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={assetUrl(b.src)} alt="" loading="lazy" decoding="async" className="block h-full w-full" />
+          <img src={assetUrl(b.src)} alt="" loading="lazy" decoding="async" className={cn("block h-full w-full", preview && PREVIEW_BLUR)} />
         </span>
       ))}
     </span>
