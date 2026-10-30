@@ -6,6 +6,7 @@ import { Bookmark, BookmarkCheck, Check, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { boardStore, onBoardsChanged, type BoardSummary } from "@/lib/boards";
+import { gateOf, type Gate } from "@/lib/account";
 import type { Block } from "@/lib/blocks";
 
 /**
@@ -19,6 +20,7 @@ export function SaveToBoard({ block, className, up }: { block: Block; className?
   const [name, setName] = useState("");
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [gate, setGate] = useState<Gate | null>(null);
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -56,10 +58,12 @@ export function SaveToBoard({ block, className, up }: { block: Block; className?
   const run = async (id: string, job: () => Promise<unknown>) => {
     setBusy(id);
     setError(null);
+    setGate(null);
     try {
       await job();
     } catch (e) {
       setError((e as Error).message);
+      setGate(gateOf(e));
     } finally {
       setBusy(null);
     }
@@ -126,12 +130,27 @@ export function SaveToBoard({ block, className, up }: { block: Block; className?
               <Plus />
             </Button>
           </form>
-          {error && <p className="px-2 pt-1.5 text-[12px] text-destructive">{error}</p>}
+          {error && (
+            <p className="px-2 pt-1.5 text-[12px] text-destructive">
+              {error}
+              <GateLink gate={gate} />
+            </p>
+          )}
           <Link href="/boards" className="mt-1 block rounded-md px-2 py-1.5 text-[12px] text-muted-foreground outline-none hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50">
             Manage and share boards
           </Link>
         </div>
       )}
     </div>
+  );
+}
+
+/** "Sign in" or "See plans" after a board error the plan gate caused. */
+function GateLink({ gate }: { gate: Gate | null }) {
+  if (!gate) return null;
+  return (
+    <Link href={gate === "SIGN_IN_REQUIRED" ? "/account?next=/boards" : "/account"} className="ml-1 text-link underline-offset-4 hover:underline">
+      {gate === "SIGN_IN_REQUIRED" ? "Sign in" : "See plans"}
+    </Link>
   );
 }

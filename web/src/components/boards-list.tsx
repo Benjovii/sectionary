@@ -7,14 +7,18 @@ import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { assetUrl } from "@/lib/data-source";
 import { boardStore, onBoardsChanged, type BoardSummary } from "@/lib/boards";
+import { gateOf, useAccount, type Gate } from "@/lib/account";
+import { API_MODE } from "@/lib/data-source";
 
 /** Your boards, newest first, and a field to start one. */
 export function BoardsList() {
   const [boards, setBoards] = useState<BoardSummary[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [gate, setGate] = useState<Gate | null>(null);
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
   const router = useRouter();
+  const account = useAccount();
 
   useEffect(() => {
     let alive = true;
@@ -36,6 +40,7 @@ export function BoardsList() {
       router.push(`/boards/${b.id}`);
     } catch (err) {
       setError((err as Error).message);
+      setGate(gateOf(err));
       setBusy(false);
     }
   }
@@ -63,7 +68,12 @@ export function BoardsList() {
         </Button>
       </form>
 
-      {error && <p className="text-[12px] text-destructive">{error}</p>}
+      {error && (
+        <p className="text-[12px] text-destructive">
+          {error}
+          <GateLink gate={gate} />
+        </p>
+      )}
 
       {boards === null ? (
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4" aria-busy="true" aria-label="Loading boards">
@@ -112,7 +122,28 @@ export function BoardsList() {
           ))}
         </ul>
       )}
-      <p className="text-[11px] text-muted-foreground">Until accounts arrive, your boards are tied to this browser.</p>
+      <p className="text-[11px] text-muted-foreground">
+        {!API_MODE
+          ? "On this preview, your boards are tied to this browser."
+          : account
+            ? `Saved to your account, ${account.email}.`
+            : account === null && (
+                <>
+                  Signed out, your boards are tied to this browser.{" "}
+                  <Link href="/account?next=/boards" className="text-link underline-offset-4 hover:underline">Sign in</Link> to keep them on every device.
+                </>
+              )}
+      </p>
     </div>
+  );
+}
+
+/** "Sign in" or "See plans" after a board error the plan gate caused. */
+function GateLink({ gate }: { gate: Gate | null }) {
+  if (!gate) return null;
+  return (
+    <Link href={gate === "SIGN_IN_REQUIRED" ? "/account?next=/boards" : "/account"} className="ml-1 text-link underline-offset-4 hover:underline">
+      {gate === "SIGN_IN_REQUIRED" ? "Sign in" : "See plans"}
+    </Link>
   );
 }

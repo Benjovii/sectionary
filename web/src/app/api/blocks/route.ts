@@ -1,6 +1,24 @@
 import { apiError, database, PUBLIC_CACHE } from "@/server/db";
 import { blockColumns, blockJoins, blockWhere, facetCounts, readFilters, toBlock, withColours } from "@/server/blocks";
 import { searchBlocks } from "@/server/search";
+import { userForRequest } from "@/server/accounts";
+import { accessOf, can, FREE_FILTERS, gatesOn } from "@/server/plans";
+import type { BlockFilters } from "@/server/blocks";
+
+/**
+ * Free and signed-out viewers filter by Store and Block type only (with
+ * PLAN_GATES=on): any other filter is dropped. Only a request that carries one
+ * looks up the session, so the wall's ordinary pages stay CDN-cached for all.
+ */
+async function allowedFilters(request: Request, f: BlockFilters): Promise<{ f: BlockFilters; personal: boolean }> {
+  const extra = Object.keys(f).filter((k) => !FREE_FILTERS.has(k));
+  if (!gatesOn() || extra.length === 0) return { f, personal: false };
+  if (can(accessOf(await userForRequest(request)), "filters")) return { f, personal: true };
+  const kept: BlockFilters = {};
+  for (const k of Object.keys(f) as (keyof BlockFilters)[]) if (FREE_FILTERS.has(k)) (kept as Record<string, unknown>)[k] = f[k];
+  return { f: kept, personal: true };
+}
+const PRIVATE = { "Cache-Control": "private, no-store" };
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -18,7 +36,9 @@ export async function GET(request: Request) {
   try {
     const url = new URL(request.url);
     const sql = database();
-    const f = await withColours(sql, readFilters(url));
+    const gated = await allowedFilters(request, readFilters(url));
+    const f = await withColours(sql, gated.f);
+    const cache = gated.personal ? PRIVATE : PUBLIC_CACHE;
     const q = url.searchParams.get("q")?.trim() || null;
     const limit = Math.min(200, Math.max(1, Number(url.searchParams.get("limit")) || 60));
     const offset = Math.max(0, Number(url.searchParams.get("cursor")) || 0);
@@ -28,7 +48,7 @@ export async function GET(request: Request) {
       const { items, total, nextCursor, facets, nearMiss, search } = await searchBlocks(q, f, limit, offset, first);
       // How the query was read goes in headers, so the body stays exactly BlocksResponse.
       const headers = {
-        ...PUBLIC_CACHE,
+        ...cache,
         "x-search-terms": search.terms.join(" "),
         "x-search-corrected": Object.entries(search.corrected).map(([from, to]) => `${from}>${to}`).join(" "),
         "x-search-semantic": String(search.semantic),
@@ -50,6 +70,6 @@ export async function GET(request: Request) {
       items, blocks: items, generatedAt: new Date().toISOString(),
       nextCursor: offset + items.length < total ? String(offset + items.length) : null, total,
       ...(counts && { facets: counts.facets, nearMiss: counts.nearMiss }),
-    }, { headers: PUBLIC_CACHE });
+    }, { headers: cache });
   } catch (error) { return apiError(error); }
 }

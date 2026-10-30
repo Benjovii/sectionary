@@ -4,6 +4,8 @@ import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BriefPanel } from "@/components/brief-panel";
+import { ProOnly } from "@/components/view-limit";
+import { useAccess } from "@/lib/account";
 import { TimeMachineControls, type TimeMachine } from "@/components/time-machine";
 import { cn } from "@/lib/utils";
 import { labelFor, PAGE_TYPE_LABEL, type Block } from "@/lib/blocks";
@@ -60,6 +62,7 @@ export function BlockInfoPanel({
   tabs?: [Tab, string][];
   children?: React.ReactNode;
 } & TechProps) {
+  const access = useAccess();
   const bucket = bucketFor(focus.bg);
   const pageLabel = PAGE_TYPE_LABEL[focus.pageType] ?? focus.pageType;
   return (
@@ -87,12 +90,24 @@ export function BlockInfoPanel({
       )}
       {tab === "brief" && (
         <div role="tabpanel" id="panel-brief" aria-labelledby="tab-brief" className="flex min-h-0 flex-1 flex-col">
-          <BriefPanel block={focus} />
+          {access.can("brief") ? (
+            <BriefPanel block={focus} />
+          ) : (
+            <ProOnly title="Copy as brief comes with Pro" signedIn={access.signedIn}>
+              A ready-to-paste brief of this block for Claude Code, Cursor or a designer. Included in Pro and in the 7-day trial.
+            </ProOnly>
+          )}
         </div>
       )}
       {tab === "history" && (
         <div role="tabpanel" id="panel-history" aria-labelledby="tab-history" className="flex min-h-0 flex-1 flex-col">
-          {tm && <TimeMachineControls tm={tm} />}
+          {!access.can("history") ? (
+            <ProOnly title="The time machine comes with Pro" signedIn={access.signedIn}>
+              See how this block changed across every capture of the page, side by side or as an overlay. Included in Pro and in the 7-day trial.
+            </ProOnly>
+          ) : (
+            tm && <TimeMachineControls tm={tm} />
+          )}
         </div>
       )}
       {tab === "details" && (

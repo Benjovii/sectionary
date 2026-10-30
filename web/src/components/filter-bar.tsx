@@ -1,10 +1,15 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Check, ChevronDown, X } from "lucide-react";
+import { Check, ChevronDown, Lock, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { BAR_FILTERS, FILTERS, countSelected, type FilterKey, type Selected } from "@/lib/filters";
+import { useAccess } from "@/lib/account";
+import { ProOnly } from "@/components/view-limit";
+
+/** The filters Free and signed-out viewers keep (the API drops the rest; server/plans.ts). The viewport is the Web / Mobile switch, open to everyone. */
+const FREE_FILTERS: ReadonlySet<FilterKey> = new Set<FilterKey>(["host", "block", "vp"]);
 
 type Facets = Record<string, { value: string; count: number }[]>;
 
@@ -55,6 +60,8 @@ export function FilterBar({
   onSearch: (value: string) => void;
 }) {
   const [open, setOpen] = useState<FilterKey | null>(null);
+  const access = useAccess();
+  const locked = (key: FilterKey) => !FREE_FILTERS.has(key) && !access.can("filters");
   const [needle, setNeedle] = useState("");
   const root = useRef<HTMLDivElement>(null);
   const chips = useRef(new Map<FilterKey, HTMLButtonElement>());
@@ -123,6 +130,7 @@ export function FilterBar({
                   setOpen((prev) => (prev === filter.key ? null : filter.key));
                 }}
               >
+                {locked(filter.key) && <Lock aria-label="Pro" className="size-3 text-muted-foreground" />}
                 {filter.label}
                 {chosen.length > 0 && (
                   <span className="rounded-full bg-primary-foreground/20 px-1.5 font-mono text-[10px] tabular-nums">{chosen.length}</span>
@@ -164,6 +172,11 @@ export function FilterBar({
 
       {spec && (
         <div id="filter-panel" role="group" aria-label={spec.label} className="absolute inset-x-0 top-full z-10 mt-2 rounded-lg border bg-popover p-1 text-popover-foreground shadow-[0_12px_32px_-8px_rgb(0_0_0/0.35)]">
+          {locked(spec.key) ? (
+            <ProOnly title={`The ${spec.label} filter comes with Pro`} signedIn={access.signedIn}>
+              Free filters by Store and Block type. Pro adds every filter: page, viewport, platform, theme, apps, industry, country, video and colour.
+            </ProOnly>
+          ) : (<>
           {spec.searchable && (facets[spec.key] ?? []).length > 8 && (
             <input
               type="search"
@@ -211,6 +224,7 @@ export function FilterBar({
               })
             )}
           </div>
+          </>)}
         </div>
       )}
     </div>

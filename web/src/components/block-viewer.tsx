@@ -2,10 +2,12 @@
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowDown, ArrowLeft, ArrowRight, Check, Copy, ExternalLink, Link2, MoreHorizontal, Store, X } from "lucide-react";
+import { ArrowDown, ArrowLeft, ArrowRight, Check, Copy, ExternalLink, Link2, Lock, MoreHorizontal, Store, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StoreIcon } from "@/components/store-icon";
 import { SaveToBoard } from "@/components/save-to-board";
+import { useViewCheck, ViewLimitPanel } from "@/components/view-limit";
+import { useAccess } from "@/lib/account";
 import { ViewportSwitch } from "@/components/viewport-switch";
 import { TimeMachineStage, useTimeMachine } from "@/components/time-machine";
 import { BlockInfoPanel, copyImage, TABS, zoomWidth, type Tab } from "@/components/block-info";
@@ -69,6 +71,10 @@ type ViewerProps = {
 export function BlockViewer({ block, missing = false, detail, info, onInfo, onClose, ...rest }: ViewerProps) {
   const ref = useRef<HTMLDialogElement>(null);
   const show = Boolean(block || missing);
+  // The Free plan's daily cap (SEC-28); null until the count answers, and in
+  // sample mode. A client opening a shared board is not counted.
+  const check = useViewCheck(block && !rest.shared ? block.id : null);
+  const limited = check?.allowed === false;
 
   useEffect(() => {
     const d = ref.current;
@@ -94,7 +100,11 @@ export function BlockViewer({ block, missing = false, detail, info, onInfo, onCl
       }}
       className="m-0 h-dvh max-h-dvh w-screen max-w-none overflow-y-auto overscroll-contain bg-transparent p-0 backdrop:bg-black/75 backdrop:backdrop-blur-sm"
     >
-      {block ? (
+      {block && limited && check ? (
+        <div className="flex min-h-dvh items-center justify-center p-4" onClick={(e) => e.target === e.currentTarget && onClose()}>
+          <ViewLimitPanel check={check} onClose={onClose} />
+        </div>
+      ) : block ? (
         <Window key={block.id} block={block} detail={detail ?? NO_DETAIL} info={info} onInfo={onInfo} onClose={onClose} {...rest} />
       ) : missing ? (
         <div className="flex min-h-dvh items-center justify-center p-4" onClick={(e) => e.target === e.currentTarget && onClose()}>
@@ -141,7 +151,10 @@ function Window({
   // The info panel's tab. The time machine fetches its history only once
   // its tab is open, and shows its comparison where the screenshot was.
   const [tab, setTab] = useState<Tab>("details");
-  const history = info && tab === "history" && !shared;
+  // Pro tools (SEC-28). A shared board keeps the source link it always had.
+  const access = useAccess();
+  const sourceOk = Boolean(shared) || access.can("source-link");
+  const history = info && tab === "history" && !shared && access.can("history");
   const tm = useTimeMachine(block, history);
   const panel = usePresence(info, PANEL_MS);
 
@@ -195,16 +208,27 @@ function Window({
           <div className="ml-auto flex items-center gap-1">
             {pair && <ViewportSwitch value={viewport} onChange={setViewport} size="sm" className="mr-2 hidden sm:inline-flex" />}
             <CopyLink />
-            <a
-              href={block.pageUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Open the source page"
-              title="Open the source page"
-              className="inline-flex size-9 items-center justify-center rounded-lg text-muted-foreground outline-none transition-colors duration-150 hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring touch:size-11"
-            >
-              <ExternalLink className="size-[18px]" />
-            </a>
+            {sourceOk ? (
+              <a
+                href={block.pageUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Open the source page"
+                title="Open the source page"
+                className="inline-flex size-9 items-center justify-center rounded-lg text-muted-foreground outline-none transition-colors duration-150 hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring touch:size-11"
+              >
+                <ExternalLink className="size-[18px]" />
+              </a>
+            ) : (
+              <Link
+                href="/account"
+                aria-label="The source page link comes with Pro"
+                title="The source page link comes with Pro"
+                className="inline-flex size-9 items-center justify-center rounded-lg text-muted-foreground outline-none transition-colors duration-150 hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring touch:size-11"
+              >
+                <Lock className="size-4" />
+              </Link>
+            )}
             <span aria-hidden className="mx-2 h-6 w-px bg-border" />
             <button
               type="button"
@@ -262,8 +286,17 @@ function Window({
               </div>
               <div className="flex items-center gap-2 md:col-start-2">
                 {!shared && <SaveToBoard block={block} up className="h-10 rounded-full px-5 text-[14px] touch:h-11" />}
-                <CopyImage block={block} />
-                <More block={block} site={!shared} />
+                {access.can("copy-image") ? (
+                  <CopyImage block={block} />
+                ) : (
+                  // A client on a shared board never had copy; elsewhere it shows locked.
+                  !shared && (
+                    <Link href="/account" title="Copy image comes with Pro" className={LOCKED}>
+                      <Lock className="size-4" /> Copy
+                    </Link>
+                  )
+                )}
+                <More block={block} site={!shared} source={sourceOk} />
               </div>
               <div className="flex min-w-0 flex-col items-end text-right text-[13px] leading-tight">
                 <span className="hidden truncate text-muted-foreground sm:block">
@@ -580,6 +613,10 @@ function useFlash(): [string | null, (job: () => Promise<void>) => void] {
   return [state, run];
 }
 
+/** A Pro-only action for Free viewers: the pill it replaces, dashed, with a lock, linking to the plans. */
+const LOCKED =
+  "inline-flex h-10 items-center gap-1.5 rounded-full border border-dashed px-5 text-[14px] font-medium text-muted-foreground outline-none transition-colors duration-150 hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring touch:h-11";
+
 function CopyImage({ block }: { block: Block }) {
   const [state, run] = useFlash();
   return (
@@ -615,7 +652,7 @@ function CopyLink() {
 }
 
 /** The "…" menu: the less common actions. */
-function More({ block, site }: { block: Block; site: boolean }) {
+function More({ block, site, source }: { block: Block; site: boolean; source: boolean }) {
   const [open, setOpen] = useState(false);
   const [state, run] = useFlash();
   const ref = useRef<HTMLDivElement>(null);
@@ -661,10 +698,17 @@ function More({ block, site }: { block: Block; site: boolean }) {
             {state === "Copied" ? <Check /> : <Link2 />}
             {state ?? "Copy link"}
           </button>
-          <a role="menuitem" href={block.pageUrl} target="_blank" rel="noopener noreferrer" className={item} onClick={() => setOpen(false)}>
-            <ExternalLink />
-            Open source page
-          </a>
+          {source ? (
+            <a role="menuitem" href={block.pageUrl} target="_blank" rel="noopener noreferrer" className={item} onClick={() => setOpen(false)}>
+              <ExternalLink />
+              Open source page
+            </a>
+          ) : (
+            <Link role="menuitem" href="/account" title="The source page link comes with Pro" className={item}>
+              <Lock />
+              Source page (Pro)
+            </Link>
+          )}
           {site && (
             <Link role="menuitem" href={`/sites/${encodeURIComponent(block.host)}`} className={item}>
               <Store />

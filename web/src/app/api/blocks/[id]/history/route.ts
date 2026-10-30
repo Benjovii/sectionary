@@ -1,6 +1,8 @@
 import type { BlockHistory } from "@/contracts/api";
 import { apiError, database } from "@/server/db";
 import { blockColumns, blockJoins, toBlock, UUID } from "@/server/blocks";
+import { userForRequest } from "@/server/accounts";
+import { accessOf, can, planRequired } from "@/server/plans";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -19,8 +21,10 @@ function fullPageSrc(blockKey: string | null, shot: ViewportShot) {
 }
 
 /** GET /api/blocks/[id]/history · BlockHistory, newest capture first. */
-export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const access = accessOf(await userForRequest(request));
+    if (!can(access, "history")) return planRequired(access, "The time machine");
     const { id } = await params;
     if (!UUID.test(id)) return Response.json({ error: "Block not found", code: "NOT_FOUND" }, { status: 404 });
     const sql = database();

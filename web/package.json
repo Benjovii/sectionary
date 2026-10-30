@@ -11,16 +11,18 @@
     "mock": "node scripts/mock-blocks.mjs",
     "flow-check": "node scripts/flow-check.mts",
     "search:acceptance": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --import ./scripts/server-alias.mjs scripts/search-acceptance.mts",
-    "test": "node --test --disable-warning=MODULE_TYPELESS_PACKAGE_JSON src/server/*.test.ts"
+    "test": "node --test --disable-warning=MODULE_TYPELESS_PACKAGE_JSON src/server/*.test.ts",
+    "account:acceptance": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --import ./scripts/server-alias.mjs scripts/account-acceptance.mts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.127.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^1.24.0",
-    "next": "16.3.5",
+    "next": "^16.4.3",
     "next-themes": "^0.4.6",
     "postgres": "^3.4.7",
+    "qrcode": "^1.5.4",
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "tailwind-merge": "^3.6.0"
@@ -28,10 +30,11 @@
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
+    "@types/qrcode": "^1.5.6",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
-    "eslint-config-next": "16.3.5",
+    "eslint-config-next": "^16.4.3",
     "tailwindcss": "^4",
     "typescript": "^5"
   }
