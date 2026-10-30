@@ -9,8 +9,12 @@ import { boardStore, onBoardsChanged, type BoardSummary } from "@/lib/boards";
 import { gateOf, type Gate } from "@/lib/account";
 import type { Block } from "@/lib/blocks";
 
-/** "Save" in the detail view: tick the boards this block belongs to, or start a new one. */
-export function SaveToBoard({ block }: { block: Block }) {
+/**
+ * "Save" in the detail view and the viewer: tick the boards this block belongs
+ * to, or start a new one. `className` restyles the button; `up` opens the list
+ * above it, for a button that sits at the bottom of the screen.
+ */
+export function SaveToBoard({ block, className, up }: { block: Block; className?: string; up?: boolean }) {
   const [open, setOpen] = useState(false);
   const [boards, setBoards] = useState<BoardSummary[] | null>(null);
   const [name, setName] = useState("");
@@ -79,12 +83,12 @@ export function SaveToBoard({ block }: { block: Block }) {
 
   return (
     <div ref={ref} className="relative">
-      <Button variant={saved.length ? "secondary" : "default"} size="sm" aria-expanded={open} aria-haspopup="dialog" onClick={() => setOpen((o) => !o)}>
+      <Button variant={saved.length ? "secondary" : "default"} size="sm" className={className} aria-expanded={open} aria-haspopup="dialog" onClick={() => setOpen((o) => !o)}>
         {saved.length ? <BookmarkCheck /> : <Bookmark />}
         {saved.length ? `Saved${saved.length > 1 ? ` · ${saved.length}` : ""}` : "Save"}
       </Button>
       {open && (
-        <div role="dialog" aria-label="Save to board" className="absolute top-full right-0 z-10 mt-1.5 w-64 rounded-lg border bg-popover p-1.5 text-popover-foreground shadow-lg">
+        <div role="dialog" aria-label="Save to board" className={cn("absolute z-10 w-64", up ? "bottom-full left-1/2 mb-2 -translate-x-1/2" : "top-full right-0 mt-1.5", "rounded-lg border bg-popover p-1.5 text-popover-foreground shadow-lg")}>
           {boards === null ? (
             <p className="px-2 py-1.5 text-[12px] text-muted-foreground">Loading boards…</p>
           ) : boards.length === 0 ? (

@@ -17,7 +17,18 @@ import { useAccess } from "@/lib/account";
  * aspect ratio. That keeps the rendered card and the computed layout identical,
  * which is what stops the wall drifting as you scroll.
  */
-export function BlockCard({ block, onOpen, height }: { block: Block; onOpen: (b: Block) => void; height?: number }) {
+export function BlockCard({
+  block,
+  onOpen,
+  width,
+  height,
+}: {
+  block: Block;
+  onOpen: (b: Block) => void;
+  /** The card's width on the wall, which tells the browser which image to fetch. */
+  width?: number;
+  height?: number;
+}) {
   const [loaded, setLoaded] = useState(false);
   // The thumbnail first (see thumbOf); the full screenshot if it will not load.
   const [full, setFull] = useState(false);
@@ -27,6 +38,9 @@ export function BlockCard({ block, onOpen, height }: { block: Block; onOpen: (b:
   const blur = blurOf(block);
   // Signed out (with the plan gates on): a blurred preview only; an account opens the real thing.
   const preview = !useAccess().can("full-images");
+  // Thumbnail or full capture, the browser's choice (see srcSetOf). A blurred
+  // preview never needs the full capture.
+  const srcSet = thumb && !preview ? srcSetOf(block, thumb) : undefined;
   return (
     <figure
       className={cn(
@@ -65,6 +79,8 @@ export function BlockCard({ block, onOpen, height }: { block: Block; onOpen: (b:
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={assetUrl(thumb ?? block.src)}
+            srcSet={srcSet}
+            sizes={srcSet && width ? `${Math.round(width * SIZES_FACTOR)}px` : undefined}
             alt=""
             width={block.w}
             height={block.h}
@@ -98,6 +114,25 @@ export function BlockCard({ block, onOpen, height }: { block: Block; onOpen: (b:
     </figure>
   );
 }
+
+/**
+ * The thumbnail is 600 pixels wide; the full capture is 2x the block's width
+ * (2,880 on desktop). Offered both, the browser fetches the thumbnail while a
+ * card is small and the full capture once the page is zoomed in or the card
+ * is drawn wider, which is when the thumbnail went blurry.
+ */
+function srcSetOf(block: Block, thumb: string): string {
+  return `${assetUrl(thumb)} 600w, ${assetUrl(block.src)} ${block.w * 2}w`;
+}
+
+/**
+ * `sizes` is declared a little under the card's real width. A wall card is
+ * 300 to 340 pixels, so on a 2x screen the 600px thumbnail is 1.75 to 2 image
+ * pixels per CSS pixel, which reads sharp; without the margin the browser
+ * would skip it for the full capture on every retina screen, at several times
+ * the bytes. At 110% zoom and up it takes the full capture.
+ */
+const SIZES_FACTOR = 0.85;
 
 /** The same frame with nothing in it, for loading states. */
 export function BlockCardSkeleton({ ratio, mobile }: { ratio: number; mobile?: boolean }) {

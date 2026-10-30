@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { assetUrl } from "@/lib/data-source";
 import { boardStore } from "@/lib/boards";
 import { labelFor } from "@/lib/blocks";
+import { markReturn } from "@/lib/return-to";
 import type { Board, BoardItem } from "@/contracts/api";
 
 const fieldClass =
@@ -316,14 +317,23 @@ function ItemList({
                 <GripVertical className="mt-1 size-4 cursor-grab text-muted-foreground" aria-hidden />
                 <span className="font-mono text-[11px] tabular-nums text-muted-foreground">{String(i + 1).padStart(2, "0")}</span>
               </div>
-              <div className="w-24 shrink-0 overflow-hidden rounded-md border sm:w-44" style={{ background: b?.bg }}>
-                {b ? (
-                  // eslint-disable-next-line @next/next/no-img-element
+              {b ? (
+                // Opens the block in the viewer on the wall; closing it comes back here.
+                <Link
+                  href={`/?open=${encodeURIComponent(b.id)}`}
+                  onClick={() => markReturn(b.id)}
+                  aria-label={`Open ${labelFor(b.typeHint)} from ${b.host}`}
+                  className="w-24 shrink-0 cursor-zoom-in overflow-hidden rounded-md border outline-none transition-colors duration-150 hover:border-primary/60 focus-visible:ring-2 focus-visible:ring-ring sm:w-44"
+                  style={{ background: b.bg }}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={assetUrl(b.src)} alt="" loading="lazy" className="block max-h-40 w-full object-cover object-top" />
-                ) : (
+                </Link>
+              ) : (
+                <div className="w-24 shrink-0 overflow-hidden rounded-md border sm:w-44">
                   <div className="grid h-20 place-items-center text-[11px] text-muted-foreground">Removed from library</div>
-                )}
-              </div>
+                </div>
+              )}
               <div className="flex min-w-0 flex-1 flex-col gap-1.5">
                 <div className="flex min-w-0 flex-wrap items-baseline gap-x-1.5 text-[12px]">
                   <span className="font-medium">{b ? labelFor(b.typeHint) : "Block"}</span>

@@ -4,7 +4,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { BlockCard, BlockCardSkeleton } from "@/components/block-card";
-import { BlockDialog } from "@/components/block-dialog";
+import { BlockViewer } from "@/components/block-viewer";
+import { ViewportSwitch, type ViewportChoice } from "@/components/viewport-switch";
 import { FilterBar, FilterBarSkeleton } from "@/components/filter-bar";
 import { TechFilters } from "@/components/tech-filters";
 import { techFromFacets } from "@/lib/tech";
@@ -15,6 +16,7 @@ import { type DetailIndex } from "@/lib/block-detail";
 import { layOut, visible, GAP, type Layout } from "@/lib/wall-layout";
 import { FILTERS, readSelected, writeSelected, toggleValue, toQuery, countSelected, SEARCH_KEY, type FilterKey } from "@/lib/filters";
 import { type Block } from "@/lib/blocks";
+import type { Viewport } from "@/contracts/block";
 
 const SKELETON_RATIOS = [0.55, 1.4, 0.8, 1.9, 0.7, 1.1, 0.5, 1.6, 0.9, 1.3, 0.6, 1.2];
 
@@ -35,6 +37,12 @@ const LOADING_STRIP = 420;
 /** The URL key that holds the open block's id. Not "block": that is the block-type filter. */
 const BLOCK_KEY = "open";
 
+/** Present (`info=1`) while the open block's "More info" panel is open in the viewer. */
+const INFO_KEY = "info";
+
+/** Web unless the URL says otherwise; "All" shows both viewports mixed. */
+const DEFAULT_VIEWPORT: Viewport = "desktop";
+
 /**
  * Everything above the blocks plus the blocks, as placeholders. The route's
  * loading.tsx and the page's Suspense fallback both use this, so the first
@@ -44,6 +52,9 @@ const BLOCK_KEY = "open";
 export function WallFallback() {
   return (
     <div className="flex flex-col gap-3">
+      <div className="flex">
+        <ViewportSwitch value={DEFAULT_VIEWPORT as ViewportChoice} onChange={() => undefined} withAll />
+      </div>
       <FilterBarSkeleton />
       <WallSkeleton />
     </div>
@@ -75,9 +86,13 @@ export function Wall() {
   const params = useMemo(() => new URLSearchParams(searchParams.toString()), [searchParams]);
   const selected = useMemo(() => readSelected(params), [params]);
   const search = params.get(SEARCH_KEY) ?? "";
+  // All, Web or Mobile, from the switch above the filters. No `vp` in the URL
+  // means Web, so the plain address stays clean; All names both viewports.
+  const viewport: ViewportChoice = !selected.vp?.length ? DEFAULT_VIEWPORT : selected.vp.length > 1 ? "all" : (selected.vp[0] as Viewport);
+  const effective = useMemo(() => (selected.vp?.length ? selected : { ...selected, vp: [DEFAULT_VIEWPORT] }), [selected]);
   // Keyed by its JSON so a URL change that leaves the filters alone, like
   // opening a block, does not re-run the query over the whole set.
-  const queryKey = useMemo(() => JSON.stringify(toQuery(selected, search)), [selected, search]);
+  const queryKey = useMemo(() => JSON.stringify(toQuery(effective, search)), [effective, search]);
   const query = useMemo(() => JSON.parse(queryKey) as WallQuery, [queryKey]);
 
   const replace = useCallback(
@@ -100,7 +115,19 @@ export function Wall() {
     [params, replace],
   );
 
-  const onClearAll = useCallback(() => replace(new URLSearchParams()), [replace]);
+  // The viewport is a mode, not a filter: "Clear all" keeps it.
+  const onClearAll = useCallback(() => {
+    const next = new URLSearchParams();
+    const vp = params.get("vp");
+    if (vp) next.set("vp", vp);
+    replace(next);
+  }, [params, replace]);
+
+  const onViewport = useCallback(
+    (value: ViewportChoice) =>
+      replace(writeSelected(params, "vp", value === DEFAULT_VIEWPORT ? [] : value === "all" ? ["desktop", "mobile"] : [value])),
+    [params, replace],
+  );
 
   const onClearOne = useCallback(
     (key: FilterKey) => replace(writeSelected(params, key, [])),
@@ -269,7 +296,10 @@ export function Wall() {
     (id: string | null) => {
       const next = new URLSearchParams(params.toString());
       if (id) next.set(BLOCK_KEY, id);
-      else next.delete(BLOCK_KEY);
+      else {
+        next.delete(BLOCK_KEY);
+        next.delete(INFO_KEY);
+      }
       return next.size ? `${pathname}?${next}` : pathname;
     },
     [params, pathname],
@@ -295,6 +325,19 @@ export function Wall() {
       router.replace(withBlock(null), { scroll: false });
     }
   }, [openId, returnOnClose, router, withBlock]);
+
+  // "More info" opens a panel inside the viewer. In the URL, so a link can
+  // open with it; replaced rather than pushed, so Back still closes the block.
+  const info = Boolean(openId) && params.get(INFO_KEY) === "1";
+  const onInfo = useCallback(
+    (on: boolean) => {
+      const next = new URLSearchParams(params.toString());
+      if (on) next.set(INFO_KEY, "1");
+      else next.delete(INFO_KEY);
+      router.replace(next.size ? `${pathname}?${next}` : pathname, { scroll: false });
+    },
+    [params, pathname, router],
+  );
 
   // Opened by a pasted link, then closed by Back: nothing of ours to pop.
   useEffect(() => {
@@ -331,6 +374,7 @@ export function Wall() {
       pushed.current = false;
       const next = writeSelected(params, key, [value]);
       next.delete(BLOCK_KEY);
+      next.delete(INFO_KEY);
       replace(next);
     },
     [params, replace],
@@ -346,6 +390,8 @@ export function Wall() {
     let key: string | null = null;
     let count = 0;
     for (const [candidate, n] of Object.entries(near)) {
+      // The viewport is the switch above, not a filter to remove.
+      if (candidate === "vp") continue;
       if (n > count) {
         count = n;
         key = candidate;
@@ -360,6 +406,10 @@ export function Wall() {
 
   return (
     <div className="flex flex-col gap-3">
+      <div className="flex">
+        <ViewportSwitch value={viewport} onChange={onViewport} withAll />
+      </div>
+
       <FilterBar
         facets={facets}
         selected={selected}
@@ -428,7 +478,7 @@ export function Wall() {
                 height: card.height,
               }}
             >
-              <BlockCard block={card.block} onOpen={onOpen} height={card.height} />
+              <BlockCard block={card.block} onOpen={onOpen} width={card.cardWidth} height={card.height} />
             </div>
           ))}
 
@@ -448,15 +498,17 @@ export function Wall() {
         </div>
       )}
 
-      <BlockDialog
+      <BlockViewer
         block={open}
         missing={Boolean(loadedOpen && !open)}
         detail={detail}
+        info={info}
+        onInfo={onInfo}
         onClose={onCloseBlock}
-        onOpen={onShow}
+        onShow={onShow}
         onStep={onStep}
-        counts={libraryCounts}
         onFilter={onFilterTech}
+        counts={libraryCounts}
       />
     </div>
   );

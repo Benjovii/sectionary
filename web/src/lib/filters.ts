@@ -27,6 +27,8 @@ export type FilterSpec = {
   order?: string[];
   /** Long lists get a filter box inside the panel. */
   searchable?: boolean;
+  /** Has its own control above the wall instead of a chip in the filter bar. */
+  ownControl?: boolean;
 };
 
 const COUNTRY_LABEL: Record<string, string> = {
@@ -49,7 +51,8 @@ export const FILTERS: FilterSpec[] = [
   { key: "host", label: "Store", format: (v) => v, byCount: true, searchable: true },
   { key: "page", label: "Page", format: (v) => PAGE_TYPE_LABEL[v] ?? v },
   { key: "block", label: "Block", format: labelFor, byCount: true, searchable: true },
-  { key: "vp", label: "Viewport", format: (v) => (v === "mobile" ? "Mobile" : "Desktop") },
+  // The Web / Mobile switch above the wall (components/viewport-switch.tsx).
+  { key: "vp", label: "Viewport", format: (v) => (v === "mobile" ? "Mobile" : "Desktop"), ownControl: true },
   { key: "platform", label: "Platform", format: platformLabel, byCount: true },
   { key: "theme", label: "Theme", format: (v) => v, byCount: true, searchable: true },
   { key: "app", label: "Apps", format: (v) => v, byCount: true, searchable: true },
@@ -68,6 +71,9 @@ export const FILTERS: FilterSpec[] = [
 ];
 
 export const FILTER_KEYS = FILTERS.map((f) => f.key);
+
+/** The filters that are chips in the filter bar. */
+export const BAR_FILTERS = FILTERS.filter((f) => !f.ownControl);
 
 /** Free-text search rides in the URL beside the filters. */
 export const SEARCH_KEY = "q";

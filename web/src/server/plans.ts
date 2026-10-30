@@ -8,7 +8,7 @@ import type { Plan, Feature } from "@/contracts/api";
 //  - no Copy as brief, no time machine;
 //  - boards are read-only: what it has stays readable, shareable and deletable,
 //    but it cannot make boards or add to them;
-//  - filters: Store and Block type only;
+//  - filters: Store and Block type only (and Web / Mobile, the wall's viewport switch);
 //  - no copy image, no source page link.
 // Signed out: the wall only, with blurred previews; opening a block needs an account.
 // Pro and Team have everything. Team is Pro billed per seat.
@@ -37,8 +37,8 @@ export function accessOf(user: { plan: Plan; trialEndsAt: string | null } | null
   return inTrial(user) ? "pro" : "free";
 }
 
-/** The filters Free and signed-out viewers keep: Store and Block type. */
-export const FREE_FILTERS = new Set(["host", "block"]);
+/** The filters Free and signed-out viewers keep: Store and Block type, and the Web / Mobile switch (vp). */
+export const FREE_FILTERS = new Set(["host", "block", "vp"]);
 
 /** Whether `access` (from accessOf; null = signed out) may use `feature`. */
 export function can(access: Plan | null, feature: Feature): boolean {

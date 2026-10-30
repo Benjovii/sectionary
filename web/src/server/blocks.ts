@@ -84,7 +84,7 @@ function condition(sql: Sql, f: BlockFilters, key: FilterKey) {
   return sql`coalesce(${valueOf(sql, key)}=ANY(${pgArray(f[key]!)}::text[]), false)`;
 }
 
-const LATEST = (sql: Sql) => sql`c.id=(SELECT c2.id FROM captures c2 WHERE c2.page_id=p.id ORDER BY c2.captured_at DESC LIMIT 1)`;
+export const LATEST = (sql: Sql) => sql`c.id=(SELECT c2.id FROM captures c2 WHERE c2.page_id=p.id ORDER BY c2.captured_at DESC LIMIT 1)`;
 
 /**
  * One block per section of a store: a store's product grid is captured as a
