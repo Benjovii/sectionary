@@ -14,12 +14,11 @@ import { wallSource } from "@/lib/load-blocks";
 import { clearReturn, returnsFor } from "@/lib/return-to";
 import { type WallQuery, type WallResponse } from "@/lib/block-source";
 import { type DetailIndex } from "@/lib/block-detail";
-import { layOut, visible, GAP, type Layout } from "@/lib/wall-layout";
+import { layOut, visible, GAP, DESKTOP_RATIO, MOBILE_RATIO, type Layout } from "@/lib/wall-layout";
 import { FILTERS, readSelected, writeSelected, toggleValue, toQuery, countSelected, SEARCH_KEY, type FilterKey } from "@/lib/filters";
 import { type Block } from "@/lib/blocks";
+import { cn } from "@/lib/utils";
 import type { Viewport } from "@/contracts/block";
-
-const SKELETON_RATIOS = [0.55, 1.4, 0.8, 1.9, 0.7, 1.1, 0.5, 1.6, 0.9, 1.3, 0.6, 1.2];
 
 /** How many blocks a page of the wall asks for. The contract caps it at 200. */
 const PAGE_SIZE = 200;
@@ -62,12 +61,24 @@ export function WallFallback() {
   );
 }
 
-/** Skeleton wall, exported so the route's loading.tsx shows the same shape. */
-export function WallSkeleton() {
+/**
+ * Skeleton wall, exported so the route's loading.tsx shows the same shape: the
+ * rows of the real wall, at the Web view's cell size unless told it is Mobile.
+ */
+export function WallSkeleton({ mobile }: { mobile?: boolean }) {
   return (
-    <div className="wall" aria-busy="true" aria-label="Loading blocks">
-      {SKELETON_RATIOS.map((r, i) => (
-        <BlockCardSkeleton key={i} ratio={r} mobile={i % 4 === 3} />
+    <div
+      className={cn(
+        "grid gap-3",
+        mobile
+          ? "grid-cols-2 min-[560px]:grid-cols-4 min-[900px]:grid-cols-6 min-[1280px]:grid-cols-8 min-[1700px]:grid-cols-10"
+          : "grid-cols-1 min-[560px]:grid-cols-2 min-[900px]:grid-cols-3 min-[1280px]:grid-cols-4 min-[1700px]:grid-cols-5",
+      )}
+      aria-busy="true"
+      aria-label="Loading blocks"
+    >
+      {Array.from({ length: mobile ? 20 : 10 }, (_, i) => (
+        <BlockCardSkeleton key={i} ratio={mobile ? MOBILE_RATIO : DESKTOP_RATIO} fill />
       ))}
     </div>
   );
@@ -241,7 +252,7 @@ export function Wall() {
 
   // Positions for everything loaded, recomputed only when the set or the width
   // changes. Heights come from the contract, so nothing is measured.
-  const layout = useMemo(() => (box.width > 0 ? layOut(items, box.width) : null), [items, box.width]);
+  const layout = useMemo(() => (box.width > 0 ? layOut(items, box.width, viewport) : null), [items, box.width, viewport]);
 
   const cards = useMemo(() => {
     if (!layout) return [];
@@ -431,7 +442,7 @@ export function Wall() {
           <p className="mt-1 text-[12px]">Run the capture and export scripts, then reload.</p>
         </div>
       ) : !ready ? (
-        <WallSkeleton />
+        <WallSkeleton mobile={viewport === "mobile"} />
       ) : total === 0 ? (
         <div className="rounded-lg border border-dashed p-8 text-center text-muted-foreground">
           {blame ? (
@@ -475,26 +486,19 @@ export function Wall() {
               role="listitem"
               className="absolute"
               style={{
-                transform: `translate(${card.x + (card.width - card.cardWidth) / 2}px, ${card.y}px)`,
-                width: card.cardWidth,
+                transform: `translate(${card.x}px, ${card.y}px)`,
+                width: card.width,
                 height: card.height,
               }}
             >
-              <BlockCard block={card.block} onOpen={onOpen} width={card.cardWidth} height={card.height} />
+              <BlockCard block={card.block} onOpen={onOpen} width={card.width} height={card.height} fit={card.fit} />
             </div>
           ))}
 
-          {/* Clipped: CSS columns at a fixed height spill sideways into extra
-              columns, which on one-column phones widened the whole page. */}
+          {/* Clipped to the strip, so the skeleton rows never add height. */}
           {cursor && layout && (
-            <div
-              className="wall absolute inset-x-0 overflow-hidden"
-              style={{ top: layout.height + GAP, height: LOADING_STRIP }}
-              aria-hidden
-            >
-              {SKELETON_RATIOS.slice(0, 4).map((r, i) => (
-                <BlockCardSkeleton key={i} ratio={r} mobile={i % 4 === 3} />
-              ))}
+            <div className="absolute inset-x-0 overflow-hidden" style={{ top: layout.height + GAP, height: LOADING_STRIP }} aria-hidden>
+              <WallSkeleton mobile={viewport === "mobile"} />
             </div>
           )}
         </div>
