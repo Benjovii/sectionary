@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight, ExternalLink, Route } from "lucide-react";
 import { StoreIcon } from "@/components/store-icon";
 import { BlockViewer } from "@/components/block-viewer";
+import { ViewportSwitch } from "@/components/viewport-switch";
+import { PageModeSwitch, PageViewer, type PageBlocks, type PageMode } from "@/components/page-viewer";
 import { cn } from "@/lib/utils";
 import { assetUrl } from "@/lib/data-source";
 import { loadPageBlocks, loadSiteView, wallSource } from "@/lib/load-blocks";
@@ -16,6 +18,7 @@ import { industryLabel, platformLabel, rankLabel } from "@/lib/stores";
 import type { ProfilePage, SiteView } from "@/lib/site-profile";
 import type { DetailIndex } from "@/lib/block-detail";
 import type { FilterKey } from "@/lib/filters";
+import type { Viewport } from "@/contracts/block";
 
 const dateFormat = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric" });
 const when = (iso: string | null) => (iso ? dateFormat.format(new Date(iso)) : "Date not recorded");
@@ -30,20 +33,31 @@ const THUMB_RATIO = 5 / 4;
  */
 export function SiteProfileView({ host }: { host: string }) {
   const [state, setState] = useState<{ host: string; view: SiteView | null; error: string | null } | null>(null);
-  // The page whose sections are open in the block viewer, and which section.
-  const [open, setOpen] = useState<{ key: string; sections: Block[]; at: number } | null>(null);
-  const [loading, setLoading] = useState<string | null>(null);
+  // The open page: whole ("page") or block by block in the block viewer
+  // ("blocks"), at which viewport, and which block. Its blocks are null while
+  // they load; the window opens at once and fills in.
+  const [open, setOpen] = useState<OpenPage | null>(null);
 
   const openPage = useCallback((page: ProfilePage) => {
-    setLoading(page.key);
-    sectionsOf(page).then(
-      (sections) => {
-        setLoading((k) => (k === page.key ? null : k));
-        if (sections.length) setOpen({ key: page.key, sections, at: 0 });
-      },
-      () => setLoading((k) => (k === page.key ? null : k)),
+    const viewport: Viewport = page.desktopBlocks.length || page.desktop || !(page.mobileBlocks.length || page.mobile) ? "desktop" : "mobile";
+    setOpen({ page, blocks: null, viewport, mode: "page", at: 0 });
+    blocksOf(page).then(
+      (blocks) => setOpen((o) => (o?.page.key === page.key ? { ...o, blocks } : o)),
+      () => setOpen((o) => (o?.page.key === page.key ? { ...o, blocks: { desktop: [], mobile: [] } } : o)),
     );
   }, []);
+
+  // Each window closes only its own mode: switching modes closes one dialog
+  // and opens the other, and that close must not close the page.
+  const closeMode = useCallback((mode: PageMode) => setOpen((o) => (o?.mode === mode ? null : o)), []);
+  const setMode = useCallback((mode: PageMode) => setOpen((o) => (o ? { ...o, mode } : o)), []);
+  // Block by block, Web / Mobile moves to the same part of the page at the other viewport.
+  const setBlocksViewport = useCallback(
+    (viewport: Viewport) =>
+      setOpen((o) => (o?.blocks && o.viewport !== viewport ? { ...o, viewport, at: matchAt(o.blocks[o.viewport], o.at, o.blocks[viewport]) } : o)),
+    [],
+  );
+  const bothViewports = Boolean(open?.blocks?.desktop.length && open.blocks.mobile.length);
 
   useEffect(() => {
     let alive = true;
@@ -184,7 +198,7 @@ export function SiteProfileView({ host }: { host: string }) {
             <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
               {pages.map((page) => (
                 <li key={page.key}>
-                  <PageCard page={page} busy={loading === page.key} onOpen={() => openPage(page)} />
+                  <PageCard page={page} busy={open?.page.key === page.key && !open.blocks} onOpen={() => openPage(page)} />
                 </li>
               ))}
             </ul>
@@ -195,11 +209,28 @@ export function SiteProfileView({ host }: { host: string }) {
         <Timeline captures={captures} className="lg:hidden" />
       </div>
 
+      <PageViewer
+        page={open?.mode === "page" ? open.page : null}
+        blocks={open?.blocks ?? null}
+        viewport={open?.viewport ?? "desktop"}
+        onViewport={(viewport) => setOpen((o) => (o ? { ...o, viewport, at: 0 } : o))}
+        onBlock={(at) => setOpen((o) => (o ? { ...o, mode: "blocks", at } : o))}
+        onMode={setMode}
+        focus={open?.at ?? 0}
+        onClose={() => closeMode("page")}
+      />
       <SectionViewer
-        sections={open?.sections ?? []}
-        at={open?.at ?? null}
+        sections={open?.mode === "blocks" && open.blocks ? sectionsAt(open.blocks, open.viewport) : []}
+        at={open?.mode === "blocks" ? open.at : null}
         onAt={(at) => setOpen((o) => (o ? { ...o, at } : o))}
-        onClose={() => setOpen(null)}
+        toolbar={
+          <>
+            <PageModeSwitch value="blocks" onChange={setMode} />
+            {bothViewports && <ViewportSwitch value={open?.viewport ?? "desktop"} onChange={setBlocksViewport} size="sm" />}
+          </>
+        }
+        viewportSwitch={!bothViewports}
+        onClose={() => closeMode("blocks")}
       />
     </div>
   );
@@ -279,31 +310,63 @@ export function Stack({ src, blocks, ratio }: { src: string | null; blocks: Bloc
   );
 }
 
+type OpenPage = { page: ProfilePage; blocks: PageBlocks | null; viewport: Viewport; mode: PageMode; at: number };
+
 /**
- * A page's sections, top to bottom: the sample carries them, the API sends
- * them on request. Desktop, unless the page was only captured on mobile; the
- * viewer's Web / Mobile switch shows each section's other viewport.
+ * A page's blocks at both viewports, top to bottom: the sample carries them,
+ * the API sends them on request.
  */
-async function sectionsOf(page: ProfilePage): Promise<Block[]> {
-  if (page.desktopBlocks.length || page.mobileBlocks.length) return page.desktopBlocks.length ? page.desktopBlocks : page.mobileBlocks;
-  if (page.blockCount === 0) return [];
-  const fetched = await loadPageBlocks(new URL(page.url).host, page.url);
-  return fetched.desktop.length ? fetched.desktop : fetched.mobile;
+async function blocksOf(page: ProfilePage): Promise<PageBlocks> {
+  if (page.desktopBlocks.length || page.mobileBlocks.length) return { desktop: page.desktopBlocks, mobile: page.mobileBlocks };
+  if (page.blockCount === 0) return { desktop: [], mobile: [] };
+  const { desktop, mobile } = await loadPageBlocks(new URL(page.url).host, page.url);
+  return { desktop, mobile };
 }
 
 /**
- * A page opened from the profile: its sections in the block viewer, one at a
- * time at full resolution, the arrows walking down the page.
+ * The sections the block viewer walks: the chosen viewport's, or the other's
+ * when the page was captured at one only. The viewer's own Web / Mobile switch
+ * shows each section's other viewport.
+ */
+function sectionsAt(blocks: PageBlocks, viewport: Viewport): Block[] {
+  const other = viewport === "desktop" ? blocks.mobile : blocks.desktop;
+  return blocks[viewport].length ? blocks[viewport] : other;
+}
+
+/**
+ * Where block `at` of `from` lands in `to`, the same page at the other
+ * viewport: the same kind of block nearest the same point down the page, or
+ * just that point when the other viewport has none of that kind.
+ */
+function matchAt(from: Block[], at: number, to: Block[]): number {
+  if (!to.length) return 0;
+  const target = from.length > 1 ? Math.round((at / (from.length - 1)) * (to.length - 1)) : 0;
+  const kind = from[at]?.typeHint;
+  let best = -1;
+  to.forEach((b, i) => {
+    if (b.typeHint === kind && (best < 0 || Math.abs(i - target) < Math.abs(best - target))) best = i;
+  });
+  return best >= 0 ? best : target;
+}
+
+/**
+ * A page opened block by block: its sections in the block viewer, one at a
+ * time at full resolution, the arrows walking down the page. The toolbar's
+ * switch goes back to the full page.
  */
 function SectionViewer({
   sections,
   at,
   onAt,
+  toolbar,
+  viewportSwitch,
   onClose,
 }: {
   sections: Block[];
   at: number | null;
   onAt: (at: number) => void;
+  toolbar?: React.ReactNode;
+  viewportSwitch?: boolean;
   onClose: () => void;
 }) {
   const router = useRouter();
@@ -355,6 +418,8 @@ function SectionViewer({
       onShow={onShow}
       onStep={step}
       onFilter={onFilter}
+      toolbar={toolbar}
+      viewportSwitch={viewportSwitch}
     />
   );
 }

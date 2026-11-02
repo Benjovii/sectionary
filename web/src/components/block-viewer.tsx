@@ -20,7 +20,7 @@ import type { TechCounts } from "@/lib/tech";
 import type { Viewport } from "@/contracts/block";
 
 /** Gap round the window on a wide screen. Phones get the whole screen. */
-const INSET = "min-[700px]:m-6 min-[700px]:h-[calc(100dvh-48px)]";
+export const INSET = "min-[700px]:m-6 min-[700px]:h-[calc(100dvh-48px)]";
 
 /** A block opened from a shared board: the client sees its note, and none of the library's tools. */
 export type SharedContext = { note: string | null; position: string };
@@ -50,6 +50,10 @@ type ViewerProps = {
   counts?: TechCounts | null;
   /** Opened from a shared board, by a client. */
   shared?: SharedContext;
+  /** Extra controls at the start of the header's right side (a row of their own on phones): a site page's switches. */
+  toolbar?: React.ReactNode;
+  /** The block's own Web / Mobile switch; off when the toolbar switches the whole list instead. */
+  viewportSwitch?: boolean;
 };
 
 /**
@@ -132,6 +136,8 @@ function Window({
   onFilter,
   counts = null,
   shared,
+  toolbar,
+  viewportSwitch = true,
 }: Omit<ViewerProps, "block" | "missing" | "detail"> & { block: Block; detail: DetailIndex }) {
   // Earlier captures of this block, once recapture gives it any; the newest
   // is shown, and the info panel steps back through the rest.
@@ -142,6 +148,7 @@ function Window({
   // The same block at the other viewport, when the page has one. Switching to
   // it is local: the arrows still step from the block that was opened.
   const pair = useMemo(() => counterpartOf(detail, current), [detail, current]);
+  const pairSwitch = Boolean(pair) && viewportSwitch;
   const [viewport, setViewport] = useState<Viewport>(opened.viewport);
   const block = viewport === current.viewport ? current : (pair ?? current);
   const similar = useMemo(() => (shared || !onShow ? [] : similarTo(detail, block)), [detail, block, shared, onShow]);
@@ -206,7 +213,8 @@ function Window({
             </Link>
           )}
           <div className="ml-auto flex items-center gap-1">
-            {pair && <ViewportSwitch value={viewport} onChange={setViewport} size="sm" className="mr-2 hidden sm:inline-flex" />}
+            {toolbar && <div className="mr-2 hidden items-center gap-2 sm:flex">{toolbar}</div>}
+            {pairSwitch && <ViewportSwitch value={viewport} onChange={setViewport} size="sm" className="mr-2 hidden sm:inline-flex" />}
             <CopyLink />
             {sourceOk ? (
               <a
@@ -242,9 +250,10 @@ function Window({
           </div>
         </header>
 
-        {pair && (
-          <div className="flex justify-center pb-2 sm:hidden">
-            <ViewportSwitch value={viewport} onChange={setViewport} size="sm" />
+        {(toolbar || pairSwitch) && (
+          <div className="flex justify-center gap-2 pb-2 sm:hidden">
+            {toolbar}
+            {pairSwitch && <ViewportSwitch value={viewport} onChange={setViewport} size="sm" />}
           </div>
         )}
 
