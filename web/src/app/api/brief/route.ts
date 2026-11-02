@@ -3,8 +3,10 @@ import { assetUrl } from "@/lib/data-source";
 import { apiError } from "@/server/db";
 import { findBlock } from "@/server/blocks";
 import { BRIEF_SYSTEM, briefUserText, isBriefTarget, templateBrief } from "@/server/brief";
-import { userForRequest } from "@/server/accounts";
-import { accessOf, can, planRequired } from "@/server/plans";
+import { userForRequest, type SessionUser } from "@/server/accounts";
+import { accessOf, can, isPaid, planRequired } from "@/server/plans";
+import { clientIp, hit, limitKey, RateLimitError, type Limit } from "@/server/rate-limit";
+import { siteOrigin } from "@/server/site-url";
 import type { Block } from "@/contracts/block";
 
 export const runtime = "nodejs";
@@ -36,6 +38,21 @@ async function screenshot(block: Block, origin: string): Promise<Anthropic.Beta.
   }
 }
 
+const dailyEnv = (name: string, fallback: number) => {
+  const n = Number(process.env[name]);
+  return Number.isInteger(n) && n > 0 ? n : fallback;
+};
+
+/**
+ * Briefs a day: BRIEF_DAILY_LIMIT for paid accounts (default 50),
+ * BRIEF_TRIAL_DAILY_LIMIT for everyone else who may write one, the trial
+ * included (default 10). Signed out (only with the plan gates off) counts per IP.
+ */
+function briefLimit(user: SessionUser | null, paid: boolean, headers: Headers): Limit {
+  const max = paid ? dailyEnv("BRIEF_DAILY_LIMIT", 50) : dailyEnv("BRIEF_TRIAL_DAILY_LIMIT", 10);
+  return { key: user ? `brief:u:${user.id}` : limitKey("brief:ip", clientIp(headers)), max, windowSeconds: 86_400 };
+}
+
 const text = (body: string, source: "claude" | "template") =>
   new Response(body, { headers: { "content-type": "text/plain; charset=utf-8", "x-brief-source": source, "cache-control": "no-store" } });
 
@@ -46,12 +63,23 @@ export async function POST(request: Request) {
     if (typeof blockId !== "string" || !isBriefTarget(target)) {
       return Response.json({ error: "Send { blockId, target } with target claude-code, cursor or designer", code: "INVALID" }, { status: 400 });
     }
-    const access = accessOf(await userForRequest(request));
+    const user = await userForRequest(request);
+    const access = accessOf(user);
     if (!can(access, "brief")) return planRequired(access, "Copy as brief");
-    const origin = new URL(request.url).origin;
+    const origin = siteOrigin(new URL(request.url).origin);
     const block = await findBlock(blockId, origin);
     if (!block) return Response.json({ error: "Block not found", code: "NOT_FOUND" }, { status: 404 });
     if (!process.env.ANTHROPIC_API_KEY) return text(templateBrief(block, target), "template");
+
+    // Each brief is a paid Claude call; a daily cap per account (per IP signed out) keeps that bounded.
+    try {
+      await hit([briefLimit(user, isPaid(user?.plan), request.headers)], "You've written the most briefs for today. More tomorrow.");
+    } catch (error) {
+      if (error instanceof RateLimitError) {
+        return Response.json({ error: error.message, code: error.code }, { status: 429, headers: { "retry-after": String(error.retryAfter) } });
+      }
+      throw error;
+    }
 
     const image = await screenshot(block, origin);
     const client = new Anthropic();

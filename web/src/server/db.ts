@@ -7,7 +7,21 @@ export function database() {
   if (!url) throw new Error("DATABASE_URL is not configured");
   // DATABASE_POOL_MAX=1 for a local PGlite (platform/src/local-db.ts), which mixes up statements from parallel connections.
   const max = Number(process.env.DATABASE_POOL_MAX) || 5;
-  return globalThis.sectionarySql ??= postgres(url, { max, prepare: false, idle_timeout: 20 });
+  return globalThis.sectionarySql ??= postgres(url, { max, prepare: false, idle_timeout: 20, ...(needsTls(url) && { ssl: "require" as const }) });
+}
+
+/**
+ * Encrypted unless the URL says otherwise (sslmode=...) or the database is on
+ * this machine. Hosted on AWS, the app reaches Supabase across the internet.
+ */
+export function needsTls(url: string): boolean {
+  try {
+    const u = new URL(url);
+    if (u.searchParams.has("sslmode")) return false;
+    return !["localhost", "127.0.0.1", "[::1]", "::1"].includes(u.hostname);
+  } catch {
+    return false;
+  }
 }
 
 /**
