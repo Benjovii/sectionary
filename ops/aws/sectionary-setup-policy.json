@@ -1,0 +1,82 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "EcrSectionaryRepos",
+      "Effect": "Allow",
+      "Action": [
+        "ecr:CreateRepository", "ecr:DescribeRepositories", "ecr:PutLifecyclePolicy",
+        "ecr:PutImageScanningConfiguration", "ecr:TagResource", "ecr:DescribeImages", "ecr:ListImages"
+      ],
+      "Resource": "arn:aws:ecr:eu-west-1:944851228389:repository/sectionary-*"
+    },
+    {
+      "Sid": "EcrList",
+      "Effect": "Allow",
+      "Action": ["ecr:DescribeRepositories", "ecr:GetAuthorizationToken"],
+      "Resource": "*"
+    },
+    {
+      "Sid": "GithubOidcProvider",
+      "Effect": "Allow",
+      "Action": [
+        "iam:CreateOpenIDConnectProvider", "iam:GetOpenIDConnectProvider", "iam:TagOpenIDConnectProvider"
+      ],
+      "Resource": "arn:aws:iam::944851228389:oidc-provider/token.actions.githubusercontent.com"
+    },
+    {
+      "Sid": "IamListProviders",
+      "Effect": "Allow",
+      "Action": "iam:ListOpenIDConnectProviders",
+      "Resource": "*"
+    },
+    {
+      "Sid": "SectionaryRoles",
+      "Effect": "Allow",
+      "Action": [
+        "iam:CreateRole", "iam:GetRole", "iam:TagRole", "iam:UpdateAssumeRolePolicy",
+        "iam:PutRolePolicy", "iam:GetRolePolicy", "iam:AttachRolePolicy", "iam:ListAttachedRolePolicies",
+        "iam:PassRole"
+      ],
+      "Resource": "arn:aws:iam::944851228389:role/sectionary-*"
+    },
+    {
+      "Sid": "AppRunnerServiceLinkedRole",
+      "Effect": "Allow",
+      "Action": "iam:CreateServiceLinkedRole",
+      "Resource": "*",
+      "Condition": { "StringEquals": { "iam:AWSServiceName": "apprunner.amazonaws.com" } }
+    },
+    {
+      "Sid": "SectionarySecrets",
+      "Effect": "Allow",
+      "Action": ["secretsmanager:CreateSecret", "secretsmanager:DescribeSecret", "secretsmanager:TagResource"],
+      "Resource": "arn:aws:secretsmanager:eu-west-1:944851228389:secret:sectionary/*"
+    },
+    {
+      "Sid": "SectionaryAppRunner",
+      "Effect": "Allow",
+      "Action": "apprunner:*",
+      "Resource": [
+        "arn:aws:apprunner:eu-west-1:944851228389:service/sectionary-*",
+        "arn:aws:apprunner:eu-west-1:944851228389:autoscalingconfiguration/sectionary-*",
+        "arn:aws:apprunner:eu-west-1:944851228389:operation/sectionary-*"
+      ]
+    },
+    {
+      "Sid": "AppRunnerList",
+      "Effect": "Allow",
+      "Action": [
+        "apprunner:ListServices", "apprunner:ListAutoScalingConfigurations", "apprunner:ListOperations",
+        "apprunner:CreateService", "apprunner:CreateAutoScalingConfiguration"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "SectionaryBudget",
+      "Effect": "Allow",
+      "Action": ["budgets:ModifyBudget", "budgets:ViewBudget"],
+      "Resource": "arn:aws:budgets::944851228389:budget/sectionary-*"
+    }
+  ]
+}
