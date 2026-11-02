@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight, ExternalLink, Route } from "lucide-react";
 import { StoreIcon } from "@/components/store-icon";
 import { BlockViewer } from "@/components/block-viewer";
+import { ViewportSwitch } from "@/components/viewport-switch";
 import { PageModeSwitch, PageViewer, type PageBlocks, type PageMode } from "@/components/page-viewer";
 import { cn } from "@/lib/utils";
 import { PREVIEW_BLUR, usePreviewOnly } from "@/lib/account";
@@ -51,6 +52,13 @@ export function SiteProfileView({ host }: { host: string }) {
   // and opens the other, and that close must not close the page.
   const closeMode = useCallback((mode: PageMode) => setOpen((o) => (o?.mode === mode ? null : o)), []);
   const setMode = useCallback((mode: PageMode) => setOpen((o) => (o ? { ...o, mode } : o)), []);
+  // Block by block, Web / Mobile moves to the same part of the page at the other viewport.
+  const setBlocksViewport = useCallback(
+    (viewport: Viewport) =>
+      setOpen((o) => (o?.blocks && o.viewport !== viewport ? { ...o, viewport, at: matchAt(o.blocks[o.viewport], o.at, o.blocks[viewport]) } : o)),
+    [],
+  );
+  const bothViewports = Boolean(open?.blocks?.desktop.length && open.blocks.mobile.length);
 
   useEffect(() => {
     let alive = true;
@@ -216,7 +224,13 @@ export function SiteProfileView({ host }: { host: string }) {
         sections={open?.mode === "blocks" && open.blocks ? sectionsAt(open.blocks, open.viewport) : []}
         at={open?.mode === "blocks" ? open.at : null}
         onAt={(at) => setOpen((o) => (o ? { ...o, at } : o))}
-        toolbar={<PageModeSwitch value="blocks" onChange={setMode} className="mr-2" />}
+        toolbar={
+          <>
+            <PageModeSwitch value="blocks" onChange={setMode} />
+            {bothViewports && <ViewportSwitch value={open?.viewport ?? "desktop"} onChange={setBlocksViewport} size="sm" />}
+          </>
+        }
+        viewportSwitch={!bothViewports}
         onClose={() => closeMode("blocks")}
       />
     </div>
@@ -323,6 +337,22 @@ function sectionsAt(blocks: PageBlocks, viewport: Viewport): Block[] {
 }
 
 /**
+ * Where block `at` of `from` lands in `to`, the same page at the other
+ * viewport: the same kind of block nearest the same point down the page, or
+ * just that point when the other viewport has none of that kind.
+ */
+function matchAt(from: Block[], at: number, to: Block[]): number {
+  if (!to.length) return 0;
+  const target = from.length > 1 ? Math.round((at / (from.length - 1)) * (to.length - 1)) : 0;
+  const kind = from[at]?.typeHint;
+  let best = -1;
+  to.forEach((b, i) => {
+    if (b.typeHint === kind && (best < 0 || Math.abs(i - target) < Math.abs(best - target))) best = i;
+  });
+  return best >= 0 ? best : target;
+}
+
+/**
  * A page opened block by block: its sections in the block viewer, one at a
  * time at full resolution, the arrows walking down the page. The toolbar's
  * switch goes back to the full page.
@@ -332,12 +362,14 @@ function SectionViewer({
   at,
   onAt,
   toolbar,
+  viewportSwitch,
   onClose,
 }: {
   sections: Block[];
   at: number | null;
   onAt: (at: number) => void;
   toolbar?: React.ReactNode;
+  viewportSwitch?: boolean;
   onClose: () => void;
 }) {
   const router = useRouter();
@@ -390,6 +422,7 @@ function SectionViewer({
       onStep={step}
       onFilter={onFilter}
       toolbar={toolbar}
+      viewportSwitch={viewportSwitch}
     />
   );
 }
