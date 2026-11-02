@@ -20,7 +20,7 @@ import type { TechCounts } from "@/lib/tech";
 import type { Viewport } from "@/contracts/block";
 
 /** Gap round the window on a wide screen. Phones get the whole screen. */
-const INSET = "min-[700px]:m-6 min-[700px]:h-[calc(100dvh-48px)]";
+export const INSET = "min-[700px]:m-6 min-[700px]:h-[calc(100dvh-48px)]";
 
 /** A block opened from a shared board: the client sees its note, and none of the library's tools. */
 export type SharedContext = { note: string | null; position: string };
@@ -50,6 +50,8 @@ type ViewerProps = {
   counts?: TechCounts | null;
   /** Opened from a shared board, by a client. */
   shared?: SharedContext;
+  /** Extra controls at the start of the header's right side: a site page's Full page / Blocks switch. */
+  toolbar?: React.ReactNode;
 };
 
 /**
@@ -132,6 +134,7 @@ function Window({
   onFilter,
   counts = null,
   shared,
+  toolbar,
 }: Omit<ViewerProps, "block" | "missing" | "detail"> & { block: Block; detail: DetailIndex }) {
   // Earlier captures of this block, once recapture gives it any; the newest
   // is shown, and the info panel steps back through the rest.
@@ -206,6 +209,7 @@ function Window({
             </Link>
           )}
           <div className="ml-auto flex items-center gap-1">
+            {toolbar}
             {pair && <ViewportSwitch value={viewport} onChange={setViewport} size="sm" className="mr-2 hidden sm:inline-flex" />}
             <CopyLink />
             {sourceOk ? (
