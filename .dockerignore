@@ -1,0 +1,14 @@
+# What the web image is built from (web/Dockerfile): web/ and platform/src/
+# only. Everything else stays out, secrets and local builds above all.
+*
+!web
+!platform/src
+!platform/package.json
+!tsconfig.json
+
+**/node_modules
+**/.env
+**/.env.*
+!**/.env.example
+web/.next
+web/tsconfig.tsbuildinfo

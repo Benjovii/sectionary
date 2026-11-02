@@ -3,6 +3,15 @@ import type { NextConfig } from "next";
 const dev = process.env.NODE_ENV === "development";
 
 const nextConfig: NextConfig = {
+  // A self-contained server in .next/standalone (server.js and only the
+  // node_modules it uses), for the Docker image AWS App Runner runs
+  // (web/Dockerfile, docs/AWS.md). Vercel builds it the same as before.
+  output: "standalone",
+  // web/ is the project, not the repo root that the second package-lock.json
+  // there suggests: server.js lands in .next/standalone/ on every machine.
+  outputFileTracingRoot: __dirname,
+  turbopack: { root: __dirname },
+
   // Lets a phone on the same Wi-Fi open the dev server by the Mac's address
   // (http://192.168.x.x:3000). Without it Next.js blocks the dev scripts for
   // any host but localhost and the page never hydrates. Development only.
