@@ -1,5 +1,7 @@
 import type { NextConfig } from "next";
 
+const dev = process.env.NODE_ENV === "development";
+
 const nextConfig: NextConfig = {
   // Lets a phone on the same Wi-Fi open the dev server by the Mac's address
   // (http://192.168.x.x:3000). Without it Next.js blocks the dev scripts for
@@ -29,6 +31,11 @@ const nextConfig: NextConfig = {
           { key: "X-Content-Type-Options", value: "nosniff" },
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
           { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), browsing-topics=()" },
+          // The script policy to enforce later, reported only for now: the
+          // browser console lists anything it would have blocked. Scripts from
+          // this site and Paddle only. Once Paddle checkout and every page show
+          // no reports, move this into Content-Security-Policy above.
+          { key: "Content-Security-Policy-Report-Only", value: `script-src 'self' 'unsafe-inline'${dev ? " 'unsafe-eval'" : ""} https://cdn.paddle.com https://*.paddle.com; object-src 'none'; base-uri 'self'` },
         ],
       },
     ];

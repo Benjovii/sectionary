@@ -62,3 +62,35 @@ VPS changes where it runs, not who runs it.
   "copy as brief", Vercel's `ANTHROPIC_API_KEY`.
 - **Voyage**: dashboard.voyageai.com → API key, with a usage limit in billing.
   Goes in `platform/.env` and Vercel's `VOYAGE_API_KEY` (same `VOYAGE_MODEL` in both).
+
+## Security
+
+What the code cannot do for itself. Do these once, in order, after
+`npm run db:migrate` has applied 0011 and 0012.
+
+1. **Supabase Data API off.** Project Settings → Data API: switch it off (or
+   remove `public` from Exposed schemas). The app never uses it; migration 0011
+   already took away every grant and policy it could use, this closes the door too.
+2. **The app's own database role.** Supabase → SQL editor, with a new long
+   random password (a password manager's generator, never pasted in chat or a file
+   in the repo):
+
+   ```sql
+   ALTER ROLE sectionary_app WITH LOGIN PASSWORD '<new password>';
+   ```
+
+   Then the web app's `DATABASE_URL` (Vercel, later AWS) becomes the same pooler
+   address with the user `sectionary_app.<project-ref>` and that password.
+   `platform/.env` keeps `postgres`: migrations and the capture pipeline own
+   the tables. Check the site still loads, signs in and saves to a board before
+   moving on; to undo, put the old `DATABASE_URL` back.
+3. **TLS to the database.** Project Settings → Database → SSL Configuration:
+   Enforce SSL on. The app already asks for TLS on any database not on the same machine.
+4. **Hosting settings.** `NEXT_PUBLIC_SITE_URL` set to the site's address, and
+   `TRUSTED_PROXY_HOPS` if the host has more than one proxy in front of the app
+   (`web/.env.example`).
+5. **Script policy.** `next.config.ts` sends a report-only
+   `Content-Security-Policy` for scripts. Open the site and Paddle checkout with
+   the browser console open; once nothing is reported, make it enforced.
+
+The rate limits the app applies itself are listed in AUTH-AND-BILLING.md.

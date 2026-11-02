@@ -137,8 +137,11 @@ out by Payoneer or IBAN).
 On Ben's PC, with the Session pooler address in `platform/.env`:
 
 ```bash
-cd platform && npm run db:migrate     # applies 0009_accounts_billing.sql and 0010_trial_two_step.sql
+cd platform && npm run db:migrate     # applies 0009 to 0012
 ```
+
+0011 closes Supabase's Data API to the app's tables and adds `rate_limits`;
+0012 makes the `sectionary_app` role. Both need finishing by hand: docs/OPS.md, Security.
 
 ### 2. Supabase (project for Sectionary)
 
@@ -200,6 +203,25 @@ Server-only, none of them `NEXT_PUBLIC_`. Then redeploy.
 | `PLAN_GATES` | leave unset until launch, then `on` |
 | `FREE_DAILY_VIEWS` | optional, default 3 |
 | `AUTH_ENCRYPTION_KEY` | a long random string (`openssl rand -base64 32`) for two-step secrets. Set once, never change it |
+| `NEXT_PUBLIC_SITE_URL` | the site's address, as in Supabase's Site URL. Sign-in links are built from it, not from the request |
+| `TRUSTED_PROXY_HOPS` | optional, default 1. See `web/.env.example` |
+| `BRIEF_DAILY_LIMIT`, `BRIEF_TRIAL_DAILY_LIMIT` | optional, default 50 and 10 briefs a day |
+
+### Rate limits
+
+Supabase limits sign-in emails and code checks per IP, but every request
+reaches it from our server, so those limits are one quota shared by all users.
+The app keeps its own in Postgres (`rate_limits`, `web/src/server/rate-limit.ts`):
+
+| What | Limit |
+|---|---|
+| Sign-in emails | 5 an hour per address, 20 per IP |
+| Email codes typed in | 10 per address in 15 minutes, 30 per IP |
+| Email links and authenticator codes at sign-in | 30 per IP in 15 minutes (and 5 wrong codes end a pending sign-in) |
+| Turning two-step on or off, new recovery codes | 10 per account in 15 minutes |
+| Copy as brief (Claude) | 50 a day on Pro and Team, 10 on the trial |
+
+Turning two-step on or off signs the account out on every other device.
 
 ## Checking it
 
