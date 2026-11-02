@@ -2,14 +2,40 @@
 
 import { redirect } from "next/navigation";
 import { cookies, headers } from "next/headers";
-import { currentUser, EMAIL_COOKIE, finishTwoStep, rememberSignIn, safeNext, signOut, signOutEverywhere, startSession, takeNext } from "@/server/auth";
+import { currentUser, EMAIL_COOKIE, endOtherSessions, finishTwoStep, rememberSignIn, safeNext, signOut, signOutEverywhere, startSession, takeNext } from "@/server/auth";
 import { AuthError, sendMagicLink, userFromAccessToken, verifyCode, verifyTokenHash } from "@/server/supabase-auth";
 import { portalUrl } from "@/server/paddle";
 import { beginSetup, confirmSetup, disable, regenerateRecoveryCodes, TwoStepCodeError } from "@/server/two-step";
 import { TwoStepError } from "@/server/totp";
 import { revalidatePath } from "next/cache";
+import { clientIp, hit, limitKey, RateLimitError } from "@/server/rate-limit";
+import { configuredOrigin } from "@/server/site-url";
 
 // SEC-27 sign-in and SEC-28 billing actions. Thin: the work is in src/server.
+
+const MINUTE = 60;
+const ip = async () => clientIp(await headers());
+
+// Every sign-in step is limited per visitor IP, and by address or account
+// where there is one (server/rate-limit.ts says why Supabase's own are not enough).
+/** Sign-in emails: five an hour per address, twenty per IP. */
+const emailLimits = async (email: string) => [
+  { key: limitKey("signin-email", email), max: 5, windowSeconds: 60 * MINUTE },
+  { key: limitKey("signin-email-ip", await ip()), max: 20, windowSeconds: 60 * MINUTE },
+];
+/** Guesses at the email code: ten per address in fifteen minutes, thirty per IP. */
+const codeLimits = async (email: string) => [
+  { key: limitKey("signin-code", email), max: 10, windowSeconds: 15 * MINUTE },
+  { key: limitKey("signin-code-ip", await ip()), max: 30, windowSeconds: 15 * MINUTE },
+];
+/** Email links and authenticator codes at sign-in: thirty per IP in fifteen minutes. */
+const linkLimits = async () => [{ key: limitKey("signin-link-ip", await ip()), max: 30, windowSeconds: 15 * MINUTE }];
+/**
+ * Authenticator codes from a signed-in account (turning two-step on or off,
+ * new recovery codes): ten in fifteen minutes, so a stolen session cannot
+ * guess its way to switching two-step off.
+ */
+const accountCodeLimits = (userId: string) => [{ key: `two-step:u:${userId}`, max: 10, windowSeconds: 15 * MINUTE }];
 
 export type SignInState =
   | { status: "idle" }
@@ -18,13 +44,19 @@ export type SignInState =
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const message = (error: unknown) => {
-  if (error instanceof AuthError || error instanceof TwoStepCodeError || error instanceof TwoStepError) return error.message;
+  if (error instanceof AuthError || error instanceof TwoStepCodeError || error instanceof TwoStepError || error instanceof RateLimitError) return error.message;
   console.error("[auth]", error);
   return "Something went wrong on our side. Try again in a minute.";
 };
 
-/** This site's /auth/callback, where Supabase's default email link comes back to. */
+/**
+ * This site's /auth/callback, where Supabase's default email link comes back
+ * to. From NEXT_PUBLIC_SITE_URL; the request's host only when that is unset
+ * (local development), since a client can set the Host headers behind some proxies.
+ */
 async function callbackUrl(): Promise<string | undefined> {
+  const configured = configuredOrigin();
+  if (configured) return `${configured}/auth/callback`;
   const h = await headers();
   const host = h.get("x-forwarded-host") ?? h.get("host");
   if (!host) return undefined;
@@ -39,6 +71,7 @@ export async function requestSignIn(_prev: SignInState, form: FormData): Promise
     return { status: "error", message: "That doesn't look like an email address. Check for a typo.", email, step: "email" };
   }
   try {
+    await hit(await emailLimits(email), "Too many sign-in emails for now. Wait a few minutes, then try again.");
     await sendMagicLink(email, await callbackUrl());
     await rememberSignIn(email, safeNext(form.get("next")));
     return { status: "sent", email };
@@ -52,6 +85,7 @@ export async function signInWithCode(_prev: SignInState, form: FormData): Promis
   const email = String(form.get("email") ?? (await cookies()).get(EMAIL_COOKIE)?.value ?? "").trim().toLowerCase();
   let next: string;
   try {
+    await hit(await codeLimits(email), "Too many tries for now. Wait a few minutes, or use the link in the email.");
     const verified = await verifyCode(email, String(form.get("code") ?? ""));
     next = await takeNext();
     if ((await startSession(verified, next)).twoStep) next = "/auth/two-step";
@@ -71,6 +105,7 @@ export type ConfirmState = { status: "idle" } | { status: "error"; message: stri
 export async function confirmSignIn(_prev: ConfirmState, form: FormData): Promise<ConfirmState> {
   let next: string;
   try {
+    await hit(await linkLimits());
     const verified = await verifyTokenHash(String(form.get("token_hash") ?? ""), String(form.get("type") ?? "email"));
     next = await takeNext();
     if ((await startSession(verified, next)).twoStep) next = "/auth/two-step";
@@ -87,6 +122,7 @@ export async function confirmSignIn(_prev: ConfirmState, form: FormData): Promis
 export async function signInWithAccessToken(_prev: ConfirmState, form: FormData): Promise<ConfirmState> {
   let next: string;
   try {
+    await hit(await linkLimits());
     const verified = await userFromAccessToken(String(form.get("access_token") ?? ""));
     next = await takeNext();
     if ((await startSession(verified, next)).twoStep) next = "/auth/two-step";
@@ -113,6 +149,7 @@ export async function signOutEverywhereAction() {
 export async function submitTwoStepCode(_prev: ConfirmState, form: FormData): Promise<ConfirmState> {
   let next: string;
   try {
+    await hit(await linkLimits());
     next = safeNext(await finishTwoStep(String(form.get("code") ?? "")));
   } catch (error) {
     return { status: "error", message: message(error) };
@@ -144,7 +181,10 @@ export async function confirmTwoStep(_prev: TwoStepState, form: FormData): Promi
   const user = await currentUser();
   if (!user) return { status: "error", message: "Sign in again first." };
   try {
+    await hit(accountCodeLimits(user.id));
     const codes = await confirmSetup(user.id, String(form.get("code") ?? ""));
+    // Two-step now guards this account: any other device signed in before it has to sign in again.
+    await endOtherSessions(user.id);
     return { status: "codes", codes };
   } catch (error) {
     return { status: "error", message: message(error) };
@@ -155,7 +195,9 @@ export async function disableTwoStep(_prev: TwoStepState, form: FormData): Promi
   const user = await currentUser();
   if (!user) return { status: "error", message: "Sign in again first." };
   try {
+    await hit(accountCodeLimits(user.id));
     await disable(user.id, String(form.get("code") ?? ""));
+    await endOtherSessions(user.id);
   } catch (error) {
     return { status: "error", message: message(error) };
   }
@@ -167,6 +209,7 @@ export async function newRecoveryCodes(_prev: TwoStepState, form: FormData): Pro
   const user = await currentUser();
   if (!user) return { status: "error", message: "Sign in again first." };
   try {
+    await hit(accountCodeLimits(user.id));
     return { status: "codes", codes: await regenerateRecoveryCodes(user.id, String(form.get("code") ?? "")) };
   } catch (error) {
     return { status: "error", message: message(error) };

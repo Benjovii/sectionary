@@ -97,6 +97,11 @@ export async function endSession(token: string | undefined | null) {
   if (token) await database()`DELETE FROM sessions WHERE token_hash=${hashToken(token)}`;
 }
 
+/** Signs the user out on every device but the one holding `keepToken`, half-finished two-step sign-ins included. */
+export async function endSessionsExcept(userId: string, keepToken: string | undefined | null) {
+  await database()`DELETE FROM sessions WHERE user_id=${userId} AND token_hash <> ${hashToken(keepToken ?? "")}`;
+}
+
 /** Signs the user out on every device, and drops any half-finished two-step sign-in. */
 export async function endAllSessions(userId: string) {
   await database()`DELETE FROM sessions WHERE user_id=${userId}`;

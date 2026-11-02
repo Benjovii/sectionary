@@ -1,5 +1,5 @@
 import { cookies, headers } from "next/headers";
-import { createSession, endAllSessions, endSession, lookupSession, SESSION_COOKIE, SESSION_DAYS, upsertUser, userById, type SessionUser } from "@/server/accounts";
+import { createSession, endAllSessions, endSession, endSessionsExcept, lookupSession, SESSION_COOKIE, SESSION_DAYS, upsertUser, userById, type SessionUser } from "@/server/accounts";
 import { PENDING_MINUTES } from "@/server/accounts";
 import type { VerifiedUser } from "@/server/supabase-auth";
 import { finishSignIn } from "@/server/two-step";
@@ -62,6 +62,11 @@ export async function signOut() {
   const jar = await cookies();
   await endSession(jar.get(SESSION_COOKIE)?.value);
   jar.delete(SESSION_COOKIE);
+}
+
+/** Every device but this one, which stays signed in. */
+export async function endOtherSessions(userId: string) {
+  await endSessionsExcept(userId, (await cookies()).get(SESSION_COOKIE)?.value);
 }
 
 /** Every device, this one included. */
