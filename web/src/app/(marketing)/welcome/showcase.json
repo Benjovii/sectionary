@@ -13,7 +13,7 @@
    "bg": "rgb(252, 250, 247)",
    "w": 1440,
    "h": 115,
-   "src": "https://sectionary-blocks.fra1.cdn.digitaloceanspaces.com/arcticfoxandco.com/home/blocks/d-01-header.webp",
+   "src": "https://d1jstas0718wp8.cloudfront.net/arcticfoxandco.com/home/blocks/d-01-header.webp",
    "platform": "shopify",
    "theme": "arctic-fox-shopify-theme-broadcast/main",
    "apps": [
@@ -41,7 +41,7 @@
    "bg": "rgb(252, 250, 247)",
    "w": 1440,
    "h": 749,
-   "src": "https://sectionary-blocks.fra1.cdn.digitaloceanspaces.com/arcticfoxandco.com/home/blocks/d-02-featured-video.webp",
+   "src": "https://d1jstas0718wp8.cloudfront.net/arcticfoxandco.com/home/blocks/d-02-featured-video.webp",
    "platform": "shopify",
    "theme": "arctic-fox-shopify-theme-broadcast/main",
    "apps": [
@@ -69,7 +69,7 @@
    "bg": "rgb(252, 250, 247)",
    "w": 1440,
    "h": 581,
-   "src": "https://sectionary-blocks.fra1.cdn.digitaloceanspaces.com/arcticfoxandco.com/home/blocks/d-03-list-collections.webp",
+   "src": "https://d1jstas0718wp8.cloudfront.net/arcticfoxandco.com/home/blocks/d-03-list-collections.webp",
    "platform": "shopify",
    "theme": "arctic-fox-shopify-theme-broadcast/main",
    "apps": [
@@ -97,7 +97,7 @@
    "bg": "rgb(252, 250, 247)",
    "w": 1440,
    "h": 450,
-   "src": "https://sectionary-blocks.fra1.cdn.digitaloceanspaces.com/arcticfoxandco.com/home/blocks/d-05-hero.webp",
+   "src": "https://d1jstas0718wp8.cloudfront.net/arcticfoxandco.com/home/blocks/d-05-hero.webp",
    "platform": "shopify",
    "theme": "arctic-fox-shopify-theme-broadcast/main",
    "apps": [
@@ -125,7 +125,7 @@
    "bg": "rgb(252, 250, 247)",
    "w": 390,
    "h": 279,
-   "src": "https://sectionary-blocks.fra1.cdn.digitaloceanspaces.com/arcticfoxandco.com/home/blocks/m-02-featured-video.webp",
+   "src": "https://d1jstas0718wp8.cloudfront.net/arcticfoxandco.com/home/blocks/m-02-featured-video.webp",
    "platform": "shopify",
    "theme": "arctic-fox-shopify-theme-broadcast/main",
    "apps": [
@@ -153,7 +153,7 @@
    "bg": "rgb(252, 250, 247)",
    "w": 1376,
    "h": 2074,
-   "src": "https://sectionary-blocks.fra1.cdn.digitaloceanspaces.com/arcticfoxandco.com/products-the-birthstone-bracelet-december/blocks/d-02-product.webp",
+   "src": "https://d1jstas0718wp8.cloudfront.net/arcticfoxandco.com/products-the-birthstone-bracelet-december/blocks/d-02-product.webp",
    "platform": "shopify",
    "theme": "arctic-fox-shopify-theme-broadcast/main",
    "apps": [
@@ -181,7 +181,7 @@
    "bg": "rgb(252, 250, 247)",
    "w": 390,
    "h": 1522,
-   "src": "https://sectionary-blocks.fra1.cdn.digitaloceanspaces.com/arcticfoxandco.com/products-the-birthstone-bracelet-december/blocks/m-02-main.webp",
+   "src": "https://d1jstas0718wp8.cloudfront.net/arcticfoxandco.com/products-the-birthstone-bracelet-december/blocks/m-02-main.webp",
    "platform": "shopify",
    "theme": "arctic-fox-shopify-theme-broadcast/main",
    "apps": [
@@ -209,7 +209,7 @@
    "bg": "rgb(252, 250, 247)",
    "w": 1440,
    "h": 3385,
-   "src": "https://sectionary-blocks.fra1.cdn.digitaloceanspaces.com/arcticfoxandco.com/collections-jewellery/blocks/d-04-collection-part.webp",
+   "src": "https://d1jstas0718wp8.cloudfront.net/arcticfoxandco.com/collections-jewellery/blocks/d-04-collection-part.webp",
    "platform": "shopify",
    "theme": "arctic-fox-shopify-theme-broadcast/main",
    "apps": [
@@ -237,7 +237,7 @@
    "bg": "rgb(252, 250, 247)",
    "w": 1440,
    "h": 151,
-   "src": "https://sectionary-blocks.fra1.cdn.digitaloceanspaces.com/arcticfoxandco.com/cart/blocks/d-02-cart.webp",
+   "src": "https://d1jstas0718wp8.cloudfront.net/arcticfoxandco.com/cart/blocks/d-02-cart.webp",
    "platform": "shopify",
    "theme": "arctic-fox-shopify-theme-broadcast/main",
    "apps": [
@@ -259,7 +259,7 @@
    "step": "Home",
    "url": "https://arcticfoxandco.com/",
    "type": "home",
-   "src": "https://sectionary-blocks.fra1.cdn.digitaloceanspaces.com/arcticfoxandco.com/home/desktop_thumb.webp",
+   "src": "https://d1jstas0718wp8.cloudfront.net/arcticfoxandco.com/home/desktop_thumb.webp",
    "w": 600,
    "h": 1200,
    "bg": "rgb(251, 248, 243)"
@@ -268,7 +268,7 @@
    "step": "Collection",
    "url": "https://arcticfoxandco.com/collections/jewellery",
    "type": "collection",
-   "src": "https://sectionary-blocks.fra1.cdn.digitaloceanspaces.com/arcticfoxandco.com/collections-jewellery/desktop_thumb.webp",
+   "src": "https://d1jstas0718wp8.cloudfront.net/arcticfoxandco.com/collections-jewellery/desktop_thumb.webp",
    "w": 600,
    "h": 1200,
    "bg": "rgb(251, 248, 243)"
@@ -277,7 +277,7 @@
    "step": "Product",
    "url": "https://arcticfoxandco.com/products/the-birthstone-bracelet-december",
    "type": "product",
-   "src": "https://sectionary-blocks.fra1.cdn.digitaloceanspaces.com/arcticfoxandco.com/products-the-birthstone-bracelet-december/desktop_thumb.webp",
+   "src": "https://d1jstas0718wp8.cloudfront.net/arcticfoxandco.com/products-the-birthstone-bracelet-december/desktop_thumb.webp",
    "w": 600,
    "h": 1200,
    "bg": "rgb(251, 248, 243)"
@@ -286,7 +286,7 @@
    "step": "Cart",
    "url": "https://arcticfoxandco.com/cart",
    "type": "cart",
-   "src": "https://sectionary-blocks.fra1.cdn.digitaloceanspaces.com/arcticfoxandco.com/cart/desktop_thumb.webp",
+   "src": "https://d1jstas0718wp8.cloudfront.net/arcticfoxandco.com/cart/desktop_thumb.webp",
    "w": 600,
    "h": 624,
    "bg": "rgb(251, 248, 243)"

@@ -2,8 +2,8 @@
 
 The web app moves from Vercel to AWS App Runner in eu-west-1 (Ireland), next
 to the Supabase project. Supabase stays: the database and sign-in do not move.
-Images stay in their bucket (`S3_PUBLIC_BASE_URL`); browsers load them from
-there, not through the app.
+Images move from DigitalOcean Spaces to S3 behind CloudFront (Images, below);
+browsers load them from there, not through the app.
 
 How it fits together:
 
@@ -137,6 +137,53 @@ same database.
 4. Keep Vercel running for a week. To go back, undo 1 and 2.
 5. Then remove the Vercel project, `web/vercel.json`, and the Vercel notes in
    `web/src/server/db.ts` and the docs.
+
+## Images (S3 + CloudFront)
+
+From DigitalOcean Spaces (`sectionary-blocks`, FRA1) to AWS, 3 Nov 2026:
+
+- **Bucket** `sectionary-blocks-eu`, eu-west-1: ACLs off, all public access blocked.
+- **CloudFront** `sectionary-blocks` (`E2GU7OCV7AC7N4`),
+  `https://d1jstas0718wp8.cloudfront.net`, Free plan: origin access control
+  (CloudFront wrote the bucket policy), CachingOptimized, HTTPS only, response
+  headers policy CORS-With-Preflight, WAF in monitor mode. Watch the plan's
+  usage; move to Pro when traffic needs it (the address stays).
+- **Copy**: rclone in CloudShell (eu-west-1), Spaces to S3 directly; `-M` keeps
+  content type and cache headers. Running it again copies only what is missing.
+  ```bash
+  curl -s https://rclone.org/install.sh | sudo bash
+  export RCLONE_CONFIG_DO_TYPE=s3 RCLONE_CONFIG_DO_PROVIDER=DigitalOcean RCLONE_CONFIG_DO_ENDPOINT=fra1.digitaloceanspaces.com
+  read -p "Spaces key: " RCLONE_CONFIG_DO_ACCESS_KEY_ID; export RCLONE_CONFIG_DO_ACCESS_KEY_ID
+  read -sp "Spaces secret: " RCLONE_CONFIG_DO_SECRET_ACCESS_KEY; export RCLONE_CONFIG_DO_SECRET_ACCESS_KEY; echo
+  export RCLONE_CONFIG_AWS_TYPE=s3 RCLONE_CONFIG_AWS_PROVIDER=AWS RCLONE_CONFIG_AWS_ENV_AUTH=true RCLONE_CONFIG_AWS_REGION=eu-west-1
+  export RCLONE_CONFIG_AWS_NO_CHECK_BUCKET=true RCLONE_CONFIG_AWS_LOCATION_CONSTRAINT=eu-west-1
+  rclone copy do:sectionary-blocks aws:sectionary-blocks-eu -M --transfers 32 --checksum -P
+  ```
+  Without a Spaces key (how it was done on 3 Nov: 153,760 files, 12.5 GiB,
+  6½ minutes): the files are public to read, so take the list from the
+  database with [ops/aws/image-keys.sql](../ops/aws/image-keys.sql) (export
+  as CSV, upload to CloudShell) and fetch each one by its address. Without
+  `NO_CHECK_BUCKET`, rclone tries to create the bucket and every upload fails
+  with `IllegalLocationConstraintException`.
+  ```bash
+  tail -n +2 keys.csv | tr -d '"\r' > keys.txt
+  export RCLONE_CONFIG_AWS_TYPE=s3 RCLONE_CONFIG_AWS_PROVIDER=AWS RCLONE_CONFIG_AWS_ENV_AUTH=true RCLONE_CONFIG_AWS_REGION=eu-west-1
+  export RCLONE_CONFIG_AWS_NO_CHECK_BUCKET=true RCLONE_CONFIG_AWS_LOCATION_CONSTRAINT=eu-west-1
+  rclone copy --http-url https://sectionary-blocks.fra1.cdn.digitaloceanspaces.com :http: aws:sectionary-blocks-eu \
+    --files-from keys.txt --no-traverse --transfers 64 --checkers 64 -P \
+    --header-upload "Cache-Control: public, max-age=86400" --log-file copy.log --log-level NOTICE
+  ```
+- **Database**: the importer stores full image addresses, so
+  [ops/aws/move-images.sql](../ops/aws/move-images.sql) rewrites them (dry run,
+  rewrite in one transaction, check). Safe to run again after a late copy.
+- **Uploads**: IAM user `sectionary-blocks-writer` (list, get, put on the bucket
+  only). On the crawler VPS and Ben's PC: `S3_ENDPOINT=https://s3.eu-west-1.amazonaws.com`,
+  `S3_REGION=eu-west-1`, `S3_BUCKET=sectionary-blocks-eu`, the new key,
+  `S3_PUBLIC_BASE_URL=https://d1jstas0718wp8.cloudfront.net`, and **no
+  `S3_ACL`** (ACLs are off; any ACL fails the upload). Test with `ops/hello-capture.ts`.
+- **Custom domain later**: add it to the distribution, then run the SQL again
+  with the cloudfront.net address as the old one.
+- **Spaces**: delete the bucket and its keys a week after the switch.
 
 ## Later
 

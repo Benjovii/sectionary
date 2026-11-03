@@ -9,7 +9,7 @@ live in the password manager and in env files outside the repo.
 | Service | What for | Status |
 |---|---|---|
 | Supabase | Postgres, auth emails | Done. Own project (not Next Level's), Ireland, Free plan. `DATABASE_URL` in Vercel; functions in Dublin. Free plan holds the waitlist and a first import, not the full capture's vectors (decision with SEC-17). Auth setup: [AUTH-AND-BILLING.md](AUTH-AND-BILLING.md). |
-| Object storage | Block images | Done, on **DigitalOcean Spaces** instead of Cloudflare R2: bucket `sectionary-blocks`, FRA1, CDN on, CORS for the site, a key limited to the bucket on Ben's PC. The pipeline is S3-compatible, so R2 stays a settings change (`S3_*`). |
+| Object storage | Block images | On AWS since 3 Nov 2026 (images copied, database addresses moved), from DigitalOcean Spaces (`sectionary-blocks`, FRA1) to **AWS S3** `sectionary-blocks-eu` (eu-west-1, private) behind CloudFront `d1jstas0718wp8.cloudfront.net` (Free plan, CORS on). Uploads use the IAM user `sectionary-blocks-writer`. Steps: [AWS.md](AWS.md), Images. Spaces stays up a week after the switch, then goes. |
 | Vercel | The web app | Done. |
 | Crawler VPS | Playwright away from our PCs | Script ready: `ops/vps-setup.sh`. Server not created yet. |
 | Anthropic API key | AI tagger, "copy as brief" | Open. A key in its own Sectionary workspace with a monthly spend limit. |
