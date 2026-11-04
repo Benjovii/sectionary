@@ -4,7 +4,7 @@ const dev = process.env.NODE_ENV === "development";
 
 const nextConfig: NextConfig = {
   // A self-contained server in .next/standalone (server.js and only the
-  // node_modules it uses), for the Docker image AWS App Runner runs
+  // node_modules it uses), for the Docker image AWS ECS runs
   // (web/Dockerfile, docs/AWS.md). Vercel builds it the same as before.
   output: "standalone",
   // web/ is the project, not the repo root that the second package-lock.json
