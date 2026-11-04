@@ -1,7 +1,8 @@
 name: Deploy to AWS
 
 # Builds the web image (web/Dockerfile) on every push to main and pushes it to
-# ECR as :latest and :<commit>. App Runner deploys each new :latest by itself.
+# ECR as :latest and :<commit>, then tells the ECS service sectionary-web to
+# roll out the new :latest (ECS does not watch the tag by itself).
 # Off until the repository variable AWS_DEPLOY_ROLE_ARN is set (docs/AWS.md);
 # no AWS keys are stored in GitHub, it signs in through OIDC.
 on:
@@ -48,3 +49,7 @@ jobs:
             -t "$IMAGE:${{ github.sha }}" -t "$IMAGE:latest" .
           docker push "$IMAGE:${{ github.sha }}"
           docker push "$IMAGE:latest"
+      - name: Roll out on ECS
+        run: |
+          aws ecs update-service --cluster sectionary --service sectionary-web \
+            --force-new-deployment --query 'service.deployments[0].id' --output text

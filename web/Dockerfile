@@ -1,4 +1,4 @@
-# The web app as a container, for AWS App Runner (docs/AWS.md).
+# The web app as a container, for AWS ECS Express Mode (docs/AWS.md).
 # Build from the repo root, not web/: `next build` type-checks scripts that
 # import from platform/, as CI does.
 #
