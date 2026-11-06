@@ -103,18 +103,22 @@ export function useSlidingThumb(value: string) {
   useLayoutEffect(() => {
     const el = group.current;
     if (!el) return;
+    // A pill inside a dialog that has not opened yet measures 0 wide, so it is
+    // placed again whenever its size changes. A report that changes nothing
+    // (the observer's first, or one mid-slide) is ignored, so it cannot cut a
+    // slide short; a real change moves the highlight without sliding.
     const place = (moved: boolean) => {
       const on = el.querySelector<HTMLElement>(`[data-value="${CSS.escape(value)}"]`);
       if (!on) return;
-      setBox((old) => ({ x: on.offsetLeft, y: on.offsetTop, w: on.offsetWidth, h: on.offsetHeight, moved: moved && old !== null }));
+      const next = { x: on.offsetLeft, y: on.offsetTop, w: on.offsetWidth, h: on.offsetHeight };
+      setBox((old) => {
+        if (old && old.x === next.x && old.y === next.y && old.w === next.w && old.h === next.h) return old;
+        // Nothing shown yet, or shown at no size: placed, not slid in from nowhere.
+        return { ...next, moved: moved && old !== null && old.w > 0 };
+      });
     };
     place(true);
-    // An observer reports once as soon as it starts; only later reports are resizes.
-    let started = false;
-    const observer = new ResizeObserver(() => {
-      if (started) place(false);
-      started = true;
-    });
+    const observer = new ResizeObserver(() => place(false));
     observer.observe(el);
     return () => observer.disconnect();
   }, [value]);
