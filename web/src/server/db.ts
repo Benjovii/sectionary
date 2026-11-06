@@ -39,12 +39,15 @@ export function pgArray(values: readonly string[]): string {
 
 /**
  * Headers for a public read that every visitor gets alike, like the wall's
- * first page. Vercel's CDN keeps it for ten minutes and then serves the old
- * copy while it fetches a fresh one, so a visitor almost never waits on the
- * database (/api/blocks takes two seconds or more to build). Blocks only
- * change when a capture is imported, so ten minutes stale is fine.
+ * first page. A CDN (Vercel's, or one put in front of AWS) keeps it for ten
+ * minutes and then serves the old copy while it fetches a fresh one; on AWS
+ * the server keeps it in memory by the same rule (server/response-cache.ts),
+ * since /api/blocks takes the database two seconds or more to build. The
+ * browser keeps it for two minutes, so a reload, Back, or switching Web /
+ * Mobile and back does not ask again. Blocks only change when a capture is
+ * imported, so ten minutes stale is fine.
  */
-export const PUBLIC_CACHE = { "Cache-Control": "public, s-maxage=600, stale-while-revalidate=86400" };
+export const PUBLIC_CACHE = { "Cache-Control": "public, max-age=120, s-maxage=600, stale-while-revalidate=86400" };
 
 export function apiError(error: unknown) {
   console.error(error);

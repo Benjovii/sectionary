@@ -1,4 +1,5 @@
 import { apiError, database, PUBLIC_CACHE } from "@/server/db";
+import { cachedJson, keyOf } from "@/server/response-cache";
 import { blockColumns, blockJoins, blockWhere, facetCounts, readFilters, toBlock, withColours } from "@/server/blocks";
 import { searchBlocks } from "@/server/search";
 import { userForRequest } from "@/server/accounts";
@@ -37,39 +38,53 @@ export async function GET(request: Request) {
     const url = new URL(request.url);
     const sql = database();
     const gated = await allowedFilters(request, readFilters(url));
-    const f = await withColours(sql, gated.f);
-    const cache = gated.personal ? PRIVATE : PUBLIC_CACHE;
-    const q = url.searchParams.get("q")?.trim() || null;
-    const limit = Math.min(200, Math.max(1, Number(url.searchParams.get("limit")) || 60));
-    const offset = Math.max(0, Number(url.searchParams.get("cursor")) || 0);
-    const first = offset === 0;
-
-    if (q) {
-      const { items, total, nextCursor, facets, nearMiss, search } = await searchBlocks(q, f, limit, offset, first);
-      // How the query was read goes in headers, so the body stays exactly BlocksResponse.
-      const headers = {
-        ...cache,
-        "x-search-terms": search.terms.join(" "),
-        "x-search-corrected": Object.entries(search.corrected).map(([from, to]) => `${from}>${to}`).join(" "),
-        "x-search-semantic": String(search.semantic),
-        "x-search-intent": search.intents.join(" "),
-      };
-      return Response.json({ items, blocks: items, generatedAt: new Date().toISOString(), nextCursor, total, ...(first && { facets, nearMiss }) }, { headers });
+    // An answer every visitor gets alike is kept in memory (server/response-cache.ts):
+    // on AWS no CDN keeps it, and building one takes the database seconds.
+    if (gated.personal) {
+      const { body, headers } = await answer(url, sql, gated.f);
+      return Response.json(body, { headers: { ...PRIVATE, ...headers } });
     }
+    return await cachedJson(keyOf(url), PUBLIC_CACHE, () => answer(url, sql, gated.f));
+  } catch (error) { return apiError(error); }
+}
 
-    // Latest capture of each page only. Within a capture, page order, so one
-    // store's blocks arrive ready for its page viewer and flow view.
-    const [rows, counts] = await Promise.all([
-      sql`SELECT ${blockColumns(sql)} FROM ${blockJoins(sql)} WHERE ${blockWhere(sql, f)}
-        ORDER BY c.captured_at DESC, c.id, b.viewport, b.block_index, b.id LIMIT ${limit} OFFSET ${offset}`,
-      first ? facetCounts(sql, f) : null,
-    ]);
-    const total = counts?.total ?? ((await sql`SELECT count(*)::int AS total FROM ${blockJoins(sql)} WHERE ${blockWhere(sql, f)}`)[0].total as number);
-    const items = rows.map(toBlock);
-    return Response.json({
+/**
+ * One page of blocks. `facets=0` leaves out facets and near misses even on the
+ * first page, for callers that only want the blocks (the viewer's "similar").
+ */
+async function answer(url: URL, sql: ReturnType<typeof database>, filters: BlockFilters): Promise<{ body: unknown; headers?: Record<string, string> }> {
+  const f = await withColours(sql, filters);
+  const q = url.searchParams.get("q")?.trim() || null;
+  const limit = Math.min(200, Math.max(1, Number(url.searchParams.get("limit")) || 60));
+  const offset = Math.max(0, Number(url.searchParams.get("cursor")) || 0);
+  const first = offset === 0 && url.searchParams.get("facets") !== "0";
+
+  if (q) {
+    const { items, total, nextCursor, facets, nearMiss, search } = await searchBlocks(q, f, limit, offset, first);
+    // How the query was read goes in headers, so the body stays exactly BlocksResponse.
+    const headers = {
+      "x-search-terms": search.terms.join(" "),
+      "x-search-corrected": Object.entries(search.corrected).map(([from, to]) => `${from}>${to}`).join(" "),
+      "x-search-semantic": String(search.semantic),
+      "x-search-intent": search.intents.join(" "),
+    };
+    return { body: { items, blocks: items, generatedAt: new Date().toISOString(), nextCursor, total, ...(first && { facets, nearMiss }) }, headers };
+  }
+
+  // Latest capture of each page only. Within a capture, page order, so one
+  // store's blocks arrive ready for its page viewer and flow view.
+  const [rows, counts] = await Promise.all([
+    sql`SELECT ${blockColumns(sql)} FROM ${blockJoins(sql)} WHERE ${blockWhere(sql, f)}
+      ORDER BY c.captured_at DESC, c.id, b.viewport, b.block_index, b.id LIMIT ${limit} OFFSET ${offset}`,
+    first ? facetCounts(sql, f) : null,
+  ]);
+  const total = counts?.total ?? ((await sql`SELECT count(*)::int AS total FROM ${blockJoins(sql)} WHERE ${blockWhere(sql, f)}`)[0].total as number);
+  const items = rows.map(toBlock);
+  return {
+    body: {
       items, blocks: items, generatedAt: new Date().toISOString(),
       nextCursor: offset + items.length < total ? String(offset + items.length) : null, total,
       ...(counts && { facets: counts.facets, nearMiss: counts.nearMiss }),
-    }, { headers: cache });
-  } catch (error) { return apiError(error); }
+    },
+  };
 }

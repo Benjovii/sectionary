@@ -1,5 +1,6 @@
 import { apiError, database, PUBLIC_CACHE } from "@/server/db";
 import { blockColumns, blockJoins, LATEST, toBlock } from "@/server/blocks";
+import { cachedJson, keyOf } from "@/server/response-cache";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -18,13 +19,12 @@ export async function GET(request: Request, { params }: { params: Promise<{ host
     const url = new URL(request.url).searchParams.get("url");
     if (!url) return Response.json({ error: "url is required", code: "BAD_REQUEST" }, { status: 400 });
     const sql = database();
+    return await cachedJson(keyOf(new URL(request.url)), PUBLIC_CACHE, async () => {
     const rows = await sql`SELECT ${blockColumns(sql)} FROM ${blockJoins(sql)}
       WHERE s.host=${host.toLowerCase()} AND p.url=${url} AND ${LATEST(sql)}
       ORDER BY b.viewport, b.block_index, b.id`;
     const blocks = rows.map(toBlock);
-    return Response.json(
-      { desktop: blocks.filter((b) => b.viewport === "desktop"), mobile: blocks.filter((b) => b.viewport === "mobile") },
-      { headers: PUBLIC_CACHE },
-    );
+    return { body: { desktop: blocks.filter((b) => b.viewport === "desktop"), mobile: blocks.filter((b) => b.viewport === "mobile") } };
+    });
   } catch (error) { return apiError(error); }
 }

@@ -4,11 +4,11 @@
 // and scripts/mock-blocks.mjs can load it under Node type stripping.
 
 import type { Block, BlockSet } from "@/contracts/block";
-import type { StoreSet } from "@/contracts/store";
+import type { Store, StoreSet } from "@/contracts/store";
 import { buildIndex, queryBlocks, MAX_LIMIT, type BlockIndex, type WallQuery, type WallResponse } from "@/lib/block-source";
 import { baseType, detailIndex, type DetailIndex } from "@/lib/block-detail";
 import { expandBlocks } from "@/lib/mock-blocks";
-import { profileFromApi, profileFromIndex, siteCardFromApi, siteCards, type SiteCard, type SiteSummary, type SiteView } from "@/lib/site-profile";
+import { pagesFromBlocks, profileFromApi, profileFromIndex, siteCardFromApi, siteCards, storeFromBlocks, summaryPages, type ProfilePage, type SiteCard, type SiteSummary, type SiteView } from "@/lib/site-profile";
 import { flowSummaries, flowSummariesFromApi, type FlowSummary } from "@/lib/flows";
 import type { SiteProfile } from "@/contracts/api";
 import { BLOCKS_SRC, STORES_SRC, SITES_SRC, MOCK_BLOCKS, API_MODE } from "@/lib/data-source";
@@ -33,8 +33,13 @@ export type WallSource = {
    * What the detail view needs for one block: the block (null when the id is
    * unknown) and the index its pairing, similar blocks and captures read.
    * `known` is the block when the wall already has it, which saves a request.
+   * `onPartial` gets an index early, as soon as part of it is in (the page's
+   * own blocks, which pair the viewports, before "similar"), so the viewer can
+   * fill in as it goes rather than wait for the slowest part.
    */
-  detail(id: string, known?: Block): Promise<{ block: Block | null; detail: DetailIndex }>;
+  detail(id: string, known?: Block, onPartial?: (detail: DetailIndex) => void): Promise<{ block: Block | null; detail: DetailIndex }>;
+  /** Start fetching what opening this block needs, before it is opened (a hover). */
+  prefetch?(block: Block): void;
 };
 
 export function wallSource(): WallSource {
@@ -90,26 +95,76 @@ function once<T>(cache: Map<string, Promise<T>>, key: string, load: () => Promis
 
 const storeBlocks = new Map<string, Promise<Block[]>>();
 const similarPools = new Map<string, Promise<Block[]>>();
+const firstPages = new Map<string, { at: number; response: Promise<WallResponse> }>();
+
+/** How long the browser reuses a wall page it already has: switching Web / Mobile and back asks once. */
+const PAGE_TTL = 5 * 60_000;
+
+/** One page of blocks of this kind at this viewport, for "similar": one per store is shown, so 200 is plenty. */
+function similarPool(block: Block): Promise<Block[]> {
+  const type = baseType(block.typeHint);
+  return once(similarPools, `${block.viewport}:${type}`, () =>
+    getJson<WallResponse>(withQuery(BLOCKS_SRC, { block: `${type},${type}-part`, vp: block.viewport, limit: MAX_LIMIT, facets: 0 })).then((r) => r.items),
+  );
+}
+
+/** The block's own page at both viewports, which is all the Web / Mobile pairing reads. */
+function pageOf(block: Block): Promise<Block[]> {
+  return loadPageBlocks(block.host, block.pageUrl).then(({ desktop, mobile }) => [...desktop, ...mobile]);
+}
 
 const apiSource: WallSource = {
   query(query, options) {
     // The API sends facets with the first page only, so there is nothing to switch off.
-    return getJson<WallResponse>(withQuery(BLOCKS_SRC, { ...query }), options?.signal);
+    const src = withQuery(BLOCKS_SRC, { ...query });
+    if (query.cursor) return getJson<WallResponse>(src, options?.signal);
+    // First pages are kept a while: going back to a view already seen is instant.
+    // The fetch itself is never aborted, so a view left half-loaded is ready next time.
+    let hit = firstPages.get(src);
+    if (!hit || Date.now() - hit.at > PAGE_TTL) {
+      hit = { at: Date.now(), response: getJson<WallResponse>(src) };
+      const mine = hit;
+      hit.response.catch(() => firstPages.get(src) === mine && firstPages.delete(src));
+      firstPages.set(src, hit);
+    }
+    const signal = options?.signal;
+    if (!signal) return hit.response;
+    return new Promise((resolve, reject) => {
+      if (signal.aborted) return reject(new DOMException("Aborted", "AbortError"));
+      signal.addEventListener("abort", () => reject(new DOMException("Aborted", "AbortError")), { once: true });
+      hit.response.then(resolve, reject);
+    });
   },
-  async detail(id, known) {
+  async detail(id, known, onPartial) {
     const block = known ?? (await fetch(`${BLOCKS_SRC}/${encodeURIComponent(id)}`).then((r) => (r.ok ? (r.json() as Promise<Block>) : null)));
     if (!block) return { block: null, detail: detailIndex(buildIndex([], [])) };
-    // The store's own blocks pair the viewports; one page of the same kind of
-    // block at this viewport is plenty for "similar", which shows one per store.
-    const type = baseType(block.typeHint);
-    const [own, pool] = await Promise.all([
-      once(storeBlocks, block.host, () => fetchAll({ host: block.host })),
-      once(similarPools, `${block.viewport}:${type}`, () =>
-        getJson<WallResponse>(withQuery(BLOCKS_SRC, { block: `${type},${type}-part`, vp: block.viewport, limit: MAX_LIMIT })).then((r) => r.items),
-      ),
-    ]);
-    const seen = new Set(own.map((b) => b.id));
-    return { block, detail: detailIndex(buildIndex([...own, ...pool.filter((b) => !seen.has(b.id))], [])) };
+    const own = pageOf(block).catch(() => [block]);
+    const pool = similarPool(block).catch(() => [] as Block[]);
+    const index = (mine: Block[], others: Block[]) => {
+      const seen = new Set(mine.map((b) => b.id));
+      return detailIndex(buildIndex([...mine, ...others.filter((b) => !seen.has(b.id))], []));
+    };
+    // The page is one quick request; similar is a bigger one. Whichever comes first shows first.
+    let done = false;
+    let mineNow: Block[] = [block];
+    let othersNow: Block[] = [];
+    if (onPartial) {
+      own.then((mine) => {
+        mineNow = mine;
+        if (!done) onPartial(index(mineNow, othersNow));
+      });
+      pool.then((others) => {
+        othersNow = others;
+        if (!done) onPartial(index(mineNow, othersNow));
+      });
+    }
+    const [mine, others] = await Promise.all([own, pool]);
+    done = true;
+    return { block, detail: index(mine, others) };
+  },
+  prefetch(block) {
+    void pageOf(block).catch(() => undefined);
+    void similarPool(block).catch(() => undefined);
   },
 };
 
@@ -229,4 +284,55 @@ function namedTypes(list: { value: string; count: number }[]) {
 /** Every captured store's flow: from /api/sites when it is configured, otherwise from the loaded blocks. */
 export async function loadFlowSummaries(): Promise<FlowSummary[]> {
   return SITES_SRC ? flowSummariesFromApi(await loadSiteSummaries()) : flowSummaries(await loadBlockIndex());
+}
+
+/** A page from another store, offered as like the one open. */
+export type SimilarPage = { store: Store; page: ProfilePage };
+
+/** Every store with its pages, for "similar pages": from /api/sites, or built from the loaded blocks. */
+function allSitePages(): Promise<SimilarPage[][]> {
+  return once(sitePages, SITES_SRC, async () => {
+    if (SITES_SRC) return (await loadSiteSummaries()).map((s) => summaryPages(s).map((page) => ({ store: s.store, page })));
+    const index = await loadBlockIndex();
+    const byHost = new Map<string, Block[]>();
+    for (const b of index.blocks) {
+      const list = byHost.get(b.host);
+      if (list) list.push(b);
+      else byHost.set(b.host, [b]);
+    }
+    return [...byHost].map(([host, blocks]) => {
+      const store = index.storeByHost.get(host) ?? storeFromBlocks(host, blocks);
+      return pagesFromBlocks(blocks).map((page) => ({ store, page }));
+    });
+  });
+}
+
+const sitePages = new Map<string, Promise<SimilarPage[][]>>();
+
+/** Start loading what "similar pages" reads, so it is there by the time a page is opened. */
+export function prefetchSimilarPages(): void {
+  void allSitePages().catch(() => undefined);
+}
+
+/**
+ * Pages like this one from other stores: the same kind of page (another home
+ * page for a home page), one per store, ranked by what makes a store a useful
+ * comparison: the same industry, then platform, then theme, then country.
+ * The traffic rank breaks ties, so better-known stores come first.
+ */
+export async function loadSimilarPages(store: Store, page: ProfilePage, limit = 12): Promise<SimilarPage[]> {
+  const scored: { item: SimilarPage; score: number }[] = [];
+  for (const pages of await allSitePages()) {
+    const match = pages.find((p) => p.page.type === page.type && p.page.blockCount > 0);
+    if (!match || match.store.host === store.host) continue;
+    const other = match.store;
+    let score = 0;
+    if (other.industry && other.industry === store.industry) score += 4;
+    if (other.platform && other.platform === store.platform) score += 2;
+    if (other.theme && other.theme === store.theme) score += 1;
+    if (other.country && other.country === store.country) score += 0.5;
+    scored.push({ item: match, score });
+  }
+  scored.sort((a, b) => b.score - a.score || (a.item.store.rank ?? Infinity) - (b.item.store.rank ?? Infinity) || a.item.store.host.localeCompare(b.item.store.host));
+  return scored.slice(0, limit).map((s) => s.item);
 }

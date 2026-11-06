@@ -2,10 +2,10 @@
 
 import { useEffect, useRef } from "react";
 import Link from "next/link";
-import { ExternalLink, Lock, RectangleVertical, Rows3, X } from "lucide-react";
+import { ArrowDown, ExternalLink, Lock, RectangleVertical, Rows3, X } from "lucide-react";
 import { StoreIcon } from "@/components/store-icon";
 import { INSET } from "@/components/block-viewer";
-import { ViewportSwitch } from "@/components/viewport-switch";
+import { useSlidingThumb, ViewportSwitch } from "@/components/viewport-switch";
 import { useViewCheck, ViewLimitPanel } from "@/components/view-limit";
 import { useAccess } from "@/lib/account";
 import { assetUrl } from "@/lib/data-source";
@@ -32,11 +32,13 @@ const MODES: { value: PageMode; label: string; icon: typeof Rows3 }[] = [
  * switch beside it. Below `sm` the labels drop and the icons stay.
  */
 export function PageModeSwitch({ value, onChange, className }: { value: PageMode; onChange: (mode: PageMode) => void; className?: string }) {
+  const { group, thumb } = useSlidingThumb(value);
   return (
     <div
+      ref={group}
       role="radiogroup"
       aria-label="Show the page"
-      className={cn("inline-flex shrink-0 rounded-full border bg-muted/60 p-1", className)}
+      className={cn("relative isolate inline-flex shrink-0 rounded-full border bg-muted/60 p-1", className)}
       onKeyDown={(event) => {
         if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
         // Arrows switch here and stop: the block viewer listens for them to step blocks.
@@ -47,6 +49,7 @@ export function PageModeSwitch({ value, onChange, className }: { value: PageMode
         (event.currentTarget.querySelector(`[data-value="${next}"]`) as HTMLElement | null)?.focus();
       }}
     >
+      {thumb}
       {MODES.map(({ value: mode, label, icon: Icon }) => {
         const on = mode === value;
         return (
@@ -61,8 +64,8 @@ export function PageModeSwitch({ value, onChange, className }: { value: PageMode
             tabIndex={on ? 0 : -1}
             onClick={() => onChange(mode)}
             className={cn(
-              "inline-flex h-7 items-center gap-1.5 rounded-full px-3 text-[12px] font-medium transition-colors duration-150 outline-none focus-visible:ring-2 focus-visible:ring-ring touch:h-11",
-              on ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground",
+              "inline-flex h-7 items-center gap-1.5 rounded-full px-3 text-[12px] font-medium transition-colors duration-200 outline-none focus-visible:ring-2 focus-visible:ring-ring touch:h-11",
+              on ? "text-primary-foreground" : "text-muted-foreground hover:text-foreground",
             )}
           >
             <Icon className="size-3.5" aria-hidden />
@@ -87,6 +90,10 @@ type PageViewerProps = {
   /** The block to bring into view on opening: the one the Blocks view was on. */
   focus: number;
   onClose: () => void;
+  /** The store whose profile this opened from; another store's page (a similar one) links to its own. */
+  siteHost?: string;
+  /** Pages like this one from other stores, drawn below the window; "See similar" scrolls to them. */
+  similar?: React.ReactNode;
 };
 
 /**
@@ -99,9 +106,16 @@ type PageViewerProps = {
  * Without blocks (an API page whose blocks have not been split out), the
  * full-page screenshot stands in, when there is one.
  */
-export function PageViewer({ page, blocks, onClose, ...rest }: PageViewerProps) {
+export function PageViewer({ page, blocks, onClose, similar, ...rest }: PageViewerProps) {
   const ref = useRef<HTMLDialogElement>(null);
   const show = Boolean(page);
+  const similarRef = useRef<HTMLElement>(null);
+
+  // Another page opened in place (a similar one): back to its top.
+  const key = page?.key;
+  useEffect(() => {
+    ref.current?.scrollTo({ top: 0 });
+  }, [key]);
 
   useEffect(() => {
     const d = ref.current;
@@ -124,14 +138,31 @@ export function PageViewer({ page, blocks, onClose, ...rest }: PageViewerProps) 
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
-      className="m-0 h-dvh max-h-dvh w-screen max-w-none overflow-hidden overscroll-contain bg-transparent p-0 backdrop:bg-black/75 backdrop:backdrop-blur-sm"
+      className="m-0 h-dvh max-h-dvh w-screen max-w-none overflow-y-auto overscroll-contain bg-transparent p-0 backdrop:bg-black/75 backdrop:backdrop-blur-sm"
     >
       {page && limited && check ? (
         <div className="flex min-h-dvh items-center justify-center p-4" onClick={(e) => e.target === e.currentTarget && onClose()}>
           <ViewLimitPanel check={check} onClose={onClose} />
         </div>
       ) : page ? (
-        <Window key={page.key} page={page} blocks={blocks} onClose={onClose} {...rest} />
+        <>
+          <Window
+            key={page.key}
+            page={page}
+            blocks={blocks}
+            onClose={onClose}
+            onSimilar={similar ? () => similarRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }) : undefined}
+            {...rest}
+          />
+          {similar && (
+            <section ref={similarRef} aria-labelledby="similar-pages-heading" className="mx-auto max-w-[1600px] scroll-mt-6 px-3 pt-8 pb-12 min-[700px]:px-6">
+              <h3 id="similar-pages-heading" className="mb-4 font-heading text-[17px] font-semibold text-white">
+                More {(PAGE_TYPE_LABEL[page.type] ?? page.type).toLowerCase()} pages
+              </h3>
+              {similar}
+            </section>
+          )}
+        </>
       ) : null}
     </dialog>
   );
@@ -146,7 +177,9 @@ function Window({
   onMode,
   focus,
   onClose,
-}: Omit<PageViewerProps, "page"> & { page: ProfilePage }) {
+  siteHost,
+  onSimilar,
+}: Omit<PageViewerProps, "page" | "similar"> & { page: ProfilePage; onSimilar?: () => void }) {
   const host = new URL(page.url).host;
   const path = page.url.replace(/^https?:\/\/[^/]+/, "") || "/";
   const pageLabel = PAGE_TYPE_LABEL[page.type] ?? page.type;
@@ -171,16 +204,32 @@ function Window({
   return (
     <div className={cn("relative flex h-dvh flex-col bg-card text-card-foreground shadow-2xl min-[700px]:rounded-2xl min-[700px]:border", INSET)}>
       <header className="flex h-14 shrink-0 items-center gap-3 px-3 min-[700px]:h-16 min-[700px]:px-5">
-        <div className="flex min-w-0 items-center gap-2.5">
-          <StoreIcon host={host} brand={host} size={34} className="rounded-lg" />
-          <span className="flex min-w-0 flex-col leading-tight">
-            <span className="truncate font-heading text-[17px] font-semibold min-[700px]:text-[19px]">{pageLabel}</span>
-            <span className="truncate font-mono text-[11px] text-muted-foreground">
-              {host}
-              {path === "/" ? "" : path}
-            </span>
-          </span>
-        </div>
+        {(() => {
+          const title = (
+            <>
+              <StoreIcon host={host} brand={host} size={34} className="rounded-lg" />
+              <span className="flex min-w-0 flex-col leading-tight">
+                <span className="truncate font-heading text-[17px] font-semibold min-[700px]:text-[19px]">{pageLabel}</span>
+                <span className="truncate font-mono text-[11px] text-muted-foreground">
+                  {host}
+                  {path === "/" ? "" : path}
+                </span>
+              </span>
+            </>
+          );
+          // Another store's page, opened from "similar": its name leads to that store.
+          return siteHost && siteHost !== host ? (
+            <Link
+              href={`/sites/${encodeURIComponent(host)}`}
+              title={`${host}: every captured page`}
+              className="flex min-w-0 items-center gap-2.5 rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              {title}
+            </Link>
+          ) : (
+            <div className="flex min-w-0 items-center gap-2.5">{title}</div>
+          );
+        })()}
         <div className="ml-auto flex items-center gap-1">
           <div className="mr-2 hidden items-center gap-2 sm:flex">{switches}</div>
           {access.can("source-link") ? (
@@ -237,6 +286,16 @@ function Window({
           )}
         </footer>
       </div>
+
+      {onSimilar && (
+        <button
+          type="button"
+          onClick={onSimilar}
+          className="absolute bottom-0 left-1/2 z-10 inline-flex -translate-x-1/2 translate-y-1/2 items-center gap-1.5 rounded-full border bg-card px-4 py-2 text-[13px] font-medium shadow-lg outline-none transition-colors duration-150 hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring max-[699px]:bottom-16 max-[699px]:translate-y-0"
+        >
+          See similar <ArrowDown className="size-4" />
+        </button>
+      )}
     </div>
   );
 }

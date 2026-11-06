@@ -1,5 +1,6 @@
 import { apiError, database, PUBLIC_CACHE } from "@/server/db";
 import { latestPages, toStore } from "@/server/sites";
+import { cachedJson, keyOf } from "@/server/response-cache";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -13,12 +14,14 @@ export const dynamic = "force-dynamic";
 export async function GET(request: Request) {
   try {
     const url = new URL(request.url), sql = database();
+    return await cachedJson(keyOf(url), PUBLIC_CACHE, async () => {
     const limit = Math.min(200, Math.max(1, Number(url.searchParams.get("limit")) || 60));
     const offset = Math.max(0, Number(url.searchParams.get("cursor")) || 0);
     const rows = await sql`SELECT *, count(*) OVER()::int AS total FROM sites ORDER BY rank ASC NULLS LAST, host LIMIT ${limit} OFFSET ${offset}`;
     const pages = await latestPages(sql, rows.map((r) => r.id as string));
     const items = rows.map((r, i) => ({ store: toStore(r, offset + i + 1), pages: pages.get(r.id) ?? [] }));
     const total = rows[0]?.total ?? 0;
-    return Response.json({ items, generatedAt: new Date().toISOString(), nextCursor: offset + items.length < total ? String(offset + items.length) : null, total }, { headers: PUBLIC_CACHE });
+    return { body: { items, generatedAt: new Date().toISOString(), nextCursor: offset + items.length < total ? String(offset + items.length) : null, total } };
+    });
   } catch (error) { return apiError(error); }
 }

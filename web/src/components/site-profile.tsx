@@ -11,7 +11,7 @@ import { PageModeSwitch, PageViewer, type PageBlocks, type PageMode } from "@/co
 import { cn } from "@/lib/utils";
 import { PREVIEW_BLUR, usePreviewOnly } from "@/lib/account";
 import { assetUrl } from "@/lib/data-source";
-import { loadPageBlocks, loadSiteView, wallSource } from "@/lib/load-blocks";
+import { loadPageBlocks, loadSimilarPages, loadSiteView, prefetchSimilarPages, wallSource, type SimilarPage } from "@/lib/load-blocks";
 import { flowOf } from "@/lib/flows";
 import { markReturn } from "@/lib/return-to";
 import { PAGE_TYPE_LABEL, type Block } from "@/lib/blocks";
@@ -60,10 +60,33 @@ export function SiteProfileView({ host }: { host: string }) {
   );
   const bothViewports = Boolean(open?.blocks?.desktop.length && open.blocks.mobile.length);
 
+  // The same kind of page from other stores, for the full page's "See similar".
+  const [similar, setSimilar] = useState<{ key: string; pages: SimilarPage[] } | null>(null);
+  const openKey = open?.page.key ?? null;
+  const profileStore = state?.host === host ? (state.view?.store ?? null) : null;
+  useEffect(() => {
+    if (!openKey || !profileStore || !open) return;
+    let alive = true;
+    loadSimilarPages(profileStore, open.page).then(
+      (pages) => alive && setSimilar({ key: openKey, pages }),
+      () => undefined,
+    );
+    return () => {
+      alive = false;
+    };
+    // Only a different page asks again; switching Full page / Blocks or the viewport does not.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [openKey, profileStore]);
+  const similarPages = similar && similar.key === openKey ? similar.pages : [];
+
   useEffect(() => {
     let alive = true;
     loadSiteView(host).then(
-      (view) => alive && setState({ host, view, error: null }),
+      (view) => {
+        if (alive) setState({ host, view, error: null });
+        // Then what a page's "See similar" will need.
+        prefetchSimilarPages();
+      },
       (e: Error) => alive && setState({ host, view: null, error: e.message }),
     );
     return () => {
@@ -219,6 +242,8 @@ export function SiteProfileView({ host }: { host: string }) {
         onMode={setMode}
         focus={open?.at ?? 0}
         onClose={() => closeMode("page")}
+        siteHost={host}
+        similar={similarPages.length > 0 ? <SimilarPages pages={similarPages} onOpen={openPage} /> : undefined}
       />
       <SectionViewer
         sections={open?.mode === "blocks" && open.blocks ? sectionsAt(open.blocks, open.viewport) : []}
@@ -234,6 +259,30 @@ export function SiteProfileView({ host }: { host: string }) {
         onClose={() => closeMode("blocks")}
       />
     </div>
+  );
+}
+
+/** Pages like the open one from other stores: a click opens that page in the same window. */
+function SimilarPages({ pages, onOpen }: { pages: SimilarPage[]; onOpen: (page: ProfilePage) => void }) {
+  return (
+    <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
+      {pages.map(({ store, page }) => (
+        <li key={page.key}>
+          <button
+            type="button"
+            onClick={() => onOpen(page)}
+            aria-label={`${PAGE_TYPE_LABEL[page.type] ?? page.type} page from ${store.host}`}
+            className="group block w-full overflow-hidden rounded-xl border border-white/10 bg-card text-left outline-none transition-colors duration-150 hover:border-primary/60 focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <PageThumb page={page} />
+            <span className="flex items-center gap-2 border-t px-3 py-2 text-[12px]">
+              <StoreIcon host={store.host} brand={store.brand} size={18} />
+              <span className="truncate text-muted-foreground">{store.host}</span>
+            </span>
+          </button>
+        </li>
+      ))}
+    </ul>
   );
 }
 
@@ -382,7 +431,7 @@ function SectionViewer({
     if (!block) return;
     let alive = true;
     wallSource()
-      .detail(block.id, block)
+      .detail(block.id, block, (partial) => alive && setDetail({ id: block.id, index: partial }))
       .then(
         (d) => alive && setDetail({ id: block.id, index: d.detail }),
         () => undefined,

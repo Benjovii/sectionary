@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Monitor, Smartphone } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { assetUrl } from "@/lib/data-source";
@@ -23,18 +23,36 @@ import { PREVIEW_BLUR, usePreviewOnly } from "@/lib/account";
 export function BlockCard({
   block,
   onOpen,
+  onIntent,
   width,
   height,
   fit = "cover",
 }: {
   block: Block;
   onOpen: (b: Block) => void;
+  /** The pointer rests on the card, or it is pressed or focused: a chance to start loading what opening it needs. */
+  onIntent?: (b: Block) => void;
   /** The card's width on the wall, which tells the browser which image to fetch. */
   width?: number;
   height?: number;
   fit?: "cover" | "contain";
 }) {
   const [loaded, setLoaded] = useState(false);
+  // A pointer passing over on its way somewhere is not intent; one that stays a moment is.
+  const rest = useRef(0);
+  useEffect(() => () => window.clearTimeout(rest.current), []);
+  const intent = () => onIntent?.(block);
+  const hover = onIntent
+    ? {
+        onPointerEnter: () => {
+          window.clearTimeout(rest.current);
+          rest.current = window.setTimeout(intent, 120);
+        },
+        onPointerLeave: () => window.clearTimeout(rest.current),
+        onPointerDown: intent,
+        onFocus: intent,
+      }
+    : {};
   // The thumbnail first (see thumbOf); the full screenshot if it will not load.
   const [full, setFull] = useState(false);
   const thumb = full ? undefined : thumbOf(block);
@@ -62,6 +80,7 @@ export function BlockCard({
       <button
         type="button"
         onClick={() => onOpen(block)}
+        {...hover}
         className={cn(
           "block w-full cursor-zoom-in outline-none after:absolute after:inset-0 after:z-10 after:rounded-lg focus-visible:after:ring-2 focus-visible:after:ring-ring focus-visible:after:ring-inset",
           fixed && "min-h-0 flex-1",

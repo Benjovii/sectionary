@@ -11,6 +11,7 @@ import { FilterBar, FilterBarSkeleton } from "@/components/filter-bar";
 import { TechFilters } from "@/components/tech-filters";
 import { techFromFacets } from "@/lib/tech";
 import { wallSource } from "@/lib/load-blocks";
+import { API_MODE, assetUrl } from "@/lib/data-source";
 import { clearReturn, returnsFor } from "@/lib/return-to";
 import { type WallQuery, type WallResponse } from "@/lib/block-source";
 import { type DetailIndex } from "@/lib/block-detail";
@@ -33,6 +34,12 @@ const OVERSCAN = 800;
  * when it is replaced and the shift never reaches the viewport.
  */
 const LOADING_STRIP = 420;
+
+/** Blocks already prefetched on hover, so a pointer going back and forth asks once. */
+const warmed = new Set<string>();
+
+/** Before an open block's pairing and "similar" arrive. */
+const NO_DETAIL: DetailIndex = { byId: new Map(), byPage: new Map(), byType: new Map(), captures: new Map() };
 
 /** The URL key that holds the open block's id. Not "block": that is the block-type filter. */
 const BLOCK_KEY = "open";
@@ -107,9 +114,13 @@ export function Wall() {
   const queryKey = useMemo(() => JSON.stringify(toQuery(effective, search)), [effective, search]);
   const query = useMemo(() => JSON.parse(queryKey) as WallQuery, [queryKey]);
 
+  // URL changes go through the browser's own history API, which Next.js
+  // follows (useSearchParams updates) without asking the server for the page
+  // again: router.push and replace each waited on a round trip, so opening a
+  // block or switching Web / Mobile lagged by that much.
   const replace = useCallback(
-    (next: URLSearchParams) => router.replace(next.size ? `${pathname}?${next}` : pathname, { scroll: false }),
-    [router, pathname],
+    (next: URLSearchParams) => window.history.replaceState(null, "", next.size ? `${pathname}?${next}` : pathname),
+    [pathname],
   );
 
   const onToggle = useCallback(
@@ -180,10 +191,28 @@ export function Wall() {
   const total = first?.total ?? 0;
   const facets = useMemo(() => first?.facets ?? {}, [first]);
 
-  // Back to the top when the filters change. A DOM call, no state.
+  // Back to the top when the filters change. A DOM call, no state. Glided
+  // rather than jumped, so a switch of the Web / Mobile pill reads as moving
+  // to the new view; from far down the wall it skips most of the way first.
+  const scrolledFor = useRef(queryKey);
   useEffect(() => {
-    window.scrollTo({ top: 0 });
+    if (scrolledFor.current === queryKey) return;
+    scrolledFor.current = queryKey;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return window.scrollTo({ top: 0 });
+    if (window.scrollY > window.innerHeight * 2) window.scrollTo({ top: window.innerHeight });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }, [queryKey]);
+
+  // The pill's other two views, fetched once this one is up, so switching
+  // between All, Web and Mobile shows blocks at once instead of waiting.
+  useEffect(() => {
+    if (!API_MODE || !settled) return;
+    const others: string[][] = [["desktop"], ["mobile"], ["desktop", "mobile"]].filter((vp) => vp.join(",") !== (query.vp ?? ""));
+    const timer = window.setTimeout(() => {
+      for (const vp of others) void source.query({ ...query, vp: vp.join(","), limit: PAGE_SIZE }).catch(() => undefined);
+    }, 300);
+    return () => window.clearTimeout(timer);
+  }, [settled, query]);
 
   const loadMore = useCallback(() => {
     if (!cursor) return;
@@ -279,13 +308,22 @@ export function Wall() {
     itemsRef.current = items;
   });
   const [opened, setOpened] = useState<{ id: string; block: Block | null; detail: DetailIndex } | null>(null);
+  const openedRef = useRef(opened);
+  useEffect(() => {
+    openedRef.current = opened;
+  });
   useEffect(() => {
     if (!openId) return;
     let alive = true;
-    source.detail(openId, itemsRef.current.find((b) => b.id === openId)).then(
-      ({ block, detail }) => alive && setOpened({ id: openId, block, detail }),
-      () => alive && setOpened({ id: openId, block: null, detail: { byId: new Map(), byPage: new Map(), byType: new Map(), captures: new Map() } }),
-    );
+    // The wall's card, or a similar block the open one listed: either way the
+    // window opens on it at once, and the pairing and "similar" fill in.
+    const known = itemsRef.current.find((b) => b.id === openId) ?? openedRef.current?.detail.byId.get(openId);
+    source
+      .detail(openId, known, known && ((partial) => alive && setOpened({ id: openId, block: known, detail: partial })))
+      .then(
+        ({ block, detail }) => alive && setOpened({ id: openId, block, detail }),
+        () => alive && setOpened({ id: openId, block: known ?? null, detail: NO_DETAIL }),
+      );
     return () => {
       alive = false;
     };
@@ -293,11 +331,16 @@ export function Wall() {
   // Closed: forget the last block, so the next one opened from the wall does
   // not flash it. Set during render, React's pattern for state that follows a prop.
   if (!openId && opened) setOpened(null);
-  // Moving to another block inside the view ("More like this", the other
-  // viewport) keeps the current one up until the next has loaded. Dropping it
-  // meanwhile closed the dialog, and the dialog's close event then took the
-  // visitor back to the wall instead of to the block they picked.
-  const loadedOpen = openId ? opened : null;
+  // A block the wall (or the open block's "similar" row) already has opens
+  // straight away, before its details arrive. One it does not have yet keeps
+  // the current one up until it loads: dropping it meanwhile closed the
+  // dialog, and the dialog's close event then took the visitor back to the
+  // wall instead of to the block they picked.
+  const instant = useMemo(
+    () => (openId && opened?.id !== openId ? (items.find((b) => b.id === openId) ?? opened?.detail.byId.get(openId) ?? null) : null),
+    [openId, opened, items],
+  );
+  const loadedOpen = !openId ? null : instant ? { id: openId, block: instant, detail: NO_DETAIL } : opened;
   const open = loadedOpen?.block ?? null;
   const detail = loadedOpen?.detail ?? null;
   const pushed = useRef(false);
@@ -320,12 +363,24 @@ export function Wall() {
   const onOpen = useCallback(
     (block: Block) => {
       pushed.current = true;
-      router.push(withBlock(block.id), { scroll: false });
+      window.history.pushState(null, "", withBlock(block.id));
     },
-    [router, withBlock],
+    [withBlock],
   );
 
-  const onShow = useCallback((block: Block) => router.replace(withBlock(block.id), { scroll: false }), [router, withBlock]);
+  const onShow = useCallback((block: Block) => window.history.replaceState(null, "", withBlock(block.id)), [withBlock]);
+
+  // A card the pointer rests on: fetch its full screenshot, its page and its
+  // "similar" now, so the viewer has them, or most of them, by the click.
+  const onIntent = useCallback((block: Block) => {
+    if (warmed.has(block.id)) return;
+    warmed.add(block.id);
+    source.prefetch?.(block);
+    const image = new Image();
+    image.fetchPriority = "low";
+    image.decoding = "async";
+    image.src = assetUrl(block.src);
+  }, []);
 
   const onCloseBlock = useCallback(() => {
     if (!openId) return;
@@ -334,7 +389,7 @@ export function Wall() {
       clearReturn();
       router.back();
     } else {
-      router.replace(withBlock(null), { scroll: false });
+      window.history.replaceState(null, "", withBlock(null));
     }
   }, [openId, returnOnClose, router, withBlock]);
 
@@ -346,9 +401,9 @@ export function Wall() {
       const next = new URLSearchParams(params.toString());
       if (on) next.set(INFO_KEY, "1");
       else next.delete(INFO_KEY);
-      router.replace(next.size ? `${pathname}?${next}` : pathname, { scroll: false });
+      window.history.replaceState(null, "", next.size ? `${pathname}?${next}` : pathname);
     },
-    [params, pathname, router],
+    [params, pathname],
   );
 
   // Opened by a pasted link, then closed by Back: nothing of ours to pop.
@@ -491,7 +546,7 @@ export function Wall() {
                 height: card.height,
               }}
             >
-              <BlockCard block={card.block} onOpen={onOpen} width={card.width} height={card.height} fit={card.fit} />
+              <BlockCard block={card.block} onOpen={onOpen} onIntent={onIntent} width={card.width} height={card.height} fit={card.fit} />
             </div>
           ))}
 
