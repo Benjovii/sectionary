@@ -8,7 +8,6 @@ import { BlockViewer } from "@/components/block-viewer";
 import { PreviewNotice } from "@/components/view-limit";
 import { ViewportSwitch, type ViewportChoice } from "@/components/viewport-switch";
 import { FilterDrawer, FilterDrawerSkeleton } from "@/components/filter-drawer";
-import { TechFilters } from "@/components/tech-filters";
 import { techFromFacets } from "@/lib/tech";
 import { wallSource } from "@/lib/load-blocks";
 import { API_MODE, assetUrl } from "@/lib/data-source";
@@ -489,8 +488,6 @@ export function Wall() {
         onClearAll={onClearAll}
         onSearch={onSearch}
       />
-
-      {ready && <TechFilters facets={facets} selected={selected} onToggle={onToggle} />}
 
       {error ? (
         <div className="rounded-lg border border-dashed p-8 text-center text-muted-foreground">

@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { Check, Lock, Search, SlidersHorizontal, X } from "lucide-react";
+import { Check, Layers, Lock, Search, SlidersHorizontal, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { BAR_FILTERS, countSelected, type FilterKey, type FilterSpec, type Selected } from "@/lib/filters";
 import { useAccess } from "@/lib/account";
@@ -23,7 +23,8 @@ const SEARCH =
 /**
  * The wall's filters, laid out the way Etsy does search filters: one
  * "All filters" pill opens a side panel with every group stacked as a plain
- * checkbox list, and what is picked shows as removable chips under the bar.
+ * checkbox list, and what is applied shows in the Tech stack box under the bar,
+ * grouped by filter, each value removable.
  *
  * Ticking applies at once (the URL changes and the wall reloads behind the
  * panel), so the footer button always shows the live count. It only closes the
@@ -80,12 +81,21 @@ export function FilterDrawer({
     };
   }, [open]);
 
-  const chips = BAR_FILTERS.flatMap((spec) => (selected[spec.key] ?? []).map((value) => ({ spec, value })));
+  // A snapshot taken when the panel opens; the box shows it until the panel closes.
+  const [snapshot, setSnapshot] = useState<{ selected: Selected; search: string }>({ selected, search });
+  const shown = open ? snapshot : { selected, search };
+  const shownSearch = shown.search.trim();
+  const shownPicked = countSelected({ ...shown.selected, vp: undefined });
+  const groups = BAR_FILTERS.map((spec) => ({ spec, values: shown.selected[spec.key] ?? [] })).filter((g) => g.values.length > 0);
 
   return (
     <div className="flex flex-col gap-3">
       <div className="flex flex-wrap items-center gap-2">
-        <button ref={trigger} type="button" className={PILL} aria-haspopup="dialog" aria-expanded={open} onClick={() => setOpen(true)}>
+        <button ref={trigger} type="button" className={PILL} aria-haspopup="dialog" aria-expanded={open} onClick={() => {
+            setSnapshot({ selected, search });
+            setOpen(true);
+          }}
+        >
           <SlidersHorizontal className="size-4" aria-hidden />
           All filters
           {picked > 0 && (
@@ -113,28 +123,37 @@ export function FilterDrawer({
         </span>
       </div>
 
-      {activeCount > 0 && (
-        <ul className="flex flex-wrap items-center gap-2" aria-label="Active filters">
-          {search.trim() && (
-            <li>
-              <Chip label={`“${search.trim()}”`} onRemove={() => onSearch("")} />
-            </li>
+      {/* What is applied, grouped by filter, in the Tech stack box. While the panel
+          is open it holds what was there when it opened, so it changes once, on
+          "Show results", not behind the panel on every tick. */}
+      {(shownPicked > 0 || shownSearch) && (
+        <section aria-label="Applied filters" className="flex flex-col gap-2 rounded-lg border bg-card px-3 py-2.5 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-4">
+          <h2 className="inline-flex items-center gap-1.5 text-[12px] font-medium">
+            <Layers className="size-3.5 text-muted-foreground" aria-hidden />
+            Tech stack
+          </h2>
+          {shownSearch && (
+            <div className="flex min-w-0 flex-wrap items-center gap-1" role="group" aria-label="Search">
+              <span className="mr-0.5 text-[11px] text-muted-foreground">Search</span>
+              <Chip label={`“${shownSearch}”`} onRemove={() => onSearch("")} />
+            </div>
           )}
-          {chips.map(({ spec, value }) => (
-            <li key={`${spec.key}:${value}`}>
-              <Chip label={chipLabel(spec, value)} swatch={spec.swatch?.(value)} onRemove={() => onToggle(spec.key, value)} />
-            </li>
+          {groups.map(({ spec, values }) => (
+            <div key={spec.key} className="flex min-w-0 flex-wrap items-center gap-1" role="group" aria-label={spec.label}>
+              <span className="mr-0.5 text-[11px] text-muted-foreground">{spec.label}</span>
+              {values.map((value) => (
+                <Chip key={value} label={spec.format(value)} swatch={spec.swatch?.(value)} onRemove={() => onToggle(spec.key, value)} />
+              ))}
+            </div>
           ))}
-          <li>
-            <button
-              type="button"
-              onClick={onClearAll}
-              className="rounded-full px-2 py-1 text-[13px] font-medium underline-offset-4 outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              Clear all
-            </button>
-          </li>
-        </ul>
+          <button
+            type="button"
+            onClick={onClearAll}
+            className="self-start rounded-md px-1 text-[12px] font-medium text-muted-foreground underline-offset-4 outline-none hover:text-foreground hover:underline focus-visible:ring-2 focus-visible:ring-ring sm:ml-auto sm:self-center"
+          >
+            Clear all
+          </button>
+        </section>
       )}
 
       {/* Always mounted, so it slides both ways; inert while closed. */}
@@ -346,21 +365,13 @@ function Chip({ label, swatch, onRemove }: { label: string; swatch?: string; onR
       type="button"
       onClick={onRemove}
       aria-label={`Remove ${label}`}
-      className="inline-flex h-9 max-w-64 items-center gap-2 rounded-full bg-muted pr-3 pl-4 text-[13px] font-medium outline-none transition-colors duration-150 hover:bg-foreground/10 focus-visible:ring-2 focus-visible:ring-ring touch:h-11"
+      className="inline-flex h-7 max-w-64 items-center gap-1.5 rounded-full bg-muted pr-2 pl-3 text-[12px] font-medium outline-none transition-colors duration-150 hover:bg-foreground/10 focus-visible:ring-2 focus-visible:ring-ring touch:h-11"
     >
       {swatch && <span aria-hidden className="size-3 shrink-0 rounded-full border" style={{ background: swatch }} />}
       <span className="truncate">{label}</span>
-      <X className="size-4 shrink-0" aria-hidden />
+      <X className="size-3.5 shrink-0" aria-hidden />
     </button>
   );
-}
-
-/** What a removable chip says. Bare values that read badly alone get their group name. */
-function chipLabel(spec: FilterSpec, value: string): string {
-  const text = spec.format(value);
-  if (spec.key === "color") return `${text} colour`;
-  if (spec.key === "page") return `${text} page`;
-  return text;
 }
 
 /** The bar before the data arrives: same pill, search and count, so nothing moves when it swaps in. */
