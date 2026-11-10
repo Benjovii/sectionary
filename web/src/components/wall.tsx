@@ -7,7 +7,7 @@ import { BlockCard, BlockCardSkeleton } from "@/components/block-card";
 import { BlockViewer } from "@/components/block-viewer";
 import { PreviewNotice } from "@/components/view-limit";
 import { ViewportSwitch, type ViewportChoice } from "@/components/viewport-switch";
-import { FilterBar, FilterBarSkeleton } from "@/components/filter-bar";
+import { FilterDrawer, FilterDrawerSkeleton } from "@/components/filter-drawer";
 import { TechFilters } from "@/components/tech-filters";
 import { techFromFacets } from "@/lib/tech";
 import { wallSource } from "@/lib/load-blocks";
@@ -62,7 +62,7 @@ export function WallFallback() {
       <div className="flex">
         <ViewportSwitch value={DEFAULT_VIEWPORT as ViewportChoice} onChange={() => undefined} withAll />
       </div>
-      <FilterBarSkeleton />
+      <FilterDrawerSkeleton />
       <WallSkeleton />
     </div>
   );
@@ -478,12 +478,13 @@ export function Wall() {
         <PreviewNotice />
       </div>
 
-      <FilterBar
+      <FilterDrawer
         facets={facets}
         selected={selected}
         search={search}
         total={total}
         ready={ready}
+        busy={!settled}
         onToggle={onToggle}
         onClearAll={onClearAll}
         onSearch={onSearch}
