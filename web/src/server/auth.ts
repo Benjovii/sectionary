@@ -11,6 +11,15 @@ import { finishSignIn } from "@/server/two-step";
 
 const secure = () => process.env.NODE_ENV === "production";
 
+/**
+ * Deletes a cookie set on path "/". A bare cookies().delete(name) sends no
+ * Path, so the browser uses the request's folder (e.g. /auth on
+ * /auth/two-step) and the "/" cookie survives. Clear on the path it was set on.
+ */
+async function clearCookie(name: string) {
+  (await cookies()).set(name, "", { httpOnly: true, secure: secure(), sameSite: "lax", path: "/", expires: new Date(0), maxAge: 0 });
+}
+
 /** The half-signed-in cookie between the email link and the authenticator code. */
 export const PENDING_COOKIE = "sx_two_step";
 
@@ -22,6 +31,7 @@ export async function currentUser(): Promise<SessionUser | null> {
 async function setSessionCookie(userId: string) {
   const { token, expires } = await createSession(userId, (await headers()).get("user-agent"));
   (await cookies()).set(SESSION_COOKIE, token, { httpOnly: true, secure: secure(), sameSite: "lax", path: "/", expires, maxAge: SESSION_DAYS * 86_400 });
+  await clearCookie(PENDING_COOKIE);
 }
 
 /**
@@ -33,6 +43,9 @@ export async function startSession(verified: VerifiedUser, next: string): Promis
   const user = await upsertUser(verified.id, verified.email);
   const jar = await cookies();
   if (user.twoStepSince) {
+    // A new sign-in replaces whatever this browser had: no old full session alongside the pending one.
+    await endSession(jar.get(SESSION_COOKIE)?.value);
+    await clearCookie(SESSION_COOKIE);
     const { token, expires } = await createSession(user.id, (await headers()).get("user-agent"), { next });
     jar.set(PENDING_COOKIE, token, { httpOnly: true, secure: secure(), sameSite: "lax", path: "/", expires, maxAge: PENDING_MINUTES * 60 });
     return { user, twoStep: true };
@@ -49,11 +62,10 @@ export async function finishTwoStep(code: string): Promise<string> {
     const { userId, next } = await finishSignIn(token, code);
     if (!(await userById(userId))) throw new Error("user vanished");
     await setSessionCookie(userId);
-    jar.delete(PENDING_COOKIE);
     return next;
   } catch (error) {
     // A locked or timed-out pending sign-in is gone; so is its cookie.
-    if ((error as { code?: string }).code === "LOCKED" || (error as { code?: string }).code === "EXPIRED") jar.delete(PENDING_COOKIE);
+    if ((error as { code?: string }).code === "LOCKED" || (error as { code?: string }).code === "EXPIRED") await clearCookie(PENDING_COOKIE);
     throw error;
   }
 }
@@ -61,7 +73,8 @@ export async function finishTwoStep(code: string): Promise<string> {
 export async function signOut() {
   const jar = await cookies();
   await endSession(jar.get(SESSION_COOKIE)?.value);
-  jar.delete(SESSION_COOKIE);
+  await clearCookie(SESSION_COOKIE);
+  await clearCookie(PENDING_COOKIE);
 }
 
 /** Every device but this one, which stays signed in. */
@@ -72,7 +85,8 @@ export async function endOtherSessions(userId: string) {
 /** Every device, this one included. */
 export async function signOutEverywhere(userId: string) {
   await endAllSessions(userId);
-  (await cookies()).delete(SESSION_COOKIE);
+  await clearCookie(SESSION_COOKIE);
+  await clearCookie(PENDING_COOKIE);
 }
 
 /** Where to go after signing in: a path on this site, never another origin. */
@@ -95,7 +109,7 @@ export async function rememberSignIn(email: string, next: string) {
 export async function takeNext(): Promise<string> {
   const jar = await cookies();
   const next = safeNext(jar.get(NEXT_COOKIE)?.value);
-  jar.delete(NEXT_COOKIE);
-  jar.delete(EMAIL_COOKIE);
+  await clearCookie(NEXT_COOKIE);
+  await clearCookie(EMAIL_COOKIE);
   return next;
 }
