@@ -11,7 +11,7 @@ const NAV = [
 
 /**
  * The landing page's frame (SEC-25): the app bar's wordmark and hairline, a
- * little taller, with the waitlist as the one rust action. The legal pages
+ * little taller, with the waitlist as the one lemon action. The legal pages
  * (SEC-29) share it.
  */
 export default function MarketingLayout({ children }: { children: React.ReactNode }) {
@@ -45,7 +45,7 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
             {/* Also used by /terms, /privacy and /bot, so it names the page. */}
             <Link
               href="/welcome#join"
-              className="inline-flex h-8 items-center rounded-lg bg-primary px-3 text-[13px] font-semibold text-primary-foreground outline-none transition-colors duration-150 hover:bg-primary/85 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background touch:h-11"
+              className="inline-flex h-8 items-center rounded-lg bg-brand px-3 text-[13px] font-semibold text-brand-foreground outline-none transition-colors duration-150 hover:bg-brand/85 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background touch:h-11"
             >
               Join the waitlist
             </Link>

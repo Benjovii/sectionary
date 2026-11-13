@@ -13,9 +13,9 @@ const initial: WaitlistState = { status: "idle" };
  * form in place and is announced to screen readers.
  */
 export function WaitlistForm({ source, tone = "default", className }: { source: string; tone?: "default" | "accent"; className?: string }) {
-  // On the rust band a rust button would vanish: the button goes near-black
+  // On the lemon band a lemon button would vanish: the button goes midnight
   // and the field goes white, in both themes. The error takes the band's own
-  // text colour, because no red reads on rust.
+  // text colour, because no red reads on yellow.
   const accent = tone === "accent";
   const [state, action, pending] = useActionState(joinWaitlist, initial);
   const id = useId();
@@ -24,15 +24,15 @@ export function WaitlistForm({ source, tone = "default", className }: { source: 
     return (
       <div
         role="status"
-        className={cn("flex items-start gap-3 rounded-xl border px-4 py-3.5", accent ? "border-transparent bg-[#0f0f0f] text-white" : "bg-card", className)}
+        className={cn("flex items-start gap-3 rounded-xl border px-4 py-3.5", accent ? "border-transparent bg-[#0b132b] text-[#eaf2ff]" : "bg-card", className)}
       >
-        <span className="mt-0.5 inline-flex size-5 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
+        <span className={cn("mt-0.5 inline-flex size-5 shrink-0 items-center justify-center rounded-full", accent ? "bg-brand text-brand-foreground" : "bg-primary text-primary-foreground")}>
           <Check className="size-3.5" strokeWidth={3} />
         </span>
         <p className="text-[14px] leading-snug text-pretty">
           <span className="font-medium">You&apos;re on the list.</span>{" "}
-          <span className={accent ? "text-white/70" : "text-muted-foreground"}>
-            We&apos;ll write to <span className={accent ? "text-white" : "text-foreground"}>{state.email}</span> once, when your invite is ready.
+          <span className={accent ? "text-[#eaf2ff]/75" : "text-muted-foreground"}>
+            We&apos;ll write to <span className={accent ? "text-[#eaf2ff]" : "text-foreground"}>{state.email}</span> once, when your invite is ready.
           </span>
         </p>
       </div>
@@ -68,7 +68,7 @@ export function WaitlistForm({ source, tone = "default", className }: { source: 
           className={cn(
             "h-11 w-full min-w-0 rounded-lg min-[420px]:flex-1 border px-3.5 text-[15px] outline-none transition-colors",
             accent
-              ? "border-[#0f0f0f]/15 bg-white text-[#1a1a1a] placeholder:text-[#1a1a1a]/50 focus-visible:border-[#0f0f0f] focus-visible:ring-2 focus-visible:ring-[#0f0f0f]/30 aria-invalid:border-[#0f0f0f]"
+              ? "border-[#0b132b]/20 bg-white text-[#0b132b] placeholder:text-[#0b132b]/50 focus-visible:border-[#0b132b] focus-visible:ring-2 focus-visible:ring-[#0b132b]/30 aria-invalid:border-[#0b132b]"
               : "border-input bg-background placeholder:text-muted-foreground/70 focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40 aria-invalid:border-destructive dark:bg-input/30",
           )}
         />
@@ -78,7 +78,7 @@ export function WaitlistForm({ source, tone = "default", className }: { source: 
           className={cn(
             "group inline-flex h-11 shrink-0 items-center justify-center gap-1.5 rounded-lg px-4 text-[14px] font-semibold outline-none transition-[background-color,opacity] duration-150 focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-60",
             accent
-              ? "bg-[#0f0f0f] text-white hover:bg-[#262626] focus-visible:ring-[#0f0f0f] focus-visible:ring-offset-primary"
+              ? "bg-[#0b132b] text-[#eaf2ff] hover:bg-[#1d4e89] focus-visible:ring-[#0b132b] focus-visible:ring-offset-brand"
               : "bg-primary text-primary-foreground hover:bg-primary/85 focus-visible:ring-ring focus-visible:ring-offset-background",
           )}
         >
@@ -88,7 +88,7 @@ export function WaitlistForm({ source, tone = "default", className }: { source: 
           )}
         </button>
       </div>
-      <p id={`${id}-error`} aria-live="polite" className={cn("mt-2 text-[13px]", !error ? "sr-only" : accent ? "font-semibold text-primary-foreground" : "text-destructive")}>
+      <p id={`${id}-error`} aria-live="polite" className={cn("mt-2 text-[13px]", !error ? "sr-only" : accent ? "font-semibold text-brand-foreground" : "text-destructive")}>
         {error}
       </p>
     </form>
