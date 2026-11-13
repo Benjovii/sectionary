@@ -14,12 +14,16 @@
 }
 
 /*
- * Sectionary's palette is "Rust": true-grey neutrals with one rust accent for
- * actions, focus and selection, so the chrome stays quiet around the store
- * screenshots. The rust is Curated's (curated.design), 5.1:1 on white, so one
- * colour serves as button, ring and link in light mode. Type is unchanged from
- * Next Level: Bricolage Grotesque for titles, Inter for the UI, Geist Mono for
- * ids. Anything Sectionary-specific sits at the bottom.
+ * The palette: five colours. Ice #EAF2FF is the day ground and midnight
+ * #0B132B the ink (16.3:1) and the night ground. Cobalt #1D4E89 is the day
+ * action colour (7.5:1 on ice, white on it 8.4:1), lemon #FDE74C the one loud
+ * colour, and teal #5BC0BE the second accent: live dots, and links at night.
+ *
+ * Lemon and teal only read as fills on the day ground (1.2:1 and 1.9:1 as
+ * text), so in light mode they are the brand chip, CTA band and live dot; at
+ * night lemon is the action colour outright and teal the link. `--brand` is
+ * lemon in both themes for the things that stay yellow. Type is unchanged:
+ * Bricolage Grotesque for titles, Inter for the UI, Geist Mono for ids.
  */
 @theme inline {
   --color-background: var(--background);
@@ -30,6 +34,8 @@
   --color-ring: var(--ring);
   --color-link: var(--link);
   --color-signal: var(--signal);
+  --color-brand: var(--brand);
+  --color-brand-foreground: var(--brand-foreground);
   --color-input: var(--input);
   --color-border: var(--border);
   --color-destructive: var(--destructive);
@@ -53,55 +59,59 @@
 }
 
 :root {
-  --background: #fbfaf9;
-  --foreground: #1a1a1a;
+  /* Day: ice ground, white cards, midnight ink, cobalt actions. */
+  --background: #eaf2ff;
+  --foreground: #0b132b;
   --card: #ffffff;
-  --card-foreground: #1a1a1a;
+  --card-foreground: #0b132b;
   --popover: #ffffff;
-  --popover-foreground: #1a1a1a;
-  --primary: #c54120;
+  --popover-foreground: #0b132b;
+  --primary: #1d4e89;
   --primary-foreground: #ffffff;
-  --secondary: #f3f1ef;
-  --secondary-foreground: #1a1a1a;
-  --muted: #f3f1ef;
-  --muted-foreground: #6f6a66;
-  --accent: #f3f1ef;
-  --accent-foreground: #1a1a1a;
-  --destructive: #b3122e;
-  --border: #e7e3df;
-  --input: #e7e3df;
-  /* The rust passes 5.1:1 on the ground, so it is the ring as it is. Links
-     take it one step darker (6.4:1) so running text reads comfortably. */
-  --ring: #c54120;
-  --link: #a8361a;
-  /* Live dots and "new" markers. */
-  --signal: #c54120;
+  /* Ice one step deeper for chips, hovers and skeletons. */
+  --secondary: #dce7fa;
+  --secondary-foreground: #0b132b;
+  --muted: #dce7fa;
+  /* Slate blue, 5.9:1 on the ground. */
+  --muted-foreground: #4a5d80;
+  --accent: #dce7fa;
+  --accent-foreground: #0b132b;
+  --destructive: #c2333f;
+  --border: #ccdbf3;
+  --input: #bdcfee;
+  --ring: #1d4e89;
+  --link: #1d4e89;
+  --signal: #5bc0be;
+  --brand: #fde74c;
+  --brand-foreground: #0b132b;
   --radius: 0.5rem;
 }
 
 .dark {
-  /* Curated's greys: #0F0F0F ground, #1B1B1B surface, #262626 raised. The rust
-     is lifted to #E4502A so it holds up on black, with near-black text on it. */
-  --background: #0f0f0f;
-  --foreground: #e8e8e8;
-  --card: #1b1b1b;
-  --card-foreground: #e8e8e8;
-  --popover: #1b1b1b;
-  --popover-foreground: #e8e8e8;
-  --primary: #e4502a;
-  --primary-foreground: #1a0d08;
-  --secondary: #262626;
-  --secondary-foreground: #e8e8e8;
-  --muted: #262626;
-  --muted-foreground: #a1a1a1;
-  --accent: #262626;
-  --accent-foreground: #e8e8e8;
-  --destructive: #ff5c5c;
-  --border: #2e2e2e;
-  --input: #2e2e2e;
-  --ring: #ff6a3d;
-  --link: #ff8a63;
-  --signal: #e4502a;
+  /* Night: midnight ground, a lifted midnight for cards, ice ink, lemon for
+     every action and teal for links (8.5:1). */
+  --background: #0b132b;
+  --foreground: #eaf2ff;
+  --card: #131e3d;
+  --card-foreground: #eaf2ff;
+  --popover: #131e3d;
+  --popover-foreground: #eaf2ff;
+  --primary: #fde74c;
+  --primary-foreground: #0b132b;
+  --secondary: #1a2950;
+  --secondary-foreground: #eaf2ff;
+  --muted: #1a2950;
+  --muted-foreground: #a9b8d6;
+  --accent: #1a2950;
+  --accent-foreground: #eaf2ff;
+  --destructive: #ff7b7b;
+  --border: #22325c;
+  --input: #2a3c6b;
+  --ring: #fde74c;
+  --link: #5bc0be;
+  --signal: #5bc0be;
+  --brand: #fde74c;
+  --brand-foreground: #0b132b;
 }
 
 @layer base {
@@ -111,11 +121,11 @@
   html {
     @apply font-sans;
     color-scheme: light;
-    /* Native checkboxes, radios and sliders take the rust, not the OS blue. */
+    /* Native checkboxes, radios and sliders take the action colour, not the OS blue. */
     accent-color: var(--primary);
   }
   ::selection {
-    background-color: color-mix(in oklch, var(--primary) 32%, transparent);
+    background-color: color-mix(in oklch, var(--brand) 45%, transparent);
   }
   html.dark {
     color-scheme: dark;
