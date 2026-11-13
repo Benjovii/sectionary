@@ -1,15 +1,15 @@
 import { cn } from "@/lib/utils";
 
 /**
- * The mark: a page cut into three blocks, in midnight on a lemon chip. The chip stays lemon in both
- * themes (`brand`), so the mark reads the same on the day and night grounds.
+ * The mark: a page cut into three blocks on the rust chip, in the button text
+ * colour (white in light, near-black in dark), as the palette defines it.
  */
 export function Logo({ className, spinning = false }: { className?: string; spinning?: boolean }) {
   return (
     <span
       aria-hidden
       className={cn(
-        "inline-flex size-6 shrink-0 items-center justify-center rounded-[6px] bg-brand text-brand-foreground",
+        "inline-flex size-6 shrink-0 items-center justify-center rounded-[5px] bg-primary text-primary-foreground",
         spinning && "animate-[logo-loading_0.9s_cubic-bezier(0.55,0.12,0.45,0.88)_infinite]",
         className,
       )}
